@@ -79,6 +79,16 @@ echo "  version: $NODE_VERSION"
 
 echo ""
 # ==============================================================================
+# node_module builds
+# ==============================================================================
+echo "Building node_modules..."
+
+# Note that we just assume npm exists and is valid
+# This should rebuild all node_modules in the current path (or parent)
+npm rebuild
+
+echo ""
+# ==============================================================================
 # Closure linter
 # ==============================================================================
 echo "Installing Closure linter..."
