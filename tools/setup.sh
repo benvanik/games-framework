@@ -23,6 +23,15 @@
 # TODO(benvanik): support OS X homebrew http://mxcl.github.com/homebrew/
 # TODO(benvanik): support other Linux package managers?
 
+# Ensure running as root (or on Cygwin, where it doesn't matter)
+if [ "$(id -u)" -ne 0 ]; then
+  if [ ! -e "/Cygwin.bat" ]; then
+    echo "This script must be run as root to install Python and system packages"
+    echo "Run with sudo!"
+    exit 1
+  fi
+fi
+
 # ==============================================================================
 # Check for Python
 # ==============================================================================
@@ -36,7 +45,7 @@ if [ ! -e "$(which python)" ]; then
   exit 1
 fi
 PYTHON_CHECK=`python -c 'import sys; print(sys.version_info >= (2, 6) and "1" or "0")'`
-PYTHON_VERSION=`python -c 'import sys; print(sys.version_info)'`
+PYTHON_VERSION=`python -c 'import sys; print(sys.version_info[:])'`
 if [ "$PYTHON_CHECK" = "0" ]; then
   echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
   echo "! Python is out of date - at least version 2.6 is required                     !"
@@ -52,6 +61,7 @@ if [ ! -e "$(which node)" ]; then
   echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
   echo "! node.js not found or not in PATH - at least version 0.6.10 is required       !"
   echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "Grab the latest version from: http://nodejs.org/#download"
   exit 1
 fi
 NODE_CHECK=`node -e "var v = process.version.split('v')[1].split('.'); console.log(v[0] > 0 || v[1] > 6 || v[2] >= 10)"`
@@ -61,6 +71,7 @@ if [ "$NODE_CHECK" = "false" ]; then
   echo "! node.js is out of date - at least version 0.6.10 is required                 !"
   echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
   echo "Your version: $NODE_VERSION"
+  echo "Grab the latest version from: http://nodejs.org/#download"
   exit 1
 fi
 echo "     path: $(which node)"
@@ -103,6 +114,7 @@ if [ "$(which apt-get 2>/dev/null)" ]; then
   done
 elif [ "$(which port 2>/dev/null)" ]; then
   # OS X (MacPorts)
+  port selfupdate
   for p in ${SYSTEM_PACKAGES[@]}
   do
     port install $p
