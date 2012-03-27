@@ -1,0 +1,122 @@
+#header-container {
+  float: left;
+}
+
+a {
+  text-decoration: none;
+}
+
+#compile-container {
+  float: left;
+  clear: left;
+  padding-top: 20px;
+}
+
+#source-editor-container {
+  clear: left;
+  float: left;
+  width: 100%;
+  height: 600px;
+}
+
+.glsl-input {
+  width: 33%;
+  height: 50%;
+}
+
+#fragment-container {
+  float: left;
+  display: inline;
+  width: 33%;
+}
+
+#vertex-container {
+  float: left;
+  display: inline;
+  width: 33%;
+}
+
+#glsl-container {
+  float: left;
+  width: 33%;
+  height: 100%;
+}
+
+#test-container {
+  float: left;
+  display: inline;
+  width: 42%;
+  height: 100%;
+}
+
+#results-container {
+  float: right;
+  display: inline;
+  width: 25%;
+}
+
+#fragment-source-editor {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#vertex-source-editor {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#glsl-source-editor {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#test-source-editor {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.failed {
+  color:red;
+}
+
+.passed {
+  color:green;
+}
+
+.test-case.passed {
+  display: none;
+}
+
+#results-container {
+  font-family: Courier New, monospace;
+  font-size: small;
+}
+
+#results-container > ul {
+  list-style-type: none;
+  padding-left: 7px;
+}
+
+#results-container > ul >li {
+  padding-left: 7px;
+}
+
+#canvas-container {
+  clear: left;
+}
+#status {
+  clear: left;
+}
+
+#compiled-container {
+  clear: left;
+}
+
+.compiled-source {
+  width: 33%;
+  height: 200px;
+}

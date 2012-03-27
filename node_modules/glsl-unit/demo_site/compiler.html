@@ -1,0 +1,60 @@
+
+<!DOCTYPE html>
+
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
+  <script type="text/javascript" src="third-party/angular-0.9.19.min.js" ng:autobind></script>
+  <script type="text/javascript" src="third-party/ace.js"></script>
+  <script type="text/javascript" src="third-party/theme-eclipse.js"></script>
+  <script type="text/javascript" src="third-party/mode-c_cpp.js"></script>
+  <script type="text/javascript" src="compiler-min.js"></script>
+  <script type="text/javascript" src="compiler.js"></script>
+  <script type="text/javascript" src="ace_angular_shim.js"></script>
+  <title>GLSL Compiler</title>
+	<script type="text/javascript">
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', 'UA-26753607-1']);
+	  _gaq.push(['_trackPageview']);
+	  (function() {
+	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
+	</script>
+</head>
+<body ng:controller="GLSLCompilerController">
+  <h1>
+    <a href='http://code.google.com/p/glsl-unit/wiki/UsingTheCompiler'>GLSL Compiler</a> - Minifier
+    for GLSL.
+  </h1>
+  <div id="source-editor-container">
+    <div id="vertex-container" class='glsl-input'>
+      <strong>Vertex Source</strong>
+      <ace:editor id="vertex-source" mode="c_cpp" bindExp="vertexSource" theme="eclipse"></ace:editor>
+    </div>
+    <div id="fragment-container" class='glsl-input'>
+      <strong>Fragment Source</strong>
+      <ace:editor id="fragment-source" mode="c_cpp" bindExp="fragmentSource" theme="eclipse"></ace:editor>
+    </div>
+    <div id="compile-container">
+      <button ng:click="compile()">Compile</button>
+    </div>
+    <div id="status" ng:show="compiledVertexSource">
+      <ul>
+        <li>Original Length: {{originalLength}}
+        <li>New Length: {{newLength}}
+        <li>Saved: {{originalLength - newLength}} ({{this.percentSaved}}% of
+        Original Size)
+      </ul>
+    </div>
+    <div id="compiled-container" ng:show="compiledVertexSource">
+      <textarea id="compiled-vertex" class="compiled-source"
+        name="compiledVertexSource"></textarea>
+      <textarea id="compiled-fragment" class="compiled-source"
+        name="compiledFragmentSource"></textarea>
+    </div>
+  </div>
+</body>
+</html>

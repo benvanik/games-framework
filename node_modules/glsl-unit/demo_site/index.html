@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
+  <script type="text/javascript" src="third-party/angular-0.9.19.min.js" ng:autobind></script>
+  <script type="text/javascript" src="third-party/ace.js"></script>
+  <script type="text/javascript" src="third-party/theme-eclipse.js"></script>
+  <script type="text/javascript" src="third-party/mode-javascript.js"></script>
+  <script type="text/javascript" src="third-party/mode-c_cpp.js"></script>
+  <script type="text/javascript" src="glslunit-min.js"></script>
+  <script type="text/javascript" src="app.js"></script>
+  <script type="text/javascript" src="ace_angular_shim.js"></script>
+  <title>GLSL Unit Demo</title>
+	<script type="text/javascript">
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', 'UA-26753607-1']);
+	  _gaq.push(['_trackPageview']);
+	  (function() {
+	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
+	</script>
+</head>
+<body ng:controller="GLSLUnitExampleController">
+  <h1>
+    <a href='http://code.google.com/p/glsl-unit'>GLSL Unit</a> - Unit testing for GLSL
+  </h1>
+  <div id="header-container">
+    <select id='example_select' name="selectedExample" ng:options="ex.name for ex in examples"></select>
+    <button ng:click="loadSelectedExample()">Load Example</button>
+    <button ng:click="runTest()">Run Test Suite</button>
+  </div>
+  <div id="source-editor-container">
+    <div id="glsl-container">
+      <strong>GLSL</strong>
+      <ace:editor id="glsl-source" mode="c_cpp" bindExp="glslSource" theme="eclipse"></ace:editor>
+    </div>
+    <div id="test-container">
+      <strong>Javascript</strong> The variable <em>shaderCode</em> will contain the GLSL code entered on the left
+      <ace:editor id="test-source" mode="javascript" bindExp="testJsSource" theme="eclipse"></ace:editor>
+    </div>
+    <div id="results-container">
+      <strong>Results</strong>
+      <div id='error-container' ng:show="errorText">
+	      <p>There was an error running the test case:</p>
+	      <p>{{errorText}}</p>
+	    </div>
+      <ul ng:show="lastTestRun">
+        <li ng:repeat="testSuite in lastTestRun"
+            class="test-suite {{(testSuite.getSuitePassed() && 'passed') || 'failed'}}">
+          Test Suite "{{testSuite.getDescription()}}" {{(testSuite.getSuitePassed() && 'Passed') || 'Failed'}}
+          <ul>
+            <li ng:repeat="testCase in testSuite.getTestCases()"
+                class="test-case {{(testCase.getTestPassed() && 'passed') || 'failed'}}">
+            Test case "{{testCase.getDescription()}}" {{(testCase.getTestPassed() && 'Passed') || 'Failed'}}
+            <ul>
+              <li ng:repeat="expectation in testCase.getExpectations()"
+                  class="expectation {{(expectation.getTestPassed() && 'passed') || 'failed'}}">
+                Expectation {{$index}} {{(expectation.getTestPassed() && 'Passed.') || 'Failed: ' + expectation.getFailureString()}}
+              </li>
+            </ul>
+            </li>
+          </ul>
+       </li>
+      </ul>
+    </div>
+  </div>
+  <div id='canvas-container'>
+    <canvas height="50" width="50" id="test-canvas"></canvas>
+  </div>
+</body>
+</html>
