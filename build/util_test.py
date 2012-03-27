@@ -2,19 +2,20 @@
 
 # Copyright 2012 Google Inc. All Rights Reserved.
 
+"""Tests for the util module.
+"""
+
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
-from .. import util
 import unittest2
+import util
 
 
 class UnderscoreToPascalCase(unittest2.TestCase):
-  """
-  Behavioral tests of the UnderscoreToPascalCase method.
-  """
+  """Behavioral tests of the UnderscoreToPascalCase method."""
 
-  def test_empty(self):
+  def testEmpty(self):
     self.assertEqual(
         util.UnderscoreToPascalCase(None),
         None)
@@ -22,7 +23,7 @@ class UnderscoreToPascalCase(unittest2.TestCase):
         util.UnderscoreToPascalCase(''),
         '')
 
-  def test_underscores(self):
+  def testUnderscores(self):
     self.assertEqual(
         util.UnderscoreToPascalCase('ab'),
         'Ab')
@@ -48,7 +49,7 @@ class UnderscoreToPascalCase(unittest2.TestCase):
         util.UnderscoreToPascalCase('1aa_2bb'),
         '1aa2bb')
 
-  def test_whitespace(self):
+  def testWhitespace(self):
     self.assertEqual(
         util.UnderscoreToPascalCase(' '),
         ' ')

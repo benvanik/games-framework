@@ -8,11 +8,11 @@ def UnderscoreToPascalCase(value):
 
   Args:
     value: Source string value.
-        Example: hello_world
+        Example - hello_world
 
   Returns:
     The string, converted to PascalCase.
-    Example: hello_world -> HelloWorld
+    Example - hello_world -> HelloWorld
   """
   if not value:
     return value

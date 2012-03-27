@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/python
 
 # Copyright 2012 Google Inc. All Rights Reserved.
 
@@ -17,7 +17,7 @@ def main():
   # Only find test_*.py files under build/
   loader = unittest2.TestLoader()
   tests = loader.discover('build',
-                          pattern='test_*.py',
+                          pattern='*_test.py',
                           top_level_dir='.')
 
   # Run the tests in the default runner
