@@ -50,5 +50,6 @@ npm-debug.log
 # npm/node
 .lock-wscript
 node_modules/**/build/
+node_modules/.bin/
 
 .gfcache/
