@@ -9,6 +9,12 @@ Rules may refer to each other and will be resolved in the project namespace.
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
+import base64
+import pickle
+
+import build
+
+
 class Project(object):
   """Project type that contains rules.
   Projects, once constructed, are designed to be immutable. Many duplicate
@@ -133,3 +139,21 @@ class Rule(object):
             'Values cannot have leading/trailing whitespace: "%s"' % (value))
       if require_semicolon and value[0] != ':':
         raise NameError('Values must be a rule (start with :): "%s"' % (value))
+
+  def ComputeCacheKey(self):
+    """Calculates a unique key based on the rule type and its values.
+    This key may change when code changes, but is a fairly reliable way to
+    detect changes in rule values.
+
+    Returns:
+      A string that can be used to index this key in a dictionary. The string
+      may be very long.
+    """
+    # TODO(benvanik): faster serialization than pickle?
+    pickled_self = pickle.dumps(self)
+    pickled_str = base64.b64encode(pickled_self)
+    # Include framework version in the string to enable forced rebuilds on
+    # version change
+    unique_str = build.VERSION_STR + pickled_str
+    # TODO(benvanik): hash instead of return full string?
+    return unique_str

@@ -106,6 +106,41 @@ class RuleTest(unittest2.TestCase):
     with self.assertRaises(NameError):
       Rule('r', deps=' a ')
 
+  def testRuleCacheKey(self):
+    rule1 = Rule('r1')
+    rule1_key = rule1.ComputeCacheKey()
+    self.assertIsNotNone(rule1_key)
+    self.assertGreater(len(rule1_key), 0)
+    self.assertEqual(rule1_key, rule1.ComputeCacheKey())
+    rule1.srcs.append('a')
+    self.assertNotEqual(rule1_key, rule1.ComputeCacheKey())
+
+    rule1 = Rule('r1')
+    rule2 = Rule('r1')
+    self.assertEqual(rule1.ComputeCacheKey(), rule2.ComputeCacheKey())
+    rule1 = Rule('r1')
+    rule2 = Rule('r2')
+    self.assertNotEqual(rule1.ComputeCacheKey(), rule2.ComputeCacheKey())
+
+    rule1 = Rule('r1', srcs='a')
+    rule2 = Rule('r1', srcs='a')
+    self.assertEqual(rule1.ComputeCacheKey(), rule2.ComputeCacheKey())
+    rule1 = Rule('r1', srcs='a')
+    rule2 = Rule('r1', srcs='b')
+    self.assertNotEqual(rule1.ComputeCacheKey(), rule2.ComputeCacheKey())
+    rule1 = Rule('r1', deps=':a')
+    rule2 = Rule('r1', deps=':a')
+    self.assertEqual(rule1.ComputeCacheKey(), rule2.ComputeCacheKey())
+    rule1 = Rule('r1', deps=':a')
+    rule2 = Rule('r1', deps=':b')
+    self.assertNotEqual(rule1.ComputeCacheKey(), rule2.ComputeCacheKey())
+    rule1 = Rule('r1', srcs='a', deps=':a')
+    rule2 = Rule('r1', srcs='a', deps=':a')
+    self.assertEqual(rule1.ComputeCacheKey(), rule2.ComputeCacheKey())
+    rule1 = Rule('r1', srcs='a', deps=':a')
+    rule2 = Rule('r1', srcs='b', deps=':b')
+    self.assertNotEqual(rule1.ComputeCacheKey(), rule2.ComputeCacheKey())
+
 
 class ProjectTest(unittest2.TestCase):
   """Behavioral tests of Project rule handling."""
