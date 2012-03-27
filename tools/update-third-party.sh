@@ -49,7 +49,7 @@ echo ""
 # =============================================================================
 # Closure Stylesheets
 # =============================================================================
-echo "Updating to the latest Closure Library..."
+echo "Updating to the latest Closure Stylesheets..."
 
 # TODO(benvanik): closure-stylesheets (need -latest)
 echo "WARNING: closure-stylesheets doesn't have a -latest, manually check:"
@@ -57,11 +57,13 @@ echo "http://code.google.com/p/closure-stylesheets/"
 
 echo ""
 # =============================================================================
-# Closure Stylesheets
+# node_modules
 # =============================================================================
 echo "Updating node modules..."
 
-# TODO(benvanik): node updates for npm modules
-echo "WARNING: not currently running npm update, manually check"
+# Note that we just assume npm exists and is valid
+# Calling like this should (since we are in our root) just update the npm
+# modules under the local node_modules folder
+npm update
 
 echo ""
