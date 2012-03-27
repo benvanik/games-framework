@@ -47,4 +47,8 @@ npm-debug.log
 # Build system output
 # ==============================================================================
 
+# npm/node
+.lock-wscript
+node_modules/**/build/
+
 .gfcache/
