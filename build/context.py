@@ -9,9 +9,13 @@ well as handling distribution and execution of the tasks those rules create.
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
+from collections import deque
+import multiprocessing
+
 import build
 import graph
 import project
+import time
 import util
 
 
@@ -28,38 +32,112 @@ class BuildContext(object):
   build create a new context with the same parameters.
   """
 
-  def __init__(self, project, target_rules=None):
+  def __init__(self, project,
+               worker_count=2, force=False,
+               stop_on_error=False, raise_on_error=False):
     """Initializes a build context.
 
     Args:
       project: Project to use for building.
-      target_rules: A list of rule names (or a single rule name) that are to be
-          built.
+      worker_count: Number of worker threads to use when building.
+      force: True to force execution of tasks even if they have not changed.
+      stop_on_error: True to stop executing tasks as soon as an error occurs.
+      raise_on_error: True to rethrow exceptions to ease debugging.
+    """
+    self.project = project
+
+    if not worker_count:
+      raise ValueError('Invalid worker count %s' % (worker_count))
+
+    self.worker_count = worker_count
+    self.force = force
+    self.stop_on_error = stop_on_error
+    self.raise_on_error = raise_on_error
+
+    # Build the rule graph
+    self.rule_graph = graph.RuleGraph(self.project)
+
+  def execute(self, target_rule_names):
+    """Executes all rules in the context.
+    Rules are executed in order and, depending on the value of worker_count,
+    in parallel when possible.
+
+    Args:
+      target_rule_names: A list of rule names that are to be executed.
+
+    Returns:
+      TODO
 
     Raises:
       KeyError: One of the given target rules was not found in the project.
       NameError: An invalid target rule was given.
       TypeError: An invalid target rule was given.
     """
-    self.project = project
-    if not project:
-      raise TypeError('Project required')
-
-    # Note that the rule list is copied
-    self.target_rules = []
-    if isinstance(target_rules, str):
-      if len(target_rules):
-        self.target_rules.append(target_rules)
-    elif isinstance(target_rules, list):
-      self.target_rules.extend(target_rules)
-    elif target_rules != None:
-      raise TypeError('Invalid target_rules type')
-
     # Verify that target rules are valid and exist
-    util.validate_names(self.target_rules, require_semicolon=True)
-    for rule_name in self.target_rules:
+    target_rule_names = list(target_rule_names)
+    util.validate_names(target_rule_names, require_semicolon=True)
+    for rule_name in target_rule_names:
       if not self.project.get_rule(rule_name):
         raise KeyError('Target rule "%s" not found in project' % (rule_name))
 
-    # Build the rule graph
-    self.rule_graph = graph.RuleGraph(self.project)
+    # Calculate the sequence of rules to execute
+    rule_sequence = self.rule_graph.calculate_rule_sequence(target_rule_names)
+
+    # Execute all rules in order
+    # TODO(benvanik): make this execution multithreaded (see notes below)
+    any_failed = False
+    remaining_rules = deque(rule_sequence)
+    while len(remaining_rules):
+      rule = remaining_rules.popleft()
+      start_time = time.clock()
+      result = self.execute_rule(rule)
+      duration = time.clock() - start_time
+      if not result:
+        any_failed = True
+      if any_failed and self.stop_on_error:
+        break
+
+    return any_failed
+
+  def execute_rule(self, rule):
+    """
+    """
+    pass
+
+# TODO(benvanik): multiprocessing work
+# Requires basic checks for dependency of in-flight rules to ensure parallel
+# processing is possible.
+# Rule instances should be easily portable to worker threads (just metadata),
+# however synchronizing logging and things like aborting require work.
+#
+# run the list in order:
+# remaining_rules = deque(rule_sequence)
+# in_flight_rules = []
+# def pump():
+#   while len(in_flight_rules) < max_workers and len(remaining_rules):
+#     next_rule = remaining_rules[0]
+#     for in_flight_rule in in_flight_rules:
+#       if graph.has_dependency(next_rule.full_name, in_flight_rules.full_name):
+#         blocked!
+#         return
+#       else:
+#         runnable!
+#         remaining_rules.popleft()
+#         in_flight_rules.append(next_rule)
+#         kick off worker with rule
+#   if not len(in_flight_rules) and not len(remaining_rules):
+#     done!
+#
+# # TODO(benvanik): use multiprocessing.cpu_count() or command line args to
+# #                 pick the CPU count - right now, this will log a bunch of
+# #                 warnings if we run with too many processes on cygwin
+# mp_pool = multiprocessing.Pool(processes=worker_count)
+# mp_results = []
+# for rule in self.rule_sequence:
+#   # Queue the rule
+#   mp_results.append(mp_pool.apply_async(
+#       self._execute_rule, (rule)))
+# # Gather results
+# for result in mp_results:
+#   result.wait()
+# mp_pool.close()

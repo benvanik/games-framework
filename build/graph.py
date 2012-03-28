@@ -7,32 +7,6 @@ and tracked for dependencies. The graph can then be queried for various
 information such as build rule sets/etc.
 """
 
-"""
-Basic flow notes:
-# build graph
-g = nx.DiGraph()
-g.add_node('x')
-g.add_edge('x', 'y')
-# reverse
-r = g.reverse()
-# create run graph
-g1 = nx.DiGraph()
-for target in targets:
-  g1.add_path(nx.topological_sort(r, target))
-# reverse
-g2 = g1.reverse()
-# get the list of nodes in sorted order
-run_list = list(nx.topological_sort(g2))
-# run the list in order
-# parallel:
-#   keep a list of in progress nodes
-#   on new worker free:
-#     peek next item i
-#     for each node in progress p:
-#       if not nx.has_path(g, p, i):
-#         queue
-"""
-
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 

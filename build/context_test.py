@@ -19,20 +19,32 @@ class BuildContextTest(unittest2.TestCase):
   def testConstruction(self):
     project = Project()
     ctx = BuildContext(project)
-    self.assertIs(ctx.project, project)
-    self.assertEqual(len(ctx.target_rules), 0)
 
     project = Project(rules=[Rule('a')])
-    ctx = BuildContext(project, ':a')
-    self.assertEqual(len(ctx.target_rules), 1)
-    self.assertEqual(ctx.target_rules[0], ':a')
-    ctx = BuildContext(project, [':a'])
-    self.assertEqual(len(ctx.target_rules), 1)
-    self.assertEqual(ctx.target_rules[0], ':a')
+    ctx = BuildContext(project)
+
+  def testExecution(self):
+    project = Project(rules=[Rule('a')])
+
+    ctx = BuildContext(project)
     with self.assertRaises(NameError):
-      BuildContext(project, ['a'])
+      ctx.execute(['a'])
     with self.assertRaises(KeyError):
-      BuildContext(project, [':b'])
+      ctx.execute([':b'])
+
+    ctx = BuildContext(project)
+    self.assertTrue(ctx.execute([':a']))
+
+    # TODO(benvanik): test stop_on_error
+    # TODO(benvanik): test raise_on_error
+
+  def testCaching(self):
+    # TODO(benvanik): test caching and force arg
+    pass
+
+  def testWorkerCount(self):
+    # TODO(benvanik): test worker_count
+    pass
 
   def testBuild(self):
     project = Project(rules=[
@@ -40,4 +52,6 @@ class BuildContextTest(unittest2.TestCase):
         Rule('a2'),
         Rule('b', deps=[':a1', ':a2'],),
         Rule('c', deps=[':b'],),])
+    ctx = BuildContext(project)
+    ctx.execute([':c'])
     # TODO(benvanik): the rest of this
