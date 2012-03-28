@@ -8,9 +8,10 @@
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
+import unittest2
+
 from graph import *
 from project import *
-import unittest2
 
 
 class RuleGraphTest(unittest2.TestCase):

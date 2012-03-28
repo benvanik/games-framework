@@ -8,8 +8,9 @@
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
-from project import *
 import unittest2
+
+from project import *
 
 
 class RuleTest(unittest2.TestCase):
