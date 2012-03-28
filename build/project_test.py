@@ -33,9 +33,12 @@ class RuleTest(unittest2.TestCase):
     with self.assertRaises(NameError):
       Rule('a\t')
     with self.assertRaises(NameError):
+      Rule('a b')
+    with self.assertRaises(NameError):
       Rule(':a')
-    Rule('a')
-    Rule('a b')
+    rule = Rule('a')
+    self.assertEqual(rule.name, 'a')
+    self.assertEqual(rule.full_name, ':a')
     Rule('\u0CA_\u0CA')
 
   def testRuleSrcs(self):
@@ -47,7 +50,7 @@ class RuleTest(unittest2.TestCase):
     self.assertEqual(len(rule.srcs), 3)
     self.assertIsNot(rule.srcs, srcs)
     srcs[0] = 'x'
-    self.assertEquals(rule.srcs[0], 'a')
+    self.assertEqual(rule.srcs[0], 'a')
 
     srcs = 'a'
     rule = Rule('r', srcs=srcs)
@@ -81,7 +84,7 @@ class RuleTest(unittest2.TestCase):
     self.assertEqual(len(rule.deps), 3)
     self.assertIsNot(rule.deps, deps)
     deps[0] = 'x'
-    self.assertEquals(rule.deps[0], ':a')
+    self.assertEqual(rule.deps[0], ':a')
 
     deps = ':a'
     rule = Rule('r', deps=deps)

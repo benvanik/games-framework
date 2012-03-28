@@ -11,6 +11,7 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 import base64
 import pickle
+import re
 
 import build
 import util
@@ -63,7 +64,7 @@ class Project(object):
         raise NameError('A rule with the name "%s" is already defined' % (
             rule.name))
     for rule in rules:
-      self.rules[':%s' % (rule.name)] = rule
+      self.rules[rule.full_name] = rule
 
   def GetRule(self, rule_name):
     """Gets a rule by name.
@@ -107,6 +108,8 @@ class Rule(object):
   rules as well as all real files on the file system.
   """
 
+  _whitespace_re = re.compile('\s', re.M)
+
   def __init__(self, name, srcs=None, deps=None):
     """Initializes a rule.
 
@@ -122,11 +125,12 @@ class Rule(object):
     """
     if not name or not len(name):
       raise NameError('Invalid name')
-    if name.strip() != name:
+    if self._whitespace_re.search(name):
       raise NameError('Name contains leading or trailing whitespace')
     if name[0] == ':':
       raise NameError('Name cannot start with :')
     self.name = name
+    self.full_name = ':%s' % (name)
 
     # Note that all srcs/deps are copied in
     self.srcs = []
