@@ -3,7 +3,7 @@
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
-def ValidateNames(values, require_semicolon=False):
+def validate_names(values, require_semicolon=False):
   """Validates a list of rule names to ensure they are well-defined.
 
   Args:
@@ -25,7 +25,7 @@ def ValidateNames(values, require_semicolon=False):
       raise NameError('Names must be a rule (start with :): "%s"' % (value))
 
 
-def UnderscoreToPascalCase(value):
+def underscore_to_pascalcase(value):
   """Converts a string from underscore_case to PascalCase.
 
   Args:

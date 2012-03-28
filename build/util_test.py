@@ -16,92 +16,92 @@ class ValidateNamesTest(unittest2.TestCase):
   """Behavioral tests of the ValidateNames method."""
 
   def testEmpty(self):
-    util.ValidateNames(None)
-    util.ValidateNames([])
+    util.validate_names(None)
+    util.validate_names([])
 
   def testNames(self):
-    util.ValidateNames(['a'])
-    util.ValidateNames([':a'])
-    util.ValidateNames(['a', ':b'])
+    util.validate_names(['a'])
+    util.validate_names([':a'])
+    util.validate_names(['a', ':b'])
     with self.assertRaises(TypeError):
-      util.ValidateNames([None])
+      util.validate_names([None])
     with self.assertRaises(TypeError):
-      util.ValidateNames([''])
+      util.validate_names([''])
     with self.assertRaises(TypeError):
-      util.ValidateNames([{}])
+      util.validate_names([{}])
     with self.assertRaises(NameError):
-      util.ValidateNames([' a'])
+      util.validate_names([' a'])
     with self.assertRaises(NameError):
-      util.ValidateNames(['a '])
+      util.validate_names(['a '])
     with self.assertRaises(NameError):
-      util.ValidateNames([' a '])
+      util.validate_names([' a '])
     with self.assertRaises(NameError):
-      util.ValidateNames(['a', ' b'])
+      util.validate_names(['a', ' b'])
 
   def testRequireSemicolon(self):
-    util.ValidateNames([':a'], require_semicolon=True)
-    util.ValidateNames([':a', ':b'], require_semicolon=True)
+    util.validate_names([':a'], require_semicolon=True)
+    util.validate_names([':a', ':b'], require_semicolon=True)
     with self.assertRaises(NameError):
-      util.ValidateNames(['a'], require_semicolon=True)
+      util.validate_names(['a'], require_semicolon=True)
     with self.assertRaises(NameError):
-      util.ValidateNames([':a', 'b'], require_semicolon=True)
+      util.validate_names([':a', 'b'], require_semicolon=True)
 
 
-class UnderscoreToPascalCase(unittest2.TestCase):
-  """Behavioral tests of the UnderscoreToPascalCase method."""
+class UnderscoreToPascalCaseTest(unittest2.TestCase):
+  """Behavioral tests of the underscore_to_pascalcase method."""
 
   def testEmpty(self):
     self.assertEqual(
-        util.UnderscoreToPascalCase(None),
+        util.underscore_to_pascalcase(None),
         None)
     self.assertEqual(
-        util.UnderscoreToPascalCase(''),
+        util.underscore_to_pascalcase(''),
         '')
 
   def testUnderscores(self):
     self.assertEqual(
-        util.UnderscoreToPascalCase('ab'),
+        util.underscore_to_pascalcase('ab'),
         'Ab')
     self.assertEqual(
-        util.UnderscoreToPascalCase('aB'),
+        util.underscore_to_pascalcase('aB'),
         'Ab')
     self.assertEqual(
-        util.UnderscoreToPascalCase('AB'),
+        util.underscore_to_pascalcase('AB'),
         'Ab')
     self.assertEqual(
-        util.UnderscoreToPascalCase('a_b'),
+        util.underscore_to_pascalcase('a_b'),
         'AB')
     self.assertEqual(
-        util.UnderscoreToPascalCase('A_b'),
+        util.underscore_to_pascalcase('A_b'),
         'AB')
     self.assertEqual(
-        util.UnderscoreToPascalCase('aa_bb'),
+        util.underscore_to_pascalcase('aa_bb'),
         'AaBb')
     self.assertEqual(
-        util.UnderscoreToPascalCase('aa1_bb2'),
+        util.underscore_to_pascalcase('aa1_bb2'),
         'Aa1Bb2')
     self.assertEqual(
-        util.UnderscoreToPascalCase('1aa_2bb'),
+        util.underscore_to_pascalcase('1aa_2bb'),
         '1aa2bb')
 
   def testWhitespace(self):
     self.assertEqual(
-        util.UnderscoreToPascalCase(' '),
+        util.underscore_to_pascalcase(' '),
         ' ')
     self.assertEqual(
-        util.UnderscoreToPascalCase(' a'),
+        util.underscore_to_pascalcase(' a'),
         ' a')
     self.assertEqual(
-        util.UnderscoreToPascalCase('a '),
+        util.underscore_to_pascalcase('a '),
         'A ')
     self.assertEqual(
-        util.UnderscoreToPascalCase(' a '),
+        util.underscore_to_pascalcase(' a '),
         ' a ')
     self.assertEqual(
-        util.UnderscoreToPascalCase('a b'),
+        util.underscore_to_pascalcase('a b'),
         'A b')
     self.assertEqual(
-        util.UnderscoreToPascalCase('a  b'),
+        util.underscore_to_pascalcase('a  b'),
         'A  b')
 
 

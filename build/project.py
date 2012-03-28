@@ -37,9 +37,9 @@ class Project(object):
     self.name = project_name
     self.rules = {}
     if len(rules):
-      self.AddRules(rules)
+      self.add_rules(rules)
 
-  def AddRule(self, rule):
+  def add_rule(self, rule):
     """Adds a rule to the project.
 
     Args:
@@ -48,9 +48,9 @@ class Project(object):
     Raises:
       NameError: A rule with the given name already exists in the project.
     """
-    self.AddRules([rule])
+    self.add_rules([rule])
 
-  def AddRules(self, rules):
+  def add_rules(self, rules):
     """Adds a list of rules to the project.
 
     Args:
@@ -66,7 +66,7 @@ class Project(object):
     for rule in rules:
       self.rules[rule.full_name] = rule
 
-  def GetRule(self, rule_name):
+  def get_rule(self, rule_name):
     """Gets a rule by name.
 
     Args:
@@ -82,7 +82,7 @@ class Project(object):
       raise NameError('The rule name "%s" is not valid' % (rule_name))
     return self.rules.get(rule_name, None)
 
-  def GetRules(self):
+  def rules_list(self):
     """Gets a list of all rules in the project.
 
     Returns:
@@ -90,7 +90,7 @@ class Project(object):
     """
     return self.rules.values()
 
-  def IterRules(self):
+  def rules_iter(self):
     """Iterates over all rules in the project.
     """
     for rule_name in self.rules:
@@ -151,10 +151,10 @@ class Rule(object):
     elif deps != None:
       raise TypeError('Invalid deps type')
 
-    util.ValidateNames(self.srcs)
-    util.ValidateNames(self.deps, require_semicolon=True)
+    util.validate_names(self.srcs)
+    util.validate_names(self.deps, require_semicolon=True)
 
-  def ComputeCacheKey(self):
+  def compute_cache_key(self):
     """Calculates a unique key based on the rule type and its values.
     This key may change when code changes, but is a fairly reliable way to
     detect changes in rule values.
