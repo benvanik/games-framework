@@ -13,6 +13,7 @@ import base64
 import pickle
 
 import build
+import util
 
 
 class Project(object):
@@ -22,10 +23,20 @@ class Project(object):
   be in the state it was when first created.
   """
 
-  def __init__(self):
+  def __init__(self, project_name='Project', rules=[]):
     """Initializes an empty project.
+
+    Args:
+      project_name: A human-readable name for the project that will be used for
+          logging.
+
+    Raises:
+      NameError: The name given is not valid.
     """
+    self.name = project_name
     self.rules = {}
+    if len(rules):
+      self.AddRules(rules)
 
   def AddRule(self, rule):
     """Adds a rule to the project.
@@ -34,22 +45,40 @@ class Project(object):
       rule: A rule to add. Must have a unique name.
 
     Raises:
-      NameError: A rule with the given name already exists.
+      NameError: A rule with the given name already exists in the project.
     """
-    if self.rules.get(rule.name, None):
-      raise NameError('A rule with the name "%s" is already defined' % (
-          rule.name))
-    self.rules[rule.name] = rule
+    self.AddRules([rule])
+
+  def AddRules(self, rules):
+    """Adds a list of rules to the project.
+
+    Args:
+      rules: A list of rules to add. Each must have a unique name.
+
+    Raises:
+      NameError: A rule with the given name already exists in the project.
+    """
+    for rule in rules:
+      if self.rules.get(rule.name, None):
+        raise NameError('A rule with the name "%s" is already defined' % (
+            rule.name))
+    for rule in rules:
+      self.rules[':%s' % (rule.name)] = rule
 
   def GetRule(self, rule_name):
     """Gets a rule by name.
 
     Args:
-      rule_name: Name of the rule to find.
+      rule_name: Name of the rule to find. Must include leading semicolon.
 
     Returns:
       The rule with the given name or None if it was not found.
+
+    Raises:
+      NameError: The given name did not contain a leading semicolon.
     """
+    if not len(rule_name) or rule_name[0] != ':':
+      raise NameError('The rule name "%s" is not valid' % (rule_name))
     return self.rules.get(rule_name, None)
 
   def GetRules(self):
@@ -118,27 +147,8 @@ class Rule(object):
     elif deps != None:
       raise TypeError('Invalid deps type')
 
-    self._ValidateValues(self.srcs)
-    self._ValidateValues(self.deps, require_semicolon=True)
-
-  def _ValidateValues(self, values, require_semicolon=False):
-    """Validates a list of srcs/deps values ot ensure they are well-defined.
-
-    Args:
-      values: A list of values to validate.
-      require_semicolon: Whether to require a leading :
-
-    Raises:
-      NameError: A rule value is not valid.
-    """
-    for value in values:
-      if not isinstance(value, str) or not len(value):
-        raise TypeError('Value must by a string of non-zero length')
-      if len(value.strip()) != len(value):
-        raise NameError(
-            'Values cannot have leading/trailing whitespace: "%s"' % (value))
-      if require_semicolon and value[0] != ':':
-        raise NameError('Values must be a rule (start with :): "%s"' % (value))
+    util.ValidateNames(self.srcs)
+    util.ValidateNames(self.deps, require_semicolon=True)
 
   def ComputeCacheKey(self):
     """Calculates a unique key based on the rule type and its values.

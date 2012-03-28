@@ -147,23 +147,55 @@ class ProjectTest(unittest2.TestCase):
 
   def testEmptyProject(self):
     project = Project()
-    self.assertIsNone(project.GetRule('a'))
+    self.assertIsNone(project.GetRule(':a'))
     self.assertEqual(len(project.GetRules()), 0)
     self.assertEqual(len(list(project.IterRules())), 0)
+
+  def testProjectName(self):
+    project = Project()
+    self.assertNotEqual(len(project.name), 0)
+    project = Project(project_name='a')
+    self.assertEqual(project.name, 'a')
 
   def testAddRule(self):
     project = Project()
     rule_a = Rule('a')
     rule_b = Rule('b')
-    self.assertIsNone(project.GetRule('a'))
+    self.assertIsNone(project.GetRule(':a'))
     project.AddRule(rule_a)
-    self.assertEqual(project.GetRule('a'), rule_a)
+    self.assertEqual(project.GetRule(':a'), rule_a)
     self.assertEqual(len(project.GetRules()), 1)
     self.assertEqual(len(list(project.IterRules())), 1)
     self.assertEqual(project.GetRules()[0], rule_a)
     self.assertEqual(list(project.IterRules())[0], rule_a)
-    self.assertIsNone(project.GetRule('b'))
+    self.assertIsNone(project.GetRule(':b'))
     project.AddRule(rule_b)
-    self.assertEqual(project.GetRule('b'), rule_b)
+    self.assertEqual(project.GetRule(':b'), rule_b)
     self.assertEqual(len(project.GetRules()), 2)
     self.assertEqual(len(list(project.IterRules())), 2)
+
+  def testAddRules(self):
+    project = Project()
+    rule_a = Rule('a')
+    rule_b = Rule('b')
+    rules = [rule_a, rule_b]
+    self.assertIsNone(project.GetRule(':a'))
+    self.assertIsNone(project.GetRule(':b'))
+    self.assertEqual(len(project.GetRules()), 0)
+    project.AddRules(rules)
+    self.assertEqual(len(project.GetRules()), 2)
+    self.assertEqual(len(list(project.IterRules())), 2)
+    self.assertIsNot(project.GetRules(), rules)
+    self.assertEqual(project.GetRule(':a'), rule_a)
+    self.assertEqual(project.GetRule(':b'), rule_b)
+
+  def testGetRule(self):
+    project = Project()
+    rule = Rule('a')
+    project.AddRule(rule)
+
+    self.assertIs(project.GetRule(':a'), rule)
+    with self.assertRaises(NameError):
+      project.GetRule('a')
+
+    self.assertIsNone(project.GetRule(':x'))

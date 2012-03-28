@@ -3,6 +3,28 @@
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
+def ValidateNames(values, require_semicolon=False):
+  """Validates a list of rule names to ensure they are well-defined.
+
+  Args:
+    values: A list of values to validate.
+    require_semicolon: Whether to require a leading :
+
+  Raises:
+    NameError: A rule value is not valid.
+  """
+  if not values:
+    return
+  for value in values:
+    if not isinstance(value, str) or not len(value):
+      raise TypeError('Names must be a string of non-zero length')
+    if len(value.strip()) != len(value):
+      raise NameError(
+          'Names cannot have leading/trailing whitespace: "%s"' % (value))
+    if require_semicolon and value[0] != ':':
+      raise NameError('Names must be a rule (start with :): "%s"' % (value))
+
+
 def UnderscoreToPascalCase(value):
   """Converts a string from underscore_case to PascalCase.
 

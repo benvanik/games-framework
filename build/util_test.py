@@ -12,6 +12,41 @@ import unittest2
 import util
 
 
+class ValidateNamesTest(unittest2.TestCase):
+  """Behavioral tests of the ValidateNames method."""
+
+  def testEmpty(self):
+    util.ValidateNames(None)
+    util.ValidateNames([])
+
+  def testNames(self):
+    util.ValidateNames(['a'])
+    util.ValidateNames([':a'])
+    util.ValidateNames(['a', ':b'])
+    with self.assertRaises(TypeError):
+      util.ValidateNames([None])
+    with self.assertRaises(TypeError):
+      util.ValidateNames([''])
+    with self.assertRaises(TypeError):
+      util.ValidateNames([{}])
+    with self.assertRaises(NameError):
+      util.ValidateNames([' a'])
+    with self.assertRaises(NameError):
+      util.ValidateNames(['a '])
+    with self.assertRaises(NameError):
+      util.ValidateNames([' a '])
+    with self.assertRaises(NameError):
+      util.ValidateNames(['a', ' b'])
+
+  def testRequireSemicolon(self):
+    util.ValidateNames([':a'], require_semicolon=True)
+    util.ValidateNames([':a', ':b'], require_semicolon=True)
+    with self.assertRaises(NameError):
+      util.ValidateNames(['a'], require_semicolon=True)
+    with self.assertRaises(NameError):
+      util.ValidateNames([':a', 'b'], require_semicolon=True)
+
+
 class UnderscoreToPascalCase(unittest2.TestCase):
   """Behavioral tests of the UnderscoreToPascalCase method."""
 
