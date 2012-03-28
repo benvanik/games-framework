@@ -24,7 +24,7 @@ class Project(object):
   be in the state it was when first created.
   """
 
-  def __init__(self, project_name='Project', rules=[]):
+  def __init__(self, project_name='Project', rules=None):
     """Initializes an empty project.
 
     Args:
@@ -36,7 +36,7 @@ class Project(object):
     """
     self.name = project_name
     self.rules = {}
-    if len(rules):
+    if rules and len(rules):
       self.add_rules(rules)
 
   def add_rule(self, rule):

@@ -3,6 +3,17 @@
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
+def is_rule_name(value):
+  """Detects whether the given value is a rule name.
+
+  Returns:
+    True if the string is a valid rule name.
+  """
+  # NOTE: in the future this could be made to support modules/etc by looking
+  #     for any valid use of ':'
+  return isinstance(value, str) and len(value) and value[0] == ':'
+
+
 def validate_names(values, require_semicolon=False):
   """Validates a list of rule names to ensure they are well-defined.
 

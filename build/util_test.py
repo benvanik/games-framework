@@ -12,8 +12,29 @@ import unittest2
 import util
 
 
+class IsRuleNameTest(unittest2.TestCase):
+  """Behavioral tests of the is_rule_name method."""
+
+  def testEmpty(self):
+    self.assertFalse(util.is_rule_name(None))
+    self.assertFalse(util.is_rule_name(''))
+
+  def testTypes(self):
+    self.assertFalse(util.is_rule_name(4))
+    self.assertFalse(util.is_rule_name(['a']))
+    self.assertFalse(util.is_rule_name({'a': 1}))
+
+  def testNames(self):
+    self.assertTrue(util.is_rule_name(':a'))
+    self.assertTrue(util.is_rule_name(':ab'))
+
+    self.assertFalse(util.is_rule_name('a'))
+    self.assertFalse(util.is_rule_name('/a/b.c'))
+    self.assertFalse(util.is_rule_name('a b c'))
+
+
 class ValidateNamesTest(unittest2.TestCase):
-  """Behavioral tests of the ValidateNames method."""
+  """Behavioral tests of the validate_names method."""
 
   def testEmpty(self):
     util.validate_names(None)
