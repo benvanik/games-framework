@@ -57,5 +57,34 @@ class RuleGraphTest(unittest2.TestCase):
       graph.has_dependency(':x', ':x')
 
   def testCalculateRuleSequence(self):
-    # TODO(benvanik): sequence test
-    pass
+    graph = RuleGraph(self.project)
+
+    with self.assertRaises(KeyError):
+      graph.calculate_rule_sequence([':x'])
+
+    seq = graph.calculate_rule_sequence([':a1'])
+    self.assertEqual(len(seq), 1)
+    self.assertEqual(seq[0].full_name, ':a1')
+
+    seq = graph.calculate_rule_sequence([':b'])
+    self.assertEqual(len(seq), 3)
+    self.assertTrue((seq[0].full_name == ':a1' and
+                     seq[1].full_name == ':a2') or
+                    (seq[0].full_name == ':a2' and
+                     seq[1].full_name == ':a1'))
+    self.assertEqual(seq[2].full_name, ':b')
+
+    seq = graph.calculate_rule_sequence([':a1', ':b'])
+    self.assertEqual(len(seq), 3)
+    self.assertTrue((seq[0].full_name == ':a1' and
+                     seq[1].full_name == ':a2') or
+                    (seq[0].full_name == ':a2' and
+                     seq[1].full_name == ':a1'))
+    self.assertEqual(seq[2].full_name, ':b')
+
+    seq = graph.calculate_rule_sequence([':a1', ':a3'])
+    self.assertEqual(len(seq), 2)
+    self.assertTrue((seq[0].full_name == ':a1' and
+                     seq[1].full_name == ':a3') or
+                    (seq[0].full_name == ':a3' and
+                     seq[1].full_name == ':a1'))

@@ -81,7 +81,7 @@ class RuleGraph(object):
 
     # Add all rules
     for rule in self.project.rules_iter():
-      rule_node = RuleNode(rule)
+      rule_node = _RuleNode(rule)
       if self.rule_nodes.has_key(rule.full_name):
         raise KeyError('Rule "%s" present multiple times' % (rule.full_name))
       self.rule_nodes[rule.full_name] = rule_node
@@ -126,42 +126,59 @@ class RuleGraph(object):
       raise KeyError('Rule "%s" not found' % (predecessor_rule_name))
     return nx.has_path(self.graph, predecessor_rule_node, rule_node)
 
-  def calculate_rule_sequence(self, target_rule_names=None):
+  def calculate_rule_sequence(self, target_rule_names):
+    """Calculates an ordered sequence of rules terminating with the given
+    target rules.
+
+    By passing multiple target names it's possible to build a combined sequence
+    that ensures all the given targets are included with no duplicate
+    dependencies.
+
+    Args:
+      target_rule_names: A list of target rule names to include in the
+          sequence.
+
+    Returns:
+      An ordered list of Rule instances including all of the given target rules
+      and their dependencies.
+
+    Raises:
+      KeyError: One of the given rules was not found.
     """
-    """
-    # TODO(benvanik): sequence
-    # create run graph
-    # g1 = nx.DiGraph()
-    # for target in targets:
-    #   g1.add_path(nx.topological_sort(self._reverse_graph, target))
-    # reverse
-    # g2 = g1.reverse()
-    # get the list of nodes in sorted order
-    # run_list = list(nx.topological_sort(g2))
+    sequence_graph = nx.DiGraph()
+
+    # Add all paths for targets
+    # Paths are added in reverse (from target to dependencies)
+    for rule_name in target_rule_names:
+      rule_node = self.rule_nodes.get(rule_name, None)
+      if not rule_node:
+        raise KeyError('Target rule "%s" not found' % (rule_name))
+      path = list(nx.topological_sort(self._reverse_graph, [rule_node]))
+      if len(path) == 1:
+        sequence_graph.add_node(path[0])
+      else:
+        sequence_graph.add_path(path)
+
+    # Reverse the graph so that it's dependencies -> targets
+    reversed_sequence_graph = sequence_graph.reverse()
+
+    # Get the list of nodes in sorted order
+    rule_sequence = []
+    for rule_node in nx.topological_sort(reversed_sequence_graph):
+      rule_sequence.append(rule_node.rule)
+    return rule_sequence
 
 
-class GraphNode(object):
-  """Base node type for the rule graph.
-  """
+class _RuleNode(object):
+  """A node type that references a rule in the project."""
 
-  def __init__(self, *args, **kwargs):
-    """Initializes a node.
-    """
-    super(GraphNode, self).__init__()
-
-
-class RuleNode(GraphNode):
-  """A node type that references a rule in the project.
-  """
-
-  def __init__(self, rule, *args, **kwargs):
+  def __init__(self, rule):
     """Initializes a rule node.
 
     Args:
       rule: The rule this node describes.
     """
-    super(RuleNode, self).__init__(*args, **kwargs)
     self.rule = rule
 
   def __repr__(self):
-    return ':' + self.rule.name
+    return self.rule.full_name
