@@ -14,26 +14,36 @@ from context import *
 from project import *
 
 
+class BuildEnvironmentTest(unittest2.TestCase):
+  """Behavioral tests of the BuildEnvironment type."""
+
+  def testConstruction(self):
+    build_env = BuildEnvironment()
+
 class BuildContextTest(unittest2.TestCase):
   """Behavioral tests of the BuildContext type."""
 
+  def setUp(self):
+    super(BuildContextTest, self).setUp()
+    self.build_env = BuildEnvironment()
+
   def testConstruction(self):
     project = Project()
-    ctx = BuildContext(project)
+    ctx = BuildContext(self.build_env, project)
 
     project = Project(rules=[Rule('a')])
-    ctx = BuildContext(project)
+    ctx = BuildContext(self.build_env, project)
 
   def testExecution(self):
     project = Project(rules=[Rule('a')])
 
-    ctx = BuildContext(project)
+    ctx = BuildContext(self.build_env, project)
     with self.assertRaises(NameError):
       ctx.execute(['a'])
     with self.assertRaises(KeyError):
       ctx.execute([':b'])
 
-    ctx = BuildContext(project)
+    ctx = BuildContext(self.build_env, project)
     self.assertTrue(ctx.execute([':a']))
 
     # TODO(benvanik): test stop_on_error
@@ -53,6 +63,17 @@ class BuildContextTest(unittest2.TestCase):
         Rule('a2'),
         Rule('b', deps=[':a1', ':a2'],),
         Rule('c', deps=[':b'],),])
-    ctx = BuildContext(project)
+    ctx = BuildContext(self.build_env, project)
     ctx.execute([':c'])
     # TODO(benvanik): the rest of this
+
+
+class RuleContextTest(unittest2.TestCase):
+  """Behavioral tests of the RuleContext type."""
+
+  def setUp(self):
+    super(RuleContextTest, self).setUp()
+    self.build_env = BuildEnvironment()
+
+  def test(self):
+    pass

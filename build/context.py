@@ -19,6 +19,37 @@ import time
 import util
 
 
+class Status:
+  """Enumeration describing the status of a context."""
+  WAITING = 0
+  RUNNING = 1
+  SUCCEEDED = 2
+  FAILED = 3
+
+
+class BuildEnvironment(object):
+  """Build environment settings, containing access to all globals.
+  Build environments are a combination of flags passed to the build system
+  (from configuration files or the command line), system environment variables,
+  and platform options.
+
+  Rule and task implementations should avoid accessing the kind of information
+  contained here from anywhere else (such as the sys module), as this ensures
+  a consistent environment.
+
+  The build environment should be kept constant throughout a build, and should
+  be treated as read-only while in use by a context.
+  """
+
+  def __init__(self):
+    """Initializes a build environment.
+    """
+    # TODO(benvanik): cwd for path resolution
+    # TODO(benvanik): environment variables
+    # TODO(benvanik): user-defined options dict
+    pass
+
+
 class BuildContext(object):
   """A build context for a given project and set of target rules.
   Projects are built by specifying rules that should be considered the
@@ -32,18 +63,20 @@ class BuildContext(object):
   build create a new context with the same parameters.
   """
 
-  def __init__(self, project,
+  def __init__(self, build_env, project,
                worker_count=2, force=False,
                stop_on_error=False, raise_on_error=False):
     """Initializes a build context.
 
     Args:
+      build_env: Current build environment.
       project: Project to use for building.
       worker_count: Number of worker threads to use when building.
       force: True to force execution of tasks even if they have not changed.
       stop_on_error: True to stop executing tasks as soon as an error occurs.
       raise_on_error: True to rethrow exceptions to ease debugging.
     """
+    self.build_env = build_env
     self.project = project
 
     if not worker_count:
@@ -141,3 +174,57 @@ class BuildContext(object):
 # for result in mp_results:
 #   result.wait()
 # mp_pool.close()
+
+
+class RuleContext(object):
+  """A runtime context for an individual rule.
+  """
+
+  def __init__(self, build_context, rule, *args, **kwargs):
+    """
+    Args:
+      build_context: Active build context.
+      rule: Rule this context wraps.
+    """
+    self.build_context = build_context
+    self.rule = rule
+
+    self.status = Status.WAITING
+    self.start_time = None
+    self.end_time = None
+
+    # TODO(benvanik): logger
+    self.logger = None
+
+    self.tasks = []
+
+    self.all_input_files = self._gather_input_files()
+    #self.file_delta = FileDelta()
+    #self.all_output_files = []
+
+  def _gather_input_files(self):
+    pass
+
+
+class Task(object):
+  """
+  """
+
+  def __init__(self, rule_context):
+    pass
+
+
+class FileDelta(object):
+  """
+  TODO(benvanik): move to another module and setup to use cache
+  """
+
+  def __init__(self, source_paths=None):
+    """
+    Args:
+      source_paths
+    """
+    self.all_files = []
+    self.added_files = []
+    self.removed_files = []
+    self.changed_files = []
