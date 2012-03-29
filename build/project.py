@@ -110,7 +110,7 @@ class Rule(object):
 
   _whitespace_re = re.compile('\s', re.M)
 
-  def __init__(self, name, srcs=None, deps=None):
+  def __init__(self, name, srcs=None, deps=None, *args, **kwargs):
     """Initializes a rule.
 
     Args:
