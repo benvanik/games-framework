@@ -145,6 +145,14 @@ class RuleTest(unittest2.TestCase):
     rule2 = Rule('r1', srcs='b', deps=':b')
     self.assertNotEqual(rule1.compute_cache_key(), rule2.compute_cache_key())
 
+  def testRuleFilter(self):
+    rule = Rule('a')
+    self.assertIsNone(rule.src_filter)
+    rule = Rule('a', src_filter='')
+    self.assertIsNone(rule.src_filter)
+    rule = Rule('a', src_filter='*.js')
+    self.assertEqual(rule.src_filter, '*.js')
+
 
 class ModuleTest(unittest2.TestCase):
   """Behavioral tests of Module rule handling."""

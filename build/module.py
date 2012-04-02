@@ -111,7 +111,8 @@ class Rule(object):
 
   _whitespace_re = re.compile('\s', re.M)
 
-  def __init__(self, name, srcs=None, deps=None, *args, **kwargs):
+  def __init__(self, name, srcs=None, deps=None, src_filter=None,
+               *args, **kwargs):
     """Initializes a rule.
 
     Args:
@@ -119,6 +120,8 @@ class Rule(object):
           or trailing whitespace.
       srcs: A list of source strings or a single source string.
       deps: A list of depdendency strings or a single dependency string.
+      src_filter: An inclusionary file name filter for all non-rule paths. If
+          defined only srcs that match this filter will be included.
 
     Raises:
       NameError: The given name is invalid (None/0-length).
@@ -157,6 +160,10 @@ class Rule(object):
 
     util.validate_names(self.srcs)
     util.validate_names(self.deps, require_semicolon=True)
+
+    self.src_filter = None
+    if src_filter and len(src_filter):
+      self.src_filter = src_filter
 
   def set_parent_module(self, module):
     """Sets the parent module of a rule.

@@ -21,6 +21,7 @@ class BuildEnvironmentTest(unittest2.TestCase):
   def testConstruction(self):
     build_env = BuildEnvironment()
 
+
 class BuildContextTest(unittest2.TestCase):
   """Behavioral tests of the BuildContext type."""
 
