@@ -197,3 +197,17 @@ class Rule(object):
     unique_str = build.VERSION_STR + pickled_str
     # TODO(benvanik): hash instead of return full string?
     return unique_str
+
+
+class ModuleLoader(object):
+  """A utility type that handles loading modules from files.
+  A loader should only be used to load a single module and then be discarded.
+  """
+
+  def __init__(self, path):
+    """Initializes a loader.
+
+    Args:
+      path: File-system path to the module.
+    """
+    self.path = path

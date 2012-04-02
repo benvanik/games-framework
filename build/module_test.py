@@ -11,6 +11,7 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 import unittest2
 
 from module import *
+from test import FixtureTestCase
 
 
 class RuleTest(unittest2.TestCase):
@@ -255,6 +256,13 @@ class ModuleTest(unittest2.TestCase):
 
     with self.assertRaises(ValueError):
       rule_a.set_parent_module(module)
+
+
+class ModuleLoaderTest(FixtureTestCase):
+  fixture = 'simple'
+
+  def testLoader(self):
+    loader = ModuleLoader(self.temp_path)
 
 
 if __name__ == '__main__':

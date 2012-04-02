@@ -15,16 +15,8 @@ import unittest2
 
 class FixtureTestCase(unittest2.TestCase):
   """Test case supporting static fixture/output support.
+  Set self.fixture to a folder name from the test/fixtures/ path.
   """
-
-  def __init__(self, fixture=None):
-    """Initalize fixture test case.
-
-    Args:
-      fixture: An optional fixture name to setup from the test/fixtures/ path.
-    """
-    super(FixtureTestCase, self).__init()
-    self.fixture = fixture
 
   def _find_build_path(self):
     """Scans up the current path for the build/ folder.
@@ -34,13 +26,15 @@ class FixtureTestCase(unittest2.TestCase):
     """
     path = sys.path[0]
     while True:
-      if os.path.exists(os.path.join(path, '..' 'build'):
-        return path
+      if os.path.exists(os.path.join(path, 'build')):
+        return os.path.join(path, 'build')
       path = os.path.dirname(path)
       if not len(path):
         return None
 
   def setUp(self):
+    super(FixtureTestCase, self).setUp()
+
     # Root output path
     self.temp_path = tempfile.mkdtemp()
     self.addCleanup(shutil.rmtree, self.temp_path)
@@ -51,4 +45,7 @@ class FixtureTestCase(unittest2.TestCase):
       if not build_path:
         raise Error('Unable to find build path')
       fixture_path = os.path.join(build_path, 'test', 'fixtures', self.fixture)
-      shutil.copytree(fixture_path, self.temp_path)
+      target_path = self.temp_path + '/' + self.fixture
+      shutil.copytree(fixture_path, target_path)
+      # BUG: required on cygwin due to copytree messing up file permissions
+      os.chmod(target_path, 0777)
