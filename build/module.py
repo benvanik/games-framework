@@ -30,15 +30,15 @@ class Module(object):
   cycles/lazy evaluation/etc.
   """
 
-  def __init__(self, name, rules=None):
+  def __init__(self, path, rules=None):
     """Initializes a module.
 
     Args:
-      name: A name for the module - should be the path on disk or some other
+      path: A path for the module - should be the path on disk or some other
           string that is used for referencing.
       rules: A list of rules to add to the module.
     """
-    self.name = name
+    self.path = path
     self.rules = {}
     if rules and len(rules):
       self.add_rules(rules)

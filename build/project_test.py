@@ -107,9 +107,37 @@ class ProjectTest(unittest2.TestCase):
     module_b = Module('mb', rules=[rule_b])
     project = Project(modules=[module_a, module_b])
 
-    self.assertIs(project.resolve_rule(module_a, ':a'), rule_a)
-    self.assertIs(project.resolve_rule(module_b, ':b'), rule_b)
-    self.assertIs(project.resolve_rule(module_a, 'ma:a'), rule_a)
-    self.assertIs(project.resolve_rule(module_b, 'mb:b'), rule_b)
-    self.assertIs(project.resolve_rule(module_a, 'mb:b'), rule_b)
-    self.assertIs(project.resolve_rule(module_b, 'ma:a'), rule_a)
+    with self.assertRaises(NameError):
+      project.resolve_rule('a')
+    with self.assertRaises(NameError):
+      project.resolve_rule('a', requesting_module=module_a)
+
+    self.assertIs(project.resolve_rule(':a', requesting_module=module_a),
+                  rule_a)
+    self.assertIs(project.resolve_rule(':b', requesting_module=module_b),
+                  rule_b)
+    self.assertIs(project.resolve_rule('ma:a', requesting_module=module_a),
+                  rule_a)
+    self.assertIs(project.resolve_rule('mb:b', requesting_module=module_b),
+                  rule_b)
+    self.assertIs(project.resolve_rule('mb:b', requesting_module=module_a),
+                  rule_b)
+    self.assertIs(project.resolve_rule('ma:a', requesting_module=module_b),
+                  rule_a)
+
+  def testModuleResolver(self):
+    rule_a = Rule('a')
+    rule_b = Rule('b')
+    module_a = Module('ma', rules=[rule_a])
+    module_b = Module('mb', rules=[rule_b])
+    module_resolver = StaticModuleResolver([module_a, module_b])
+    project = Project(module_resolver=module_resolver)
+
+    self.assertEqual(len(project.module_list()), 0)
+    self.assertIs(project.resolve_rule('ma:a'), rule_a)
+    self.assertEqual(len(project.module_list()), 1)
+    self.assertIs(project.resolve_rule('mb:b'), rule_b)
+    self.assertEqual(len(project.module_list()), 2)
+
+    with self.assertRaises(IOError):
+      project.resolve_rule('mx:x')

@@ -155,9 +155,9 @@ class ModuleTest(unittest2.TestCase):
     self.assertEqual(len(module.rule_list()), 0)
     self.assertEqual(len(list(module.rule_iter())), 0)
 
-  def testModuleName(self):
+  def testModulePath(self):
     module = Module('a')
-    self.assertEqual(module.name, 'a')
+    self.assertEqual(module.path, 'a')
 
   def testModuleRuleInit(self):
     rule_a = Rule('a')
