@@ -110,7 +110,7 @@ class BuildContext(object):
     target_rule_names = list(target_rule_names)
     util.validate_names(target_rule_names, require_semicolon=True)
     for rule_name in target_rule_names:
-      if not self.project.get_rule(rule_name):
+      if not self.project.resolve_rule(rule_name):
         raise KeyError('Target rule "%s" not found in project' % (rule_name))
 
     # Calculate the sequence of rules to execute
