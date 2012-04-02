@@ -10,6 +10,7 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
 import base64
+import os
 import pickle
 import re
 import string
@@ -125,11 +126,11 @@ class Project(object):
       module = self.modules.get(module_path, None)
       if not module:
         # Module not yet loaded - need to grab it
-        abs_module_path = module_path
+        requesting_path = None
         if requesting_module:
-          # TODO(benvanik): expand path/etc?
-          pass
-        module = self.module_resolver.load_module(abs_module_path)
+          requesting_path = os.path.dirname(requesting_module.path)
+        module = self.module_resolver.load_module(
+            module_path, working_path=requesting_path)
         if module:
           self.add_module(module)
         else:
@@ -144,11 +145,13 @@ class ModuleResolver(object):
   module that has not yet been loaded.
   """
 
-  def load_module(self, path):
+  def load_module(self, path, working_path=None):
     """Loads a module from the given path.
 
     Args:
       path: Absolute path of the module.
+      working_path: Path relative paths should be pased off of. If not provided
+          then relative paths may fail.
 
     Returns:
       A Module representing the given path or None if it could not be found.
@@ -174,5 +177,9 @@ class StaticModuleResolver(ModuleResolver):
     for module in modules:
       self.modules[module.path] = module
 
-  def load_module(self, path):
-    return self.modules.get(path, None)
+  def load_module(self, path, working_path=None):
+    real_path = path
+    if working_path and len(working_path):
+      real_path = os.path.join(working_path, path)
+    real_path = os.path.normpath(real_path)
+    return self.modules.get(real_path, None)

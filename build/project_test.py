@@ -146,6 +146,21 @@ class ProjectTest(unittest2.TestCase):
     with self.assertRaises(IOError):
       project.resolve_rule('mx:x')
 
+  def testRelativeModuleResolver(self):
+    rule_a = Rule('a')
+    rule_b = Rule('b')
+    module_a = Module('ma', rules=[rule_a])
+    module_b = Module('b/mb', rules=[rule_b])
+    module_resolver = StaticModuleResolver([module_a, module_b])
+    project = Project(module_resolver=module_resolver)
+
+    self.assertEqual(len(project.module_list()), 0)
+    with self.assertRaises(IOError):
+        project.resolve_rule('ma:a', requesting_module=module_b)
+    self.assertIs(project.resolve_rule('../ma:a',
+                                       requesting_module=module_b), rule_a)
+    self.assertIs(project.resolve_rule('b/mb:b',
+                                       requesting_module=module_a), rule_b)
 
 if __name__ == '__main__':
   unittest2.main()
