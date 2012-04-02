@@ -3,7 +3,10 @@
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
-def is_rule_name(value):
+import string
+
+
+def is_rule_path(value):
   """Detects whether the given value is a rule name.
 
   Returns:
@@ -11,7 +14,7 @@ def is_rule_name(value):
   """
   # NOTE: in the future this could be made to support modules/etc by looking
   #     for any valid use of ':'
-  return isinstance(value, str) and len(value) and value[0] == ':'
+  return isinstance(value, str) and len(value) and string.find(value, ':') >= 0
 
 
 def validate_names(values, require_semicolon=False):
@@ -19,7 +22,7 @@ def validate_names(values, require_semicolon=False):
 
   Args:
     values: A list of values to validate.
-    require_semicolon: Whether to require a leading :
+    require_semicolon: Whether to require a :
 
   Raises:
     NameError: A rule value is not valid.
@@ -32,8 +35,8 @@ def validate_names(values, require_semicolon=False):
     if len(value.strip()) != len(value):
       raise NameError(
           'Names cannot have leading/trailing whitespace: "%s"' % (value))
-    if require_semicolon and value[0] != ':':
-      raise NameError('Names must be a rule (start with :): "%s"' % (value))
+    if require_semicolon and string.find(value, ':') == -1:
+      raise NameError('Names must be a rule (contain a :): "%s"' % (value))
 
 
 def underscore_to_pascalcase(value):

@@ -13,25 +13,27 @@ import unittest2
 import util
 
 
-class IsRuleNameTest(unittest2.TestCase):
-  """Behavioral tests of the is_rule_name method."""
+class IsRulePathTest(unittest2.TestCase):
+  """Behavioral tests of the is_rule_path method."""
 
   def testEmpty(self):
-    self.assertFalse(util.is_rule_name(None))
-    self.assertFalse(util.is_rule_name(''))
+    self.assertFalse(util.is_rule_path(None))
+    self.assertFalse(util.is_rule_path(''))
 
   def testTypes(self):
-    self.assertFalse(util.is_rule_name(4))
-    self.assertFalse(util.is_rule_name(['a']))
-    self.assertFalse(util.is_rule_name({'a': 1}))
+    self.assertFalse(util.is_rule_path(4))
+    self.assertFalse(util.is_rule_path(['a']))
+    self.assertFalse(util.is_rule_path({'a': 1}))
 
   def testNames(self):
-    self.assertTrue(util.is_rule_name(':a'))
-    self.assertTrue(util.is_rule_name(':ab'))
+    self.assertTrue(util.is_rule_path(':a'))
+    self.assertTrue(util.is_rule_path(':ab'))
+    self.assertTrue(util.is_rule_path('xx:ab'))
+    self.assertTrue(util.is_rule_path('/a/b:ab'))
 
-    self.assertFalse(util.is_rule_name('a'))
-    self.assertFalse(util.is_rule_name('/a/b.c'))
-    self.assertFalse(util.is_rule_name('a b c'))
+    self.assertFalse(util.is_rule_path('a'))
+    self.assertFalse(util.is_rule_path('/a/b.c'))
+    self.assertFalse(util.is_rule_path('a b c'))
 
 
 class ValidateNamesTest(unittest2.TestCase):
@@ -44,6 +46,10 @@ class ValidateNamesTest(unittest2.TestCase):
   def testNames(self):
     util.validate_names(['a'])
     util.validate_names([':a'])
+    util.validate_names(['xx:a'])
+    util.validate_names(['/a/b:a'])
+    util.validate_names(['/a/b.c:a'])
+    util.validate_names(['/a/b.c/:a'])
     util.validate_names(['a', ':b'])
     with self.assertRaises(TypeError):
       util.validate_names([None])
