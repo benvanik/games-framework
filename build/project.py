@@ -111,14 +111,15 @@ class Project(object):
 
     Raises:
       NameError: The given rule name was not valid.
+      KeyError: The given rule was not found.
     """
     if string.find(rule_path, ':') == -1:
       raise NameError('The rule path "%s" is missing a semicolon' % (rule_path))
     (module_path, rule_name) = string.rsplit(rule_path, ':', 1)
     if not len(rule_name):
-      raise NameError('No rule name given in "%s"' % (rule_path))
+      raise KeyError('No rule name given in "%s"' % (rule_path))
     if not len(module_path) and not requesting_module:
-      raise NameError('Local rule "%s" given when no resolver defined' % (
+      raise KeyError('Local rule "%s" given when no resolver defined' % (
           rule_path))
 
     module = requesting_module

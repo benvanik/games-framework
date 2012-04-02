@@ -29,55 +29,9 @@ class RuleGraph(object):
       project: Project to use for resolution.
     """
     self.project = project
-
-    # A map of rule names to nodes, if they exist
+    self.graph = nx.DiGraph()
+    # A map of rule paths to nodes, if they exist
     self.rule_nodes = {}
-
-    # Build the graph - may throw errors if the graph is invalid
-    self.graph = self._construct_graph()
-
-    # Stash a reversed graph for faster sequencing
-    self._reverse_graph = self.graph.reverse()
-
-  def _construct_graph(self):
-    """Constructs a graph representing all rules in the project.
-    If any errors are encountered in the graph construction, such as missing
-    rules or cycles, exceptions will be raised.
-
-    Returns:
-      A directed graph containing all rules.
-
-    Raises:
-      KeyError: A rule was not found or was present multiple times.
-      ValueError: The graph cannot be constructed due to a cycle.
-    """
-    graph = nx.DiGraph()
-
-    # Add all rules
-    for rule in self.project.rule_iter():
-      rule_node = _RuleNode(rule)
-      if self.rule_nodes.has_key(rule.path):
-        raise KeyError('Rule "%s" present multiple times' % (rule.path))
-      self.rule_nodes[rule.path] = rule_node
-      graph.add_node(rule_node)
-
-    # Add edges for each rule
-    for rule in self.project.rule_iter():
-      rule_node = self.rule_nodes[rule.path]
-      for dep in itertools.chain(rule.srcs, rule.deps):
-        if util.is_rule_path(dep):
-          dep_node = self.rule_nodes.get(dep, None)
-          if not dep_node:
-            raise KeyError('Rule "%s" (required by "%s") not found' % (
-                dep, rule.path))
-          graph.add_edge(dep_node, rule_node)
-
-    # Ensure the graph is a DAG (no cycles)
-    if not nx.is_directed_acyclic_graph(graph):
-      # TODO(benvanik): use nx.simple_cycles() to print the cycles
-      raise ValueError('Cycle detected in the rule graph')
-
-    return graph
 
   def has_dependency(self, rule_path, predecessor_rule_path):
     """Checks to see if the given rule has a dependency on another rule.
@@ -100,6 +54,86 @@ class RuleGraph(object):
       raise KeyError('Rule "%s" not found' % (predecessor_rule_path))
     return nx.has_path(self.graph, predecessor_rule_node, rule_node)
 
+  def _ensure_rules_present(self, rule_paths, requesting_module=None):
+    """Ensures that the given list of rules are present in the graph, and if not
+    recursively loads them.
+
+    Args:
+      rule_paths: A list of target rule paths to add to the graph.
+      requesting_module: Module that is requesting the given rules or None if
+          all rule paths are absolute.
+    """
+    # Add all of the rules listed
+    rules = []
+    for rule_path in rule_paths:
+      # Attempt to resolve the rule
+      rule = self.project.resolve_rule(rule_path,
+                                       requesting_module=requesting_module)
+      if not rule:
+        raise KeyError('Rule "%s" unable to be resolved' % (rule_path))
+      rules.append(rule)
+
+      # If already present, ignore (no need to recurse)
+      if self.rule_nodes.has_key(rule.path):
+        continue
+
+      # Wrap with our node and add it to the graph
+      rule_node = _RuleNode(rule)
+      if self.rule_nodes.has_key(rule.path):
+        raise KeyError('Rule "%s" present multiple times' % (rule.path))
+      self.rule_nodes[rule.path] = rule_node
+      self.graph.add_node(rule_node)
+
+      # Recursively resolve all dependent rules
+      dependent_rule_paths = []
+      for dep in itertools.chain(rule.srcs, rule.deps):
+        if util.is_rule_path(dep):
+          dependent_rule_paths.append(dep)
+      if len(dependent_rule_paths):
+        self._ensure_rules_present(dependent_rule_paths,
+                                   requesting_module=rule.parent_module)
+
+    # Add edges for all of the requested rules (at this point, all rules should
+    # be added to the graph)
+    for rule in rules:
+      rule_node = self.rule_nodes[rule.path]
+      for dep in itertools.chain(rule_node.rule.srcs, rule_node.rule.deps):
+        if util.is_rule_path(dep):
+          dep_rule = self.project.resolve_rule(dep,
+              requesting_module=rule.parent_module)
+          dep_node = self.rule_nodes.get(dep_rule.path, None)
+          if not dep_node:
+            raise KeyError('Rule "%s" (required by "%s") not found' % (
+                dep, rule.path))
+          self.graph.add_edge(dep_node, rule_node)
+
+    # Ensure the graph is a DAG (no cycles)
+    if not nx.is_directed_acyclic_graph(self.graph):
+      # TODO(benvanik): use nx.simple_cycles() to print the cycles
+      raise ValueError('Cycle detected in the rule graph')
+
+  def add_rules_from_module(self, module):
+    """Adds all rules (and their dependencies) from the given module.
+
+    Args:
+      module: A module with rules to add.
+    """
+    rule_paths = []
+    for rule in module.rule_iter():
+      rule_paths.append(rule.path)
+    self._ensure_rules_present(rule_paths, requesting_module=module)
+
+  def has_rule(self, rule_path):
+    """Whether the graph has the given rule loaded.
+
+    Args:
+      rule_path: Full rule path.
+
+    Returns:
+      True if the given rule has been resolved and added to the graph.
+    """
+    return self.rule_nodes.get(rule_path, None) != None
+
   def calculate_rule_sequence(self, target_rule_paths):
     """Calculates an ordered sequence of rules terminating with the given
     target rules.
@@ -109,7 +143,7 @@ class RuleGraph(object):
     dependencies.
 
     Args:
-      target_rule_paths: A list of target rule names to include in the
+      target_rule_paths: A list of target rule paths to include in the
           sequence.
 
     Returns:
@@ -119,15 +153,23 @@ class RuleGraph(object):
     Raises:
       KeyError: One of the given rules was not found.
     """
-    sequence_graph = nx.DiGraph()
+    # Ensure the graph has everything required - if things go south this will
+    # raise errors
+    self._ensure_rules_present(target_rule_paths)
+
+    # Reversed graph to make sorting possible
+    # If this gets expensive (or many sequences are calculated) it could be
+    # cached
+    reverse_graph = self.graph.reverse()
 
     # Add all paths for targets
     # Paths are added in reverse (from target to dependencies)
+    sequence_graph = nx.DiGraph()
     for rule_path in target_rule_paths:
       rule_node = self.rule_nodes.get(rule_path, None)
       if not rule_node:
         raise KeyError('Target rule "%s" not found' % (rule_path))
-      path = list(nx.topological_sort(self._reverse_graph, [rule_node]))
+      path = list(nx.topological_sort(reverse_graph, [rule_node]))
       if len(path) == 1:
         sequence_graph.add_node(path[0])
       else:
@@ -141,7 +183,6 @@ class RuleGraph(object):
     for rule_node in nx.topological_sort(reversed_sequence_graph):
       rule_sequence.append(rule_node.rule)
     return rule_sequence
-
 
 class _RuleNode(object):
   """A node type that references a rule in the project."""
