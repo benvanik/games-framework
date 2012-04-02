@@ -13,3 +13,4 @@ omit =
     build/test/__init__.py
     tools/test-build.py
     *_test.py
+    /usr/**
