@@ -54,7 +54,7 @@ class RuleGraph(object):
     graph = nx.DiGraph()
 
     # Add all rules
-    for rule in self.project.rules_iter():
+    for rule in self.project.rule_iter():
       rule_node = _RuleNode(rule)
       if self.rule_nodes.has_key(rule.full_name):
         raise KeyError('Rule "%s" present multiple times' % (rule.full_name))
@@ -62,7 +62,7 @@ class RuleGraph(object):
       graph.add_node(rule_node)
 
     # Add edges for each rule
-    for rule in self.project.rules_iter():
+    for rule in self.project.rule_iter():
       rule_node = self.rule_nodes[rule.full_name]
       for dep in itertools.chain(rule.srcs, rule.deps):
         if util.is_rule_name(dep):
