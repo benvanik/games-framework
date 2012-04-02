@@ -36,6 +36,7 @@ tmtags
 # ==============================================================================
 
 *.py[co]
+.coverage
 
 # ==============================================================================
 # Logs and dumps
@@ -51,5 +52,8 @@ npm-debug.log
 .lock-wscript
 node_modules/**/build/
 node_modules/.bin/
+
+# coverage/etc
+scratch/
 
 .gfcache/
