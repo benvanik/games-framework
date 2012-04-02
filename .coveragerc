@@ -8,3 +8,8 @@ exclude_lines =
     raise NotImplementedError
     if 0:
     if __name__ == .__main__.:
+
+omit =
+    build/test/__init__.py
+    tools/test-build.py
+    *_test.py
