@@ -16,6 +16,7 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
 import base64
+import hashlib
 import pickle
 import re
 
@@ -195,8 +196,8 @@ class Rule(object):
     # Include framework version in the string to enable forced rebuilds on
     # version change
     unique_str = build.VERSION_STR + pickled_str
-    # TODO(benvanik): hash instead of return full string?
-    return unique_str
+    # Hash so that we return a reasonably-sized string
+    return hashlib.md5(unique_str).hexdigest()
 
 
 class ModuleLoader(object):
