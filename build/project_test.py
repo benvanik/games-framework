@@ -108,7 +108,11 @@ class ProjectTest(unittest2.TestCase):
     project = Project(modules=[module_a, module_b])
 
     with self.assertRaises(NameError):
+      project.resolve_rule('')
+    with self.assertRaises(NameError):
       project.resolve_rule('a')
+    with self.assertRaises(NameError):
+      project.resolve_rule('a/b/c')
     with self.assertRaises(NameError):
       project.resolve_rule('a', requesting_module=module_a)
 
@@ -141,3 +145,7 @@ class ProjectTest(unittest2.TestCase):
 
     with self.assertRaises(IOError):
       project.resolve_rule('mx:x')
+
+
+if __name__ == '__main__':
+  unittest2.main()

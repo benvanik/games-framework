@@ -79,8 +79,6 @@ class RuleGraph(object):
 
       # Wrap with our node and add it to the graph
       rule_node = _RuleNode(rule)
-      if self.rule_nodes.has_key(rule.path):
-        raise KeyError('Rule "%s" present multiple times' % (rule.path))
       self.rule_nodes[rule.path] = rule_node
       self.graph.add_node(rule_node)
 
@@ -102,9 +100,8 @@ class RuleGraph(object):
           dep_rule = self.project.resolve_rule(dep,
               requesting_module=rule.parent_module)
           dep_node = self.rule_nodes.get(dep_rule.path, None)
-          if not dep_node:
-            raise KeyError('Rule "%s" (required by "%s") not found' % (
-                dep, rule.path))
+          # Node should exist due to recursive addition above
+          assert dep_node
           self.graph.add_edge(dep_node, rule_node)
 
     # Ensure the graph is a DAG (no cycles)
@@ -144,7 +141,7 @@ class RuleGraph(object):
 
     Args:
       target_rule_paths: A list of target rule paths to include in the
-          sequence.
+          sequence, or a single target rule path.
 
     Returns:
       An ordered list of Rule instances including all of the given target rules
@@ -153,6 +150,9 @@ class RuleGraph(object):
     Raises:
       KeyError: One of the given rules was not found.
     """
+    if isinstance(target_rule_paths, str):
+      target_rule_paths = [target_rule_paths]
+
     # Ensure the graph has everything required - if things go south this will
     # raise errors
     self._ensure_rules_present(target_rule_paths)
@@ -164,11 +164,11 @@ class RuleGraph(object):
 
     # Add all paths for targets
     # Paths are added in reverse (from target to dependencies)
+    # Note that all nodes are present if we got this far, so no need to check
     sequence_graph = nx.DiGraph()
     for rule_path in target_rule_paths:
       rule_node = self.rule_nodes.get(rule_path, None)
-      if not rule_node:
-        raise KeyError('Target rule "%s" not found' % (rule_path))
+      assert rule_node
       path = list(nx.topological_sort(reverse_graph, [rule_node]))
       if len(path) == 1:
         sequence_graph.add_node(path[0])

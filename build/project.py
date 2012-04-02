@@ -116,8 +116,6 @@ class Project(object):
     if string.find(rule_path, ':') == -1:
       raise NameError('The rule path "%s" is missing a semicolon' % (rule_path))
     (module_path, rule_name) = string.rsplit(rule_path, ':', 1)
-    if not len(rule_name):
-      raise KeyError('No rule name given in "%s"' % (rule_path))
     if not len(module_path) and not requesting_module:
       raise KeyError('Local rule "%s" given when no resolver defined' % (
           rule_path))
@@ -159,7 +157,7 @@ class ModuleResolver(object):
       IOError: The module could not be found.
       NameError: The given path was not valid.
     """
-    return None
+    raise NotImplementedError()
 
 
 class StaticModuleResolver(ModuleResolver):

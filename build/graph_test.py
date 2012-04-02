@@ -25,7 +25,7 @@ class RuleGraphTest(unittest2.TestCase):
         Rule('a1'),
         Rule('a2'),
         Rule('a3'),
-        Rule('b', deps=[':a1', ':a2'],),
+        Rule('b', srcs=[':a1', 'a/b/c'], deps=[':a2'],),
         Rule('c', deps=[':b'],),])
     self.module_2 = Module('m2', rules=[
         Rule('p', deps=['m1:c'],)])
@@ -61,6 +61,22 @@ class RuleGraphTest(unittest2.TestCase):
     self.assertTrue(graph.has_rule('m1:b'))
     self.assertTrue(graph.has_rule('m1:c'))
 
+  def testCycle(self):
+    module = Module('mc', rules=[
+        Rule('a', deps=[':b']),
+        Rule('b', deps=[':a'])])
+    project = Project(modules=[module])
+    graph = RuleGraph(project)
+    with self.assertRaises(ValueError):
+      graph.add_rules_from_module(module)
+
+    module_1 = Module('mc1', rules=[Rule('a', deps=['mc2:a'])])
+    module_2 = Module('mc2', rules=[Rule('a', deps=['mc1:a'])])
+    project = Project(modules=[module_1, module_2])
+    graph = RuleGraph(project)
+    with self.assertRaises(ValueError):
+      graph.add_rules_from_module(module_1)
+
   def testHasRule(self):
     graph = RuleGraph(self.project)
     graph.add_rules_from_module(self.module_1)
@@ -94,10 +110,15 @@ class RuleGraphTest(unittest2.TestCase):
     graph = RuleGraph(self.project)
 
     with self.assertRaises(KeyError):
+      graph.calculate_rule_sequence(':x')
+    with self.assertRaises(KeyError):
       graph.calculate_rule_sequence([':x'])
     with self.assertRaises(KeyError):
       graph.calculate_rule_sequence(['m1:x'])
 
+    seq = graph.calculate_rule_sequence('m1:a1')
+    self.assertEqual(len(seq), 1)
+    self.assertEqual(seq[0].name, 'a1')
     seq = graph.calculate_rule_sequence(['m1:a1'])
     self.assertEqual(len(seq), 1)
     self.assertEqual(seq[0].name, 'a1')
@@ -119,6 +140,12 @@ class RuleGraphTest(unittest2.TestCase):
     self.assertTrue((seq[0].name in ['a1', 'a3']) or
                     (seq[1].name in ['a1', 'a3']))
 
+    module = Module('mx', rules=[Rule('a', deps=[':b'])])
+    project = Project(modules=[module])
+    graph = RuleGraph(project)
+    with self.assertRaises(KeyError):
+      graph.calculate_rule_sequence('mx:a')
+
   def testCrossModuleRules(self):
     graph = RuleGraph(self.project)
 
@@ -128,3 +155,7 @@ class RuleGraphTest(unittest2.TestCase):
                     (seq[1].name in ['a1', 'a2']))
     self.assertTrue(seq[4].path, 'm2:p')
     self.assertTrue(graph.has_dependency('m2:p', 'm1:a1'))
+
+
+if __name__ == '__main__':
+  unittest2.main()

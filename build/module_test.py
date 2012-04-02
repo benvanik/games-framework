@@ -244,3 +244,10 @@ class ModuleTest(unittest2.TestCase):
 
     self.assertIs(rule_a.parent_module, module)
     self.assertEqual(rule_a.path, 'm:a')
+
+    with self.assertRaises(ValueError):
+      rule_a.set_parent_module(module)
+
+
+if __name__ == '__main__':
+  unittest2.main()
