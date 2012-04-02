@@ -11,6 +11,7 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 import unittest2
 
 from graph import *
+from module import *
 from project import *
 
 
@@ -20,12 +21,13 @@ class RuleGraphTest(unittest2.TestCase):
   def setUp(self):
     super(RuleGraphTest, self).setUp()
 
-    self.project = Project(rules=[
+    self.module = Module('m', rules=[
         Rule('a1'),
         Rule('a2'),
         Rule('a3'),
         Rule('b', deps=[':a1', ':a2'],),
         Rule('c', deps=[':b'],),])
+    self.project = Project(modules=[self.module])
 
   def testConstruction(self):
     project = Project()
@@ -65,27 +67,27 @@ class RuleGraphTest(unittest2.TestCase):
 
     seq = graph.calculate_rule_sequence([':a1'])
     self.assertEqual(len(seq), 1)
-    self.assertEqual(seq[0].full_name, ':a1')
+    self.assertEqual(seq[0].path, ':a1')
 
     seq = graph.calculate_rule_sequence([':b'])
     self.assertEqual(len(seq), 3)
-    self.assertTrue((seq[0].full_name == ':a1' and
-                     seq[1].full_name == ':a2') or
-                    (seq[0].full_name == ':a2' and
-                     seq[1].full_name == ':a1'))
-    self.assertEqual(seq[2].full_name, ':b')
+    self.assertTrue((seq[0].path == ':a1' and
+                     seq[1].path == ':a2') or
+                    (seq[0].path == ':a2' and
+                     seq[1].path == ':a1'))
+    self.assertEqual(seq[2].path, ':b')
 
     seq = graph.calculate_rule_sequence([':a1', ':b'])
     self.assertEqual(len(seq), 3)
-    self.assertTrue((seq[0].full_name == ':a1' and
-                     seq[1].full_name == ':a2') or
-                    (seq[0].full_name == ':a2' and
-                     seq[1].full_name == ':a1'))
-    self.assertEqual(seq[2].full_name, ':b')
+    self.assertTrue((seq[0].path == ':a1' and
+                     seq[1].path == ':a2') or
+                    (seq[0].path == ':a2' and
+                     seq[1].path == ':a1'))
+    self.assertEqual(seq[2].path, ':b')
 
     seq = graph.calculate_rule_sequence([':a1', ':a3'])
     self.assertEqual(len(seq), 2)
-    self.assertTrue((seq[0].full_name == ':a1' and
-                     seq[1].full_name == ':a3') or
-                    (seq[0].full_name == ':a3' and
-                     seq[1].full_name == ':a1'))
+    self.assertTrue((seq[0].path == ':a1' and
+                     seq[1].path == ':a3') or
+                    (seq[0].path == ':a3' and
+                     seq[1].path == ':a1'))

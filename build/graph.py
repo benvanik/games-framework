@@ -56,20 +56,20 @@ class RuleGraph(object):
     # Add all rules
     for rule in self.project.rule_iter():
       rule_node = _RuleNode(rule)
-      if self.rule_nodes.has_key(rule.full_name):
-        raise KeyError('Rule "%s" present multiple times' % (rule.full_name))
-      self.rule_nodes[rule.full_name] = rule_node
+      if self.rule_nodes.has_key(rule.path):
+        raise KeyError('Rule "%s" present multiple times' % (rule.path))
+      self.rule_nodes[rule.path] = rule_node
       graph.add_node(rule_node)
 
     # Add edges for each rule
     for rule in self.project.rule_iter():
-      rule_node = self.rule_nodes[rule.full_name]
+      rule_node = self.rule_nodes[rule.path]
       for dep in itertools.chain(rule.srcs, rule.deps):
-        if util.is_rule_name(dep):
+        if util.is_rule_path(dep):
           dep_node = self.rule_nodes.get(dep, None)
           if not dep_node:
             raise KeyError('Rule "%s" (required by "%s") not found' % (
-                dep, rule.full_name))
+                dep, rule.path))
           graph.add_edge(dep_node, rule_node)
 
     # Ensure the graph is a DAG (no cycles)
@@ -79,28 +79,28 @@ class RuleGraph(object):
 
     return graph
 
-  def has_dependency(self, rule_name, predecessor_rule_name):
+  def has_dependency(self, rule_path, predecessor_rule_path):
     """Checks to see if the given rule has a dependency on another rule.
 
     Args:
-      rule_name: The name of the rule to check.
-      predecessor_rule_name: A potential predecessor rule.
+      rule_path: The name of the rule to check.
+      predecessor_rule_path: A potential predecessor rule.
 
     Returns:
-      True if by any way rule_name depends on predecessor_rule_name.
+      True if by any way rule_path depends on predecessor_rule_path.
 
     Raises:
       KeyError: One of the given rules was not found.
     """
-    rule_node = self.rule_nodes.get(rule_name, None)
+    rule_node = self.rule_nodes.get(rule_path, None)
     if not rule_node:
-      raise KeyError('Rule "%s" not found' % (rule_name))
-    predecessor_rule_node = self.rule_nodes.get(predecessor_rule_name, None)
+      raise KeyError('Rule "%s" not found' % (rule_path))
+    predecessor_rule_node = self.rule_nodes.get(predecessor_rule_path, None)
     if not predecessor_rule_node:
-      raise KeyError('Rule "%s" not found' % (predecessor_rule_name))
+      raise KeyError('Rule "%s" not found' % (predecessor_rule_path))
     return nx.has_path(self.graph, predecessor_rule_node, rule_node)
 
-  def calculate_rule_sequence(self, target_rule_names):
+  def calculate_rule_sequence(self, target_rule_paths):
     """Calculates an ordered sequence of rules terminating with the given
     target rules.
 
@@ -109,7 +109,7 @@ class RuleGraph(object):
     dependencies.
 
     Args:
-      target_rule_names: A list of target rule names to include in the
+      target_rule_paths: A list of target rule names to include in the
           sequence.
 
     Returns:
@@ -123,10 +123,10 @@ class RuleGraph(object):
 
     # Add all paths for targets
     # Paths are added in reverse (from target to dependencies)
-    for rule_name in target_rule_names:
-      rule_node = self.rule_nodes.get(rule_name, None)
+    for rule_path in target_rule_paths:
+      rule_node = self.rule_nodes.get(rule_path, None)
       if not rule_node:
-        raise KeyError('Target rule "%s" not found' % (rule_name))
+        raise KeyError('Target rule "%s" not found' % (rule_path))
       path = list(nx.topological_sort(self._reverse_graph, [rule_node]))
       if len(path) == 1:
         sequence_graph.add_node(path[0])
@@ -155,4 +155,4 @@ class _RuleNode(object):
     self.rule = rule
 
   def __repr__(self):
-    return self.rule.full_name
+    return self.rule.path

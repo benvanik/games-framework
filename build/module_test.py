@@ -39,7 +39,7 @@ class RuleTest(unittest2.TestCase):
       Rule(':a')
     rule = Rule('a')
     self.assertEqual(rule.name, 'a')
-    self.assertEqual(rule.full_name, ':a')
+    self.assertEqual(rule.path, ':a')
     Rule('\u0CA_\u0CA')
 
   def testRuleSrcs(self):
@@ -224,11 +224,23 @@ class ModuleTest(unittest2.TestCase):
     self.assertEqual(len(module.rule_list()), 2)
 
   def testGetRule(self):
-    module = Module('m')
     rule = Rule('a')
+    module = Module('m')
     module.add_rule(rule)
 
     self.assertIs(module.get_rule('a'), rule)
     self.assertIs(module.get_rule(':a'), rule)
 
     self.assertIsNone(module.get_rule(':x'))
+
+  def testRuleParentModule(self):
+    rule_a = Rule('a')
+    module = Module('m')
+
+    self.assertIsNone(rule_a.parent_module)
+    self.assertEqual(rule_a.path, ':a')
+
+    module.add_rule(rule_a)
+
+    self.assertIs(rule_a.parent_module, module)
+    self.assertEqual(rule_a.path, 'm:a')

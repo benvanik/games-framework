@@ -69,6 +69,7 @@ class Module(object):
             rule.name))
     for rule in rules:
       self.rules[rule.name] = rule
+      rule.set_parent_module(self)
 
   def get_rule(self, rule_name):
     """Gets a rule by name.
@@ -130,7 +131,10 @@ class Rule(object):
     if name[0] == ':':
       raise NameError('Name cannot start with :')
     self.name = name
-    self.full_name = ':%s' % (name)
+
+    # Path will be updated when the parent module is set
+    self.parent_module = None
+    self.path = ':%s' % (name)
 
     # Note that all srcs/deps are copied in
     self.srcs = []
@@ -153,6 +157,21 @@ class Rule(object):
 
     util.validate_names(self.srcs)
     util.validate_names(self.deps, require_semicolon=True)
+
+  def set_parent_module(self, module):
+    """Sets the parent module of a rule.
+    This can only be called once.
+
+    Args:
+      module: New parent module for the rule.
+
+    Raises:
+      ValueError: The parent module has already been set.
+    """
+    if self.parent_module:
+      raise ValueError('Rule "%s" already has a parent module' % (self.name))
+    self.parent_module = module
+    self.path = '%s:%s' % (module.path, self.name)
 
   def compute_cache_key(self):
     """Calculates a unique key based on the rule type and its values.

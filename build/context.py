@@ -150,7 +150,7 @@ class BuildContext(object):
 #   while len(in_flight_rules) < max_workers and len(remaining_rules):
 #     next_rule = remaining_rules[0]
 #     for in_flight_rule in in_flight_rules:
-#       if graph.has_dependency(next_rule.full_name, in_flight_rules.full_name):
+#       if graph.has_dependency(next_rule.path, in_flight_rules.path):
 #         blocked!
 #         return
 #       else:
