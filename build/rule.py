@@ -184,9 +184,28 @@ class RuleNamespace(object):
 #     discovery to rerun the module code on each RuleNamespace type
 RULE_NAMESPACE = RuleNamespace()
 
-# Set during module loading by module.ModuleLoader
-# TODO(benvanik): make private with accessors
-LOAD_SCOPE = None
+# Used by begin_capturing_emitted_rules/build_rule to track all emitted rules
+_EMIT_RULE_SCOPE = None
+
+def begin_capturing_emitted_rules():
+  """Begins capturing all rules emitted by @build_rule.
+  Use end_capturing_emitted_rules to end capturing and return the list of rules.
+  """
+  global _EMIT_RULE_SCOPE
+  assert not _EMIT_RULE_SCOPE
+  _EMIT_RULE_SCOPE = []
+
+def end_capturing_emitted_rules():
+  """Ends a rule capture and returns any rules emitted.
+
+  Returns:
+    A list of rules that were emitted by @build_rule.
+  """
+  global _EMIT_RULE_SCOPE
+  assert _EMIT_RULE_SCOPE is not None
+  rules = _EMIT_RULE_SCOPE
+  _EMIT_RULE_SCOPE = None
+  return rules
 
 
 class build_rule(object):
@@ -208,10 +227,10 @@ class build_rule(object):
     class wrapped_rule_type(cls):
       rule_name = self.rule_name
       def __call__(self, name, *args, **kwargs):
-        global LOAD_SCOPE
-        assert LOAD_SCOPE
+        global _EMIT_RULE_SCOPE
+        assert _EMIT_RULE_SCOPE
         rule = cls(name, *args, **kwargs)
-        LOAD_SCOPE.add_rule(rule)
+        _EMIT_RULE_SCOPE.append(rule)
 
     # Add the (wrapped)_rule type to the global namespace
     global RULE_NAMESPACE

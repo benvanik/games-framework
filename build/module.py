@@ -188,9 +188,8 @@ class ModuleLoader(object):
     Raises:
       NameError: A function or variable name was not found.
     """
-    load_scope = _ModuleLoadScope()
-    rule.LOAD_SCOPE = load_scope
-
+    all_rules = None
+    rule.begin_capturing_emitted_rules()
     try:
       # Setup scope
       scope = {}
@@ -200,31 +199,9 @@ class ModuleLoader(object):
       # Execute!
       exec self.code_obj in scope
     finally:
-      rule.LOAD_SCOPE = None
+      all_rules = rule.end_capturing_emitted_rules()
 
     # Gather rules and build the module
     module = Module(self.path)
-    module.add_rules(load_scope.rules)
+    module.add_rules(all_rules)
     return module
-
-
-class _ModuleLoadScope(object):
-  """Module loading scope.
-  Used during module loading to manage shared variables (such as the current
-  rule list/etc).
-  An instance of this type is specified on the rules module.
-  """
-
-  def __init__(self):
-    """Initializes a load scope.
-    """
-    self.rules = []
-
-  def add_rule(self, rule):
-    """Adds a rule to the load scope.
-
-    Args:
-      rule: Rule to add.
-    """
-    # TODO(benvanik): check for duplicate (local) rules here?
-    self.rules.append(rule)
