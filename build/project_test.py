@@ -11,6 +11,7 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 import unittest2
 
 from module import *
+from rule import *
 from project import *
 
 

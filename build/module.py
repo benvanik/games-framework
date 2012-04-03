@@ -1,6 +1,6 @@
 # Copyright 2012 Google Inc. All Rights Reserved.
 
-"""Module/rule representation.
+"""Module representation.
 
 A module is a simple namespace of rules, serving no purpose other than to allow
 for easier organization of projects.
@@ -15,13 +15,10 @@ TODO(benvanik): details on path resolution
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
-import base64
-import hashlib
-import pickle
-import re
+import ast
+import io
 
-import build
-import util
+import rule
 
 
 class Module(object):
@@ -99,116 +96,135 @@ class Module(object):
       yield self.rules[rule_name]
 
 
-class Rule(object):
-  """A rule definition.
-  Rules are the base unit in a module and can depend on other rules via either
-  source (which depends on the outputs of the rule) or explicit dependencies
-  (which just requires that the other rule have been run before).
-
-  Sources can also refer to files, folders, or file globs. When a rule goes to
-  run a list of sources will be compiled from the outputs from the previous
-  rules as well as all real files on the file system.
-  """
-
-  _whitespace_re = re.compile('\s', re.M)
-
-  def __init__(self, name, srcs=None, deps=None, src_filter=None,
-               *args, **kwargs):
-    """Initializes a rule.
-
-    Args:
-      name: A name for the rule - should be literal-like and contain no leading
-          or trailing whitespace.
-      srcs: A list of source strings or a single source string.
-      deps: A list of depdendency strings or a single dependency string.
-      src_filter: An inclusionary file name filter for all non-rule paths. If
-          defined only srcs that match this filter will be included.
-
-    Raises:
-      NameError: The given name is invalid (None/0-length).
-      TypeError: The type of an argument or value is invalid.
-    """
-    if not name or not len(name):
-      raise NameError('Invalid name')
-    if self._whitespace_re.search(name):
-      raise NameError('Name contains leading or trailing whitespace')
-    if name[0] == ':':
-      raise NameError('Name cannot start with :')
-    self.name = name
-
-    # Path will be updated when the parent module is set
-    self.parent_module = None
-    self.path = ':%s' % (name)
-
-    # Note that all srcs/deps are copied in
-    self.srcs = []
-    if isinstance(srcs, str):
-      if len(srcs):
-        self.srcs.append(srcs)
-    elif isinstance(srcs, list):
-      self.srcs.extend(srcs)
-    elif srcs != None:
-      raise TypeError('Invalid srcs type')
-
-    self.deps = []
-    if isinstance(deps, str):
-      if len(deps):
-        self.deps.append(deps)
-    elif isinstance(deps, list):
-      self.deps.extend(deps)
-    elif deps != None:
-      raise TypeError('Invalid deps type')
-
-    util.validate_names(self.srcs)
-    util.validate_names(self.deps, require_semicolon=True)
-
-    self.src_filter = None
-    if src_filter and len(src_filter):
-      self.src_filter = src_filter
-
-  def set_parent_module(self, module):
-    """Sets the parent module of a rule.
-    This can only be called once.
-
-    Args:
-      module: New parent module for the rule.
-
-    Raises:
-      ValueError: The parent module has already been set.
-    """
-    if self.parent_module:
-      raise ValueError('Rule "%s" already has a parent module' % (self.name))
-    self.parent_module = module
-    self.path = '%s:%s' % (module.path, self.name)
-
-  def compute_cache_key(self):
-    """Calculates a unique key based on the rule type and its values.
-    This key may change when code changes, but is a fairly reliable way to
-    detect changes in rule values.
-
-    Returns:
-      A string that can be used to index this key in a dictionary. The string
-      may be very long.
-    """
-    # TODO(benvanik): faster serialization than pickle?
-    pickled_self = pickle.dumps(self)
-    pickled_str = base64.b64encode(pickled_self)
-    # Include framework version in the string to enable forced rebuilds on
-    # version change
-    unique_str = build.VERSION_STR + pickled_str
-    # Hash so that we return a reasonably-sized string
-    return hashlib.md5(unique_str).hexdigest()
-
-
 class ModuleLoader(object):
   """A utility type that handles loading modules from files.
   A loader should only be used to load a single module and then be discarded.
   """
 
-  def __init__(self, path):
+  def __init__(self, path, rule_modules=None):
     """Initializes a loader.
 
     Args:
       path: File-system path to the module.
+      rule_modules: A list of rule modules to recursively search for rules.
     """
     self.path = path
+
+    self.code_str = None
+    self.code_ast = None
+    self.code_obj = None
+
+    self.rule_fns = self._load_all_rule_fns(rule_modules)
+
+  def _load_all_rule_fns(self, rule_modules=None):
+    """
+
+    Args:
+      rule_modules: A list of rule modules to recursively search for rules.
+
+    Returns:
+      A dictionary of rule functions.
+    """
+    rule_fns = {}
+    if not rule_modules:
+      rule_modules = []
+    for rule_module in rule_modules:
+      self._load_rule_fns(rule_fns, rule_module)
+    return rule_fns
+
+  def _load_rule_fns(self, scope, py_module):
+    """Loads all rule functions from the build.rules module into the scope.
+
+    Args:
+      scope: A scope dictionary that will be passed to the module on load.
+    """
+    # Import all rules from referenced modules
+    ref_modules = getattr(py_module, '__all__', [])
+    for ref_module in ref_modules:
+      self._load_rule_fns(scope, ref_module)
+
+    # Add rules
+    build_rules = getattr(py_module, 'BUILD_RULES', [])
+    for rule_fn in build_rules:
+      rule_name = rule_fn.func_name
+      if scope.has_key(rule_name):
+        raise KeyError('Rule "%s" already defined' % (rule_name))
+      scope[rule_name] = rule_fn
+
+  def load(self, source_string=None):
+    """Loads the module from the given path and prepares it for execution.
+
+    Args:
+      source_string: A string to use as the source. If not provided the file
+          will be loaded at the initialized path.
+
+    Raises:
+      IOError: The file could not be loaded or read.
+      SyntaxError: An error occurred parsing the module.
+    """
+    if self.code_str:
+      raise Exception('ModuleLoader load called multiple times')
+
+    # Read the source as a string
+    if source_string is None:
+      with io.open(self.path, 'r') as f:
+        self.code_str = f.read()
+    else:
+      self.code_str = source_string
+
+    # Parse the AST
+    # This will raise errors if it is not valid
+    self.code_ast = ast.parse(self.code_str, self.path, 'exec')
+
+    # Compile
+    self.code_obj = compile(self.code_ast, self.path, 'exec')
+
+  def execute(self):
+    """Executes the module and returns a Module instance.
+
+    Returns:
+      A new Module instance with all of the rules.
+
+    Raises:
+      NameError: A function or variable name was not found.
+    """
+    load_scope = _ModuleLoadScope()
+    rule.LOAD_SCOPE = load_scope
+
+    try:
+      # Setup scope
+      scope = {}
+      for rule_fn_name in self.rule_fns:
+        scope[rule_fn_name] = self.rule_fns[rule_fn_name]
+
+      # Execute!
+      exec self.code_obj in scope
+    finally:
+      rule.LOAD_SCOPE = None
+
+    # Gather rules and build the module
+    module = Module(self.path)
+    module.add_rules(load_scope.rules)
+    return module
+
+
+class _ModuleLoadScope(object):
+  """Module loading scope.
+  Used during module loading to manage shared variables (such as the current
+  rule list/etc).
+  An instance of this type is specified on the rules module.
+  """
+
+  def __init__(self):
+    """Initializes a load scope.
+    """
+    self.rules = []
+
+  def add_rule(self, rule):
+    """Adds a rule to the load scope.
+
+    Args:
+      rule: Rule to add.
+    """
+    # TODO(benvanik): check for duplicate (local) rules here?
+    self.rules.append(rule)

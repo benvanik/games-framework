@@ -12,6 +12,7 @@ import unittest2
 
 from context import *
 from module import *
+from rule import *
 from project import *
 
 

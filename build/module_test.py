@@ -8,151 +8,12 @@
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
+import os
 import unittest2
 
 from module import *
+from rule import *
 from test import FixtureTestCase
-
-
-class RuleTest(unittest2.TestCase):
-  """Behavioral tests of the Rule type."""
-
-  def testRuleNames(self):
-    with self.assertRaises(NameError):
-      Rule(None)
-    with self.assertRaises(NameError):
-      Rule('')
-    with self.assertRaises(NameError):
-      Rule(' ')
-    with self.assertRaises(NameError):
-      Rule(' a')
-    with self.assertRaises(NameError):
-      Rule('a ')
-    with self.assertRaises(NameError):
-      Rule(' a ')
-    with self.assertRaises(NameError):
-      Rule('a\n')
-    with self.assertRaises(NameError):
-      Rule('a\t')
-    with self.assertRaises(NameError):
-      Rule('a b')
-    with self.assertRaises(NameError):
-      Rule(':a')
-    rule = Rule('a')
-    self.assertEqual(rule.name, 'a')
-    self.assertEqual(rule.path, ':a')
-    Rule('\u0CA_\u0CA')
-
-  def testRuleSrcs(self):
-    rule = Rule('r')
-    self.assertEqual(len(rule.srcs), 0)
-
-    srcs = ['a', 'b', ':c']
-    rule = Rule('r', srcs=srcs)
-    self.assertEqual(len(rule.srcs), 3)
-    self.assertIsNot(rule.srcs, srcs)
-    srcs[0] = 'x'
-    self.assertEqual(rule.srcs[0], 'a')
-
-    srcs = 'a'
-    rule = Rule('r', srcs=srcs)
-    self.assertEqual(len(rule.srcs), 1)
-    self.assertEqual(rule.srcs[0], 'a')
-
-    rule = Rule('r', srcs=None)
-    rule = Rule('r', srcs='')
-    self.assertEqual(len(rule.srcs), 0)
-    with self.assertRaises(TypeError):
-      Rule('r', srcs={})
-    with self.assertRaises(TypeError):
-      Rule('r', srcs=[None])
-    with self.assertRaises(TypeError):
-      Rule('r', srcs=[''])
-    with self.assertRaises(TypeError):
-      Rule('r', srcs=[{}])
-    with self.assertRaises(NameError):
-      Rule('r', srcs=' a')
-    with self.assertRaises(NameError):
-      Rule('r', srcs='a ')
-    with self.assertRaises(NameError):
-      Rule('r', srcs=' a ')
-
-  def testRuleDeps(self):
-    rule = Rule('r')
-    self.assertEqual(len(rule.deps), 0)
-
-    deps = [':a', ':b', ':c']
-    rule = Rule('r', deps=deps)
-    self.assertEqual(len(rule.deps), 3)
-    self.assertIsNot(rule.deps, deps)
-    deps[0] = 'x'
-    self.assertEqual(rule.deps[0], ':a')
-
-    deps = ':a'
-    rule = Rule('r', deps=deps)
-    self.assertEqual(len(rule.deps), 1)
-    self.assertEqual(rule.deps[0], ':a')
-
-    rule = Rule('r', deps=None)
-    rule = Rule('r', deps='')
-    self.assertEqual(len(rule.deps), 0)
-    with self.assertRaises(TypeError):
-      Rule('r', deps={})
-    with self.assertRaises(TypeError):
-      Rule('r', deps=[None])
-    with self.assertRaises(TypeError):
-      Rule('r', deps=[''])
-    with self.assertRaises(TypeError):
-      Rule('r', deps={})
-    with self.assertRaises(NameError):
-      Rule('r', deps=' a')
-    with self.assertRaises(NameError):
-      Rule('r', deps='a ')
-    with self.assertRaises(NameError):
-      Rule('r', deps=' a ')
-
-  def testRuleCacheKey(self):
-    rule1 = Rule('r1')
-    rule1_key = rule1.compute_cache_key()
-    self.assertIsNotNone(rule1_key)
-    self.assertGreater(len(rule1_key), 0)
-    self.assertEqual(rule1_key, rule1.compute_cache_key())
-    rule1.srcs.append('a')
-    self.assertNotEqual(rule1_key, rule1.compute_cache_key())
-
-    rule1 = Rule('r1')
-    rule2 = Rule('r1')
-    self.assertEqual(rule1.compute_cache_key(), rule2.compute_cache_key())
-    rule1 = Rule('r1')
-    rule2 = Rule('r2')
-    self.assertNotEqual(rule1.compute_cache_key(), rule2.compute_cache_key())
-
-    rule1 = Rule('r1', srcs='a')
-    rule2 = Rule('r1', srcs='a')
-    self.assertEqual(rule1.compute_cache_key(), rule2.compute_cache_key())
-    rule1 = Rule('r1', srcs='a')
-    rule2 = Rule('r1', srcs='b')
-    self.assertNotEqual(rule1.compute_cache_key(), rule2.compute_cache_key())
-    rule1 = Rule('r1', deps=':a')
-    rule2 = Rule('r1', deps=':a')
-    self.assertEqual(rule1.compute_cache_key(), rule2.compute_cache_key())
-    rule1 = Rule('r1', deps=':a')
-    rule2 = Rule('r1', deps=':b')
-    self.assertNotEqual(rule1.compute_cache_key(), rule2.compute_cache_key())
-    rule1 = Rule('r1', srcs='a', deps=':a')
-    rule2 = Rule('r1', srcs='a', deps=':a')
-    self.assertEqual(rule1.compute_cache_key(), rule2.compute_cache_key())
-    rule1 = Rule('r1', srcs='a', deps=':a')
-    rule2 = Rule('r1', srcs='b', deps=':b')
-    self.assertNotEqual(rule1.compute_cache_key(), rule2.compute_cache_key())
-
-  def testRuleFilter(self):
-    rule = Rule('a')
-    self.assertIsNone(rule.src_filter)
-    rule = Rule('a', src_filter='')
-    self.assertIsNone(rule.src_filter)
-    rule = Rule('a', src_filter='*.js')
-    self.assertEqual(rule.src_filter, '*.js')
 
 
 class ModuleTest(unittest2.TestCase):
@@ -261,8 +122,57 @@ class ModuleTest(unittest2.TestCase):
 class ModuleLoaderTest(FixtureTestCase):
   fixture = 'simple'
 
-  def testLoader(self):
-    loader = ModuleLoader(self.temp_path)
+  def testLoad(self):
+    module_path = os.path.join(self.temp_path, 'simple', 'BUILD')
+    loader = ModuleLoader(module_path)
+    loader.load()
+
+    loader = ModuleLoader(module_path + '.not-real')
+    with self.assertRaises(IOError):
+      loader.load()
+
+    loader = ModuleLoader(module_path)
+    loader.load(source_string='x = 5')
+    with self.assertRaises(Exception):
+      loader.load(source_string='y = 5')
+
+    loader = ModuleLoader(module_path)
+    with self.assertRaises(SyntaxError):
+      loader.load(source_string='x/')
+    with self.assertRaises(Exception):
+      loader.load(source_string='y = 5')
+
+  def testExecute(self):
+    module_path = os.path.join(self.temp_path, 'simple', 'BUILD')
+
+    loader = ModuleLoader(module_path)
+    loader.load(source_string='asdf()')
+    with self.assertRaises(NameError):
+      loader.execute()
+
+    loader = ModuleLoader(module_path)
+    loader.load(source_string='')
+    module = loader.execute()
+    self.assertEqual(len(module.rule_list()), 0)
+
+    loader = ModuleLoader(module_path)
+    loader.load(source_string='x = 5')
+    module = loader.execute()
+    self.assertEqual(len(module.rule_list()), 0)
+
+    loader = ModuleLoader(module_path)
+    loader.load(source_string='rule("a")\nrule("b")')
+    module = loader.execute()
+    self.assertEqual(len(module.rule_list()), 2)
+    self.assertIsNotNone(module.get_rule(':a'))
+    self.assertIsNotNone(module.get_rule(':b'))
+    self.assertEqual(module.get_rule(':a').name, 'a')
+    self.assertEqual(module.get_rule(':b').name, 'b')
+
+  def testCustomRules(self):
+    module_path = os.path.join(self.temp_path, 'simple', 'BUILD')
+
+    #loader = ModuleLoader(module_path, rule_modules=)
 
 
 if __name__ == '__main__':
