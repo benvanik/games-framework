@@ -19,6 +19,7 @@ import ast
 import io
 
 import rule
+from rule import RuleNamespace
 
 
 class Module(object):
@@ -101,55 +102,22 @@ class ModuleLoader(object):
   A loader should only be used to load a single module and then be discarded.
   """
 
-  def __init__(self, path, rule_modules=None):
+  def __init__(self, path, rule_namespace=None):
     """Initializes a loader.
 
     Args:
       path: File-system path to the module.
-      rule_modules: A list of rule modules to recursively search for rules.
+      rule_namespace: Rule namespace to use for rule definitions.
     """
     self.path = path
+    self.rule_namespace = rule_namespace
+    if not self.rule_namespace:
+      self.rule_namespace = RuleNamespace()
+      self.rule_namespace.discover()
 
     self.code_str = None
     self.code_ast = None
     self.code_obj = None
-
-    self.rule_fns = self._load_all_rule_fns(rule_modules)
-
-  def _load_all_rule_fns(self, rule_modules=None):
-    """
-
-    Args:
-      rule_modules: A list of rule modules to recursively search for rules.
-
-    Returns:
-      A dictionary of rule functions.
-    """
-    rule_fns = {}
-    if not rule_modules:
-      rule_modules = []
-    for rule_module in rule_modules:
-      self._load_rule_fns(rule_fns, rule_module)
-    return rule_fns
-
-  def _load_rule_fns(self, scope, py_module):
-    """Loads all rule functions from the build.rules module into the scope.
-
-    Args:
-      scope: A scope dictionary that will be passed to the module on load.
-    """
-    # Import all rules from referenced modules
-    ref_modules = getattr(py_module, '__all__', [])
-    for ref_module in ref_modules:
-      self._load_rule_fns(scope, ref_module)
-
-    # Add rules
-    build_rules = getattr(py_module, 'BUILD_RULES', [])
-    for rule_fn in build_rules:
-      rule_name = rule_fn.func_name
-      if scope.has_key(rule_name):
-        raise KeyError('Rule "%s" already defined' % (rule_name))
-      scope[rule_name] = rule_fn
 
   def load(self, source_string=None):
     """Loads the module from the given path and prepares it for execution.
@@ -193,8 +161,7 @@ class ModuleLoader(object):
     try:
       # Setup scope
       scope = {}
-      for rule_fn_name in self.rule_fns:
-        scope[rule_fn_name] = self.rule_fns[rule_fn_name]
+      self.rule_namespace.populate_scope(scope)
 
       # Execute!
       exec self.code_obj in scope

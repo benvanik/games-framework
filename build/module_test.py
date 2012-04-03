@@ -172,8 +172,16 @@ class ModuleLoaderTest(FixtureTestCase):
   def testCustomRules(self):
     module_path = os.path.join(self.temp_path, 'simple', 'BUILD')
 
-    #loader = ModuleLoader(module_path, rule_modules=)
-
+    class MockRule1(Rule):
+      pass
+    rule_namespace = RuleNamespace()
+    rule_namespace.add_rule_type('mock_rule_1', MockRule1)
+    loader = ModuleLoader(module_path, rule_namespace=rule_namespace)
+    loader.load(source_string='mock_rule_1("a")')
+    module = loader.execute()
+    self.assertEqual(len(module.rule_list()), 1)
+    self.assertIsNotNone(module.get_rule(':a'))
+    self.assertEqual(module.get_rule(':a').name, 'a')
 
 if __name__ == '__main__':
   unittest2.main()

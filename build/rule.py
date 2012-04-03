@@ -122,6 +122,10 @@ class Rule(object):
     return hashlib.md5(unique_str).hexdigest()
 
 
+# Active rule namespace that is capturing all new rule definitions
+# This should only be modified by RuleNamespace.discover
+_RULE_NAMESPACE = None
+
 class RuleNamespace(object):
   """A namespace of rule type definitions and discovery services.
   """
@@ -130,7 +134,44 @@ class RuleNamespace(object):
     """Initializes a rule namespace."""
     self.rule_types = {}
 
-  def discover(self, path):
+  def populate_scope(self, scope):
+    """Populates the given scope dictionary with all of the rule types.
+
+    Args:
+      scope: Scope dictionary.
+    """
+    for rule_name in self.rule_types:
+      scope[rule_name] = self.rule_types[rule_name]
+
+  def add_rule_type(self, rule_name, rule_cls):
+    """Adds a rule type to the namespace.
+
+    Args:
+      rule_name: The name of the rule type exposed to modules.
+      rule_cls: Rule type class.
+    """
+    def rule_definition(name, *args, **kwargs):
+      rule = rule_cls(name, *args, **kwargs)
+      _emit_rule(rule)
+    rule_definition.rule_name = rule_name
+    if self.rule_types.has_key(rule_name):
+      raise KeyError('Rule type "%s" already defined' % (rule_name))
+    self.rule_types[rule_name] = rule_definition
+
+  def add_rule_type_fn(self, rule_type):
+    """Adds a rule type to the namespace.
+    This assumes the type is a function that is setup to emit the rule.
+    It should only be used by internal methods.
+
+    Args:
+      rule_type: Rule type.
+    """
+    rule_name = rule_type.rule_name
+    if self.rule_types.has_key(rule_name):
+      raise KeyError('Rule type "%s" already defined' % (rule_name))
+    self.rule_types[rule_name] = rule_type
+
+  def discover(self, path=None):
     """Recursively searches the given path for rule type definitions.
     Files are searched with the pattern '*_rules.py' for types decorated with
     @build_rule.
@@ -139,12 +180,25 @@ class RuleNamespace(object):
     be retained. Calling this multiple times with the same path has no effect.
 
     Args:
-      path: Path to search for rule type modules.
+      path: Path to search for rule type modules. If omitted then the built-in
+          rule path will be searched instead. If the path points to a file it
+          will be checked, even if it does not match the name rules.
     """
-    for (dirpath, dirnames, filenames) in os.walk(path):
-      for filename in filenames:
-        if fnmatch.fnmatch(filename, '*_rules.py'):
-          self._discover_in_file(os.path.join(dirpath, filename))
+    original_rule_types = self.rule_types.copy()
+    try:
+      if not path:
+        path = os.path.join(os.path.dirname(__file__), 'rules')
+      if os.path.isfile(path):
+        self._discover_in_file(path)
+      else:
+        for (dirpath, dirnames, filenames) in os.walk(path):
+          for filename in filenames:
+            if fnmatch.fnmatch(filename, '*_rules.py'):
+              self._discover_in_file(os.path.join(dirpath, filename))
+    except:
+      # Restore original types (don't take any of the discovered rules)
+      self.rule_types = original_rule_types
+      raise
 
   def _discover_in_file(self, path):
     """Loads the given python file to add all of its rules.
@@ -152,37 +206,15 @@ class RuleNamespace(object):
     Args:
       path: Python file path.
     """
-    # TODO(benvanik): error handling?
-    # TODO(benvanik): rewrite to do an uncached load
-    name = os.path.splitext(os.path.basename(path))[0]
+    global _RULE_NAMESPACE
+    assert _RULE_NAMESPACE is None
+    _RULE_NAMESPACE = self
     try:
-      return sys.modules[name]
-    except KeyError:
-      pass
-    (fp, pathname, description) = imp.find_module(name, [os.path.dirname(path)])
-    try:
-      return imp.load_module(name, fp, pathname, description)
+      name = os.path.splitext(os.path.basename(path))[0]
+      module = imp.load_source(name, path)
     finally:
-      if fp:
-        fp.close()
+      _RULE_NAMESPACE = None
 
-  def add_rule_type(self, rule_type):
-    """Adds a rule type to the namespace.
-
-    Args:
-      rule_type: Rule type.
-    """
-    if self.rule_types.has_key(rule_type.rule_name):
-      raise KeyError('Rule type "%s" already defined' % (rule_type.rule_name))
-    self.rule_types[rule_type.rule_name] = rule_type
-
-
-# Global rule namespace
-# Rules are added as modules containing rules are imported
-# TODO(benvanik): make private with accessors
-# TODO(benvanik): remove this by doing sys.reload/sys.modules munging in
-#     discovery to rerun the module code on each RuleNamespace type
-RULE_NAMESPACE = RuleNamespace()
 
 # Used by begin_capturing_emitted_rules/build_rule to track all emitted rules
 _EMIT_RULE_SCOPE = None
@@ -207,6 +239,17 @@ def end_capturing_emitted_rules():
   _EMIT_RULE_SCOPE = None
   return rules
 
+def _emit_rule(rule):
+  """Emits a rule.
+  This should only ever be called while capturing.
+
+  Args:
+    rule: Rule that is being emitted.
+  """
+  global _EMIT_RULE_SCOPE
+  assert _EMIT_RULE_SCOPE is not None
+  _EMIT_RULE_SCOPE.append(rule)
+
 
 class build_rule(object):
   """A decorator for build rule classes.
@@ -224,16 +267,15 @@ class build_rule(object):
     self.rule_name = rule_name
 
   def __call__(self, cls):
-    class wrapped_rule_type(cls):
-      rule_name = self.rule_name
-      def __call__(self, name, *args, **kwargs):
-        global _EMIT_RULE_SCOPE
-        assert _EMIT_RULE_SCOPE
-        rule = cls(name, *args, **kwargs)
-        _EMIT_RULE_SCOPE.append(rule)
+    # This wrapper function makes it possible to record all invocations of
+    # a rule while loading the module
+    def rule_definition(name, *args, **kwargs):
+      rule = cls(name, *args, **kwargs)
+      _emit_rule(rule)
+    rule_definition.rule_name = self.rule_name
 
-    # Add the (wrapped)_rule type to the global namespace
-    global RULE_NAMESPACE
-    assert RULE_NAMESPACE
-    RULE_NAMESPACE.add_rule_type(wrapped_rule_type)
-    return wrapped_rule_type
+    # Add the (wrapped) rule type to the global namespace
+    global _RULE_NAMESPACE
+    assert _RULE_NAMESPACE
+    _RULE_NAMESPACE.add_rule_type_fn(rule_definition)
+    return cls

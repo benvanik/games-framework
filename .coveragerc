@@ -14,3 +14,5 @@ omit =
     tools/test-build.py
     *_test.py
     /usr/**
+    /Library/Python/**
+    /private/var/**

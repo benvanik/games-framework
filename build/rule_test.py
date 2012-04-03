@@ -165,19 +165,39 @@ class RuleNamespaceTest(FixtureTestCase):
     self.assertEqual(len(ns.rule_types), 0)
 
     class MockRule1(Rule):
-      rule_name = 'mock_rule_1'
-    ns.add_rule_type(MockRule1)
+      pass
+    ns.add_rule_type('mock_rule_1', MockRule1)
     self.assertEqual(len(ns.rule_types), 1)
-    self.assertIs(ns.rule_types.get('mock_rule_1'), MockRule1)
+
+    with self.assertRaises(KeyError):
+      ns.add_rule_type('mock_rule_1', MockRule1)
 
   def testDiscovery(self):
+    ns = RuleNamespace()
+    ns.discover()
+    self.assertTrue(ns.rule_types.has_key('rule'))
+
     rule_path = os.path.join(self.temp_path, 'rules')
-    ns = RULE_NAMESPACE
+    ns = RuleNamespace()
     ns.discover(rule_path)
+    self.assertEqual(len(ns.rule_types), 3)
+    self.assertFalse(ns.rule_types.has_key('rule'))
     self.assertTrue(ns.rule_types.has_key('rule_a'))
     self.assertTrue(ns.rule_types.has_key('rule_b'))
     self.assertTrue(ns.rule_types.has_key('rule_c'))
     self.assertFalse(ns.rule_types.has_key('rule_x'))
+
+    rule_path = os.path.join(self.temp_path, 'rules', 'dupe.py')
+    ns = RuleNamespace()
+    with self.assertRaises(KeyError):
+      ns.discover(rule_path)
+    self.assertEqual(len(ns.rule_types), 0)
+
+    rule_path = os.path.join(self.temp_path, 'rules', 'more', 'more_rules.py')
+    ns = RuleNamespace()
+    ns.discover(rule_path)
+    self.assertEqual(len(ns.rule_types), 1)
+    self.assertTrue(ns.rule_types.has_key('rule_c'))
 
 
 if __name__ == '__main__':
