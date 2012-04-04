@@ -128,6 +128,25 @@ class ModuleLoaderTest(FixtureTestCase):
   """Behavioral tests for ModuleLoader."""
   fixture = 'simple'
 
+  def testModes(self):
+    module_path = os.path.join(self.temp_path, 'simple', 'BUILD')
+
+    loader = ModuleLoader(module_path)
+    self.assertEqual(len(loader.modes), 0)
+    loader = ModuleLoader(module_path, modes=None)
+    self.assertEqual(len(loader.modes), 0)
+    loader = ModuleLoader(module_path, modes=[])
+    self.assertEqual(len(loader.modes), 0)
+    loader = ModuleLoader(module_path, modes=['A'])
+    self.assertEqual(len(loader.modes), 1)
+    modes = ['A', 'B']
+    loader = ModuleLoader(module_path, modes=modes)
+    self.assertIsNot(loader.modes, modes)
+    self.assertEqual(len(loader.modes), 2)
+
+    with self.assertRaises(KeyError):
+      ModuleLoader(module_path, modes=['A', 'A'])
+
   def testLoad(self):
     module_path = os.path.join(self.temp_path, 'simple', 'BUILD')
     loader = ModuleLoader(module_path)
@@ -175,6 +194,21 @@ class ModuleLoaderTest(FixtureTestCase):
     self.assertEqual(module.get_rule(':a').name, 'a')
     self.assertEqual(module.get_rule(':b').name, 'b')
 
+  def testBuiltins(self):
+    module_path = os.path.join(self.temp_path, 'simple', 'BUILD')
+
+    loader = ModuleLoader(module_path, modes=['A'])
+    loader.load(source_string=(
+        'rule("a", srcs=select_any({"A": "sa"}, "sx"))\n'
+        'rule("b", srcs=select_any({"B": "sb"}, "sx"))\n'
+        'rule("c", srcs=select_one([("A", "sa")], "sx"))\n'
+        'rule("d", srcs=select_many({"B": "sb"}, "sx"))\n'))
+    module = loader.execute()
+    self.assertEqual(module.get_rule(':a').srcs[0], 'sa')
+    self.assertEqual(module.get_rule(':b').srcs[0], 'sx')
+    self.assertEqual(module.get_rule(':c').srcs[0], 'sa')
+    self.assertEqual(module.get_rule(':d').srcs[0], 'sx')
+
   def testCustomRules(self):
     module_path = os.path.join(self.temp_path, 'simple', 'BUILD')
 
@@ -188,6 +222,141 @@ class ModuleLoaderTest(FixtureTestCase):
     self.assertEqual(len(module.rule_list()), 1)
     self.assertIsNotNone(module.get_rule(':a'))
     self.assertEqual(module.get_rule(':a').name, 'a')
+
+
+class ModuleLoaderSelectionTest(unittest2.TestCase):
+  """Behavioral tests for ModuleLoader selection utilities."""
+
+  def testSelectOne(self):
+    loader = ModuleLoader('some/path')
+    self.assertEqual(loader.select_one([
+        ], default_value=100), 100)
+    self.assertEqual(loader.select_one([
+        ('A', 1),
+        ('B', 2),
+        ], default_value=100), 100)
+
+    loader = ModuleLoader('some/path', modes=['A', 'B', 'C'])
+    self.assertEqual(loader.select_one([
+        ('X', 99),
+        ], default_value=100), 100)
+    self.assertEqual(loader.select_one([
+        ('A', 1),
+        ], default_value=100), 1)
+    self.assertEqual(loader.select_one([
+        ('A', 1),
+        ('B', 2),
+        ], default_value=100), 2)
+    self.assertEqual(loader.select_one([
+        ('B', 2),
+        ('A', 1),
+        ], default_value=100), 1)
+
+  def testSelectAny(self):
+    loader = ModuleLoader('some/path')
+    self.assertEqual(loader.select_any({
+        }, default_value=100), 100)
+    self.assertIsNone(loader.select_any({
+        'A': 1,
+        'B': 2,
+        }, default_value=None))
+    self.assertEqual(loader.select_any({
+        'A': 1,
+        'B': 2,
+        }, default_value=100), 100)
+
+    loader = ModuleLoader('some/path', modes=['A', 'B', 'C'])
+    self.assertEqual(loader.select_any({
+        }, default_value=100), 100)
+    self.assertEqual(loader.select_any({
+        'X': 99,
+        }, default_value=100), 100)
+    self.assertEqual(loader.select_any({
+        'X': 99,
+        'A': 1,
+        }, default_value=100), 1)
+    self.assertEqual(loader.select_any({
+        'X': 99,
+        'B': 2,
+        }, default_value=100), 2)
+
+    with self.assertRaises(KeyError):
+      loader.select_any({
+          'A': 1,
+          'B': 2,
+          }, default_value=100)
+
+  def testSelectMany(self):
+    loader = ModuleLoader('some/path')
+    self.assertIsNone(loader.select_many({}, default_value=None))
+    self.assertEqual(loader.select_many({}, default_value=[]), [])
+    self.assertEqual(loader.select_many({}, default_value=[1]), [1])
+    self.assertEqual(loader.select_many({}, default_value={}), {})
+    self.assertEqual(loader.select_many({}, default_value={'a': 1}), {'a': 1})
+    self.assertEqual(loader.select_many({}, default_value=1), [1])
+    self.assertEqual(loader.select_many({}, default_value='a'), ['a'])
+    self.assertEqual(loader.select_many({
+        'A': 1,
+        }, default_value=100), [100])
+    self.assertEqual(loader.select_many({
+        'A': [1, 2, 3],
+        }, default_value=[100, 101, 102]), [100, 101, 102])
+    self.assertEqual(loader.select_many({
+        'A': {'a': 1},
+        }, default_value={'d': 100}), {'d': 100})
+
+    loader = ModuleLoader('some/path', modes=['A', 'B', 'C'])
+    self.assertEqual(loader.select_many({}, default_value=[]), [])
+    self.assertEqual(loader.select_many({
+        'X': 1,
+        }, default_value=100), [100])
+    self.assertEqual(loader.select_many({
+        'A': 1,
+        }, default_value=100), [1])
+    self.assertEqual(loader.select_many({
+        'A': 1,
+        'B': 2,
+        }, default_value=100), [1, 2])
+    self.assertEqual(loader.select_many({
+        'A': [1, 2, 3],
+        }, default_value=[100]), [1, 2, 3])
+    self.assertEqual(loader.select_many({
+        'A': [1, 2, 3],
+        'B': [4, 5, 6],
+        }, default_value=[100]), [1, 2, 3, 4, 5, 6])
+    self.assertEqual(loader.select_many({
+        'A': {'a': 1},
+        }, default_value={'d': 100}), {'a': 1})
+    self.assertEqual(loader.select_many({
+        'A': {'a': 1},
+        'B': {'b': 2},
+        }, default_value={'d': 100}), {'a': 1, 'b': 2})
+
+    with self.assertRaises(TypeError):
+      loader.select_many({
+          'A': 1,
+          }, default_value=[100])
+    with self.assertRaises(TypeError):
+      loader.select_many({
+          'A': 1,
+          }, default_value={'d': 100})
+    with self.assertRaises(TypeError):
+      loader.select_many({
+          'A': [1],
+          }, default_value=100)
+    with self.assertRaises(TypeError):
+      loader.select_many({
+          'A': [1],
+          }, default_value={'d': 100})
+    with self.assertRaises(TypeError):
+      loader.select_many({
+          'A': {'a': 1},
+          }, default_value=100)
+    with self.assertRaises(TypeError):
+      loader.select_many({
+          'A': {'a': 1},
+          }, default_value=[100])
+
 
 if __name__ == '__main__':
   unittest2.main()
