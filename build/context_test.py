@@ -8,12 +8,14 @@
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
+import os
 import unittest2
 
 from context import *
 from module import *
 from rule import *
 from project import *
+from test import FixtureTestCase
 
 
 class BuildEnvironmentTest(unittest2.TestCase):
@@ -75,15 +77,50 @@ class BuildContextTest(unittest2.TestCase):
     # TODO(benvanik): the rest of this
 
 
-class RuleContextTest(unittest2.TestCase):
+class RuleContextTest(FixtureTestCase):
   """Behavioral tests of the RuleContext type."""
+  fixture = 'simple'
 
   def setUp(self):
     super(RuleContextTest, self).setUp()
     self.build_env = BuildEnvironment()
 
-  def test(self):
-    pass
+  def testFileInputs(self):
+    root_path = os.path.join(self.temp_path, 'simple')
+    project = Project(module_resolver=FileModuleResolver(root_path))
+    build_ctx = BuildContext(self.build_env, project)
+
+    rule = project.resolve_rule(':file_input')
+    rule_ctx = RuleContext(build_ctx, rule)
+    self.assertEqual(
+        set([os.path.basename(f) for f in rule_ctx.all_input_files]),
+        set(['a.txt']))
+
+    rule = project.resolve_rule(':local_txt')
+    rule_ctx = RuleContext(build_ctx, rule)
+    self.assertEqual(
+        set([os.path.basename(f) for f in rule_ctx.all_input_files]),
+        set(['a.txt', 'b.txt', 'c.txt']))
+
+    rule = project.resolve_rule(':recursive_txt')
+    rule_ctx = RuleContext(build_ctx, rule)
+    self.assertEqual(
+        set([os.path.basename(f) for f in rule_ctx.all_input_files]),
+        set(['a.txt', 'b.txt', 'c.txt', 'd.txt', 'e.txt']))
+
+  def testRuleInputs(self):
+    root_path = os.path.join(self.temp_path, 'simple')
+    project = Project(module_resolver=FileModuleResolver(root_path))
+    build_ctx = BuildContext(self.build_env, project)
+
+    # TODO(benvanik): test rules
+    rule = project.resolve_rule(':rule_input')
+    # rule_ctx = RuleContext(build_ctx, rule)
+    # self.assertEqual(
+    #     set([os.path.basename(f) for f in rule_ctx.all_input_files]),
+    #     set(['a.txt', 'b.txt', 'c.txt']))
+
+    # TODO(benvanik): test mixed (rule|file) inputs
 
 
 if __name__ == '__main__':

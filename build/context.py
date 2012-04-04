@@ -10,7 +10,9 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
 from collections import deque
+import glob2
 import multiprocessing
+import os
 
 import build
 import graph
@@ -89,6 +91,9 @@ class BuildContext(object):
 
     # Build the rule graph
     self.rule_graph = graph.RuleGraph(self.project)
+
+    # Dictionary that should be used to map rule paths to RuleContexts
+    self.rule_contexts = {}
 
   def execute(self, target_rule_names):
     """Executes all rules in the context.
@@ -178,12 +183,15 @@ class BuildContext(object):
 
 class RuleContext(object):
   """A runtime context for an individual rule.
+  Must contain all of the state for a rule while it is being run, including
+  all resolved inputs and resulting outputs (once complete).
   """
 
   def __init__(self, build_context, rule, *args, **kwargs):
-    """
+    """Initializes a rule context.
+
     Args:
-      build_context: Active build context.
+      build_context: BuildContext this rule is running in.
       rule: Rule this context wraps.
     """
     self.build_context = build_context
@@ -196,14 +204,41 @@ class RuleContext(object):
     # TODO(benvanik): logger
     self.logger = None
 
-    self.tasks = []
-
+    # The fully resolved (and de-duped) list of all files from srcs
     self.all_input_files = self._gather_input_files()
-    #self.file_delta = FileDelta()
-    #self.all_output_files = []
+
+    # This list of all files this rule outputted, upon completion
+    self.all_output_files = []
 
   def _gather_input_files(self):
-    pass
+    """Gathers and returns a list of all files that a rule needs based on srcs.
+    This adds direct file references, recursively enumerates paths, expands
+    globs, and grabs outputs from other rules.
+
+    Returns:
+      A list of all file paths from srcs.
+
+    Raises:
+    KeyError: A required rule was not found.
+      OSError: A source path was not found or could not be accessed.
+    """
+    input_paths = set([])
+    base_path = os.path.dirname(self.rule.parent_module.path)
+    for src in self.rule.srcs:
+      if util.is_rule_path(src):
+        # Reference to another rule
+        other_rule = self.build_context.project.resolve_rule(
+            src, requesting_module=self.rule.parent_module)
+        if not other_rule:
+          raise KeyError('Source rule "%s" not found' % (src))
+        other_rule_ctx = build_context.rule_contexts[other_rule.path]
+        input_paths.update(other_rule_ctx.all_output_files)
+      else:
+        # File or glob - treat as the same
+        # This will only return files that exist
+        glob_path = os.path.join(base_path, src)
+        input_paths.update(glob2.iglob(glob_path))
+    return list(input_paths)
 
 
 class Task(object):
