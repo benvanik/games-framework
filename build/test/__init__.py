@@ -47,5 +47,3 @@ class FixtureTestCase(unittest2.TestCase):
       fixture_path = os.path.join(build_path, 'test', 'fixtures', self.fixture)
       target_path = self.temp_path + '/' + self.fixture
       shutil.copytree(fixture_path, target_path)
-      # BUG: required on cygwin due to copytree messing up file permissions
-      os.chmod(target_path, 0777)
