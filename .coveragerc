@@ -10,9 +10,11 @@ exclude_lines =
     if __name__ == .__main__.:
 
 omit =
+    BUILD
     build/test/__init__.py
     tools/test-build.py
     *_test.py
     /usr/**
+    /tmp/**
     /Library/Python/**
     /private/var/**

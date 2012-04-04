@@ -78,9 +78,14 @@ class Module(object):
 
     Returns:
       The rule with the given name or None if it was not found.
+
+    Raises:
+      NameError: The given rule name was invalid.
     """
-    if rule_name[0] == ':':
+    if len(rule_name) and rule_name[0] == ':':
       rule_name = rule_name[1:]
+    if not len(rule_name):
+      raise NameError('Rule name "%s" is invalid' % (rule_name))
     return self.rules.get(rule_name, None)
 
   def rule_list(self):

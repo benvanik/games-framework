@@ -103,6 +103,11 @@ class ModuleTest(unittest2.TestCase):
 
     self.assertIsNone(module.get_rule(':x'))
 
+    with self.assertRaises(NameError):
+      module.get_rule('')
+    with self.assertRaises(NameError):
+      module.get_rule(':')
+
   def testRuleParentModule(self):
     rule_a = Rule('a')
     module = Module('m')

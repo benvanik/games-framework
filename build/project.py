@@ -13,9 +13,12 @@ import base64
 import os
 import pickle
 import re
+import stat
 import string
 
 import build
+from module import ModuleLoader
+from rule import RuleNamespace
 import util
 
 
@@ -26,12 +29,15 @@ class Project(object):
   be in the state it was when first created.
   """
 
-  def __init__(self, name='Project', module_resolver=None, modules=None):
+  def __init__(self, name='Project', rule_namespace=None, module_resolver=None,
+               modules=None):
     """Initializes an empty project.
 
     Args:
       name: A human-readable name for the project that will be used for
           logging.
+      rule_namespace: Rule namespace to use when loading modules. If omitted a
+          default one is used.
       module_resolver: A module resolver to use when attempt to dynamically
           resolve modules by path.
       modules: A list of modules to add to the project.
@@ -40,9 +46,18 @@ class Project(object):
       NameError: The name given is not valid.
     """
     self.name = name
-    self.module_resolver = module_resolver
-    if not self.module_resolver:
-      self.module_resolver = ModuleResolver()
+
+    if rule_namespace:
+      self.rule_namespace = rule_namespace
+    else:
+      self.rule_namespace = RuleNamespace()
+      self.rule_namespace.discover()
+
+    if module_resolver:
+      self.module_resolver = module_resolver
+    else:
+      self.module_resolver = StaticModuleResolver()
+
     self.modules = {}
     if modules and len(modules):
       self.add_modules(modules)
@@ -123,14 +138,16 @@ class Project(object):
 
     module = requesting_module
     if len(module_path):
-      module = self.modules.get(module_path, None)
+      requesting_path = None
+      if requesting_module:
+        requesting_path = os.path.dirname(requesting_module.path)
+      full_path = self.module_resolver.resolve_module_path(
+          module_path, requesting_path)
+      module = self.modules.get(full_path, None)
       if not module:
         # Module not yet loaded - need to grab it
-        requesting_path = None
-        if requesting_module:
-          requesting_path = os.path.dirname(requesting_module.path)
         module = self.module_resolver.load_module(
-            module_path, working_path=requesting_path)
+            full_path, self.rule_namespace)
         if module:
           self.add_module(module)
         else:
@@ -145,20 +162,39 @@ class ModuleResolver(object):
   module that has not yet been loaded.
   """
 
-  def load_module(self, path, working_path=None):
+  def __init__(self, *args, **kwargs):
+    """Initializes a module resolver."""
+    pass
+
+  def resolve_module_path(self, path, working_path=None):
+    """Resolves a module path to its full, absolute path.
+    This is used by the project system to disambugate modules and check the
+    cache before actually performing a load.
+    The path returned from this will be passed to load_module.
+
+    Args:
+      path: Path of the module (may be relative/etc).
+      working_path: Path relative paths should be pased off of. If not provided
+          then relative paths may fail.
+
+    Returns:
+      An absolute path that can be used as a cache key and passed to
+      load_module.
+    """
+    raise NotImplementedError()
+
+  def load_module(self, full_path, rule_namespace):
     """Loads a module from the given path.
 
     Args:
-      path: Absolute path of the module.
-      working_path: Path relative paths should be pased off of. If not provided
-          then relative paths may fail.
+      full_path: Absolute path of the module as returned by resolve_module_path.
+      rule_namespace: Rule namespace to use when loading modules.
 
     Returns:
       A Module representing the given path or None if it could not be found.
 
     Raises:
-      IOError: The module could not be found.
-      NameError: The given path was not valid.
+      IOError/OSError: The module could not be found.
     """
     raise NotImplementedError()
 
@@ -167,19 +203,77 @@ class StaticModuleResolver(ModuleResolver):
   """A static module resolver that can resolve from a list of modules.
   """
 
-  def __init__(self, modules):
+  def __init__(self, modules=None, *args, **kwargs):
     """Initializes a static module resolver.
 
     Args:
       modules: A list of modules that can be resolved.
     """
-    self.modules = {}
-    for module in modules:
-      self.modules[module.path] = module
+    super(StaticModuleResolver, self).__init__(*args, **kwargs)
 
-  def load_module(self, path, working_path=None):
+    self.modules = {}
+    if modules:
+      for module in modules:
+        self.modules[module.path] = module
+
+  def resolve_module_path(self, path, working_path=None):
     real_path = path
     if working_path and len(working_path):
       real_path = os.path.join(working_path, path)
+    return os.path.normpath(real_path)
+
+  def load_module(self, full_path, rule_namespace):
+    return self.modules.get(full_path, None)
+
+
+class FileModuleResolver(ModuleResolver):
+  """A file-system backed module resolver.
+
+  Rules are searched for with relative paths from a defined root path.
+  If the module path given is a directory, the resolver will attempt to load
+  a BUILD file from that directory - otherwise the file specified will be
+  treated as the module.
+  """
+
+  def __init__(self, root_path, *args, **kwargs):
+    """Initializes a file-system module resolver.
+
+    Args:
+      root_path: Root filesystem path to treat as the base for all resolutions.
+
+    Raises:
+      IOError: The given root path is not found or is not a directory.
+    """
+    super(FileModuleResolver, self).__init__(*args, **kwargs)
+
+    self.root_path = root_path
+    if not os.path.isdir(root_path):
+      raise IOError('Root path "%s" not found' % (root_path))
+
+  def resolve_module_path(self, path, working_path=None):
+    # Compute the real path
+    has_working_path = working_path and len(working_path)
+    real_path = path
+    if has_working_path:
+      real_path = os.path.join(working_path, path)
     real_path = os.path.normpath(real_path)
-    return self.modules.get(real_path, None)
+    full_path = os.path.join(self.root_path, real_path)
+
+    # Check to see if it exists and is a file
+    # Special handling to find BUILD files under directories
+    mode = os.stat(full_path).st_mode
+    if stat.S_ISDIR(mode):
+      full_path = os.path.join(full_path, 'BUILD')
+      if not os.path.isfile(full_path):
+        raise IOError('Path "%s" is not a file' % (full_path))
+    elif stat.S_ISREG(mode):
+      pass
+    else:
+      raise IOError('Path "%s" is not a file' % (full_path))
+
+    return os.path.normpath(full_path)
+
+  def load_module(self, full_path, rule_namespace):
+    module_loader = ModuleLoader(full_path, rule_namespace=rule_namespace)
+    module_loader.load()
+    return module_loader.execute()
