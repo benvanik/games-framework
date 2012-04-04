@@ -121,6 +121,20 @@ class Rule(object):
     # Hash so that we return a reasonably-sized string
     return hashlib.md5(unique_str).hexdigest()
 
+  def create_context(self, build_context):
+    """Creates a new RuleContext that is used to run the rule.
+    Rule implementations should return their own RuleContext type that
+    has custom behavior.
+
+    Args:
+      build_context: The current BuildContext that should be passed to the
+          RuleContext.
+
+    Returns:
+      A new RuleContext.
+    """
+    raise NotImplementedError();
+
 
 # Active rule namespace that is capturing all new rule definitions
 # This should only be modified by RuleNamespace.discover

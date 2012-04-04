@@ -6,6 +6,7 @@
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
+from build.context import RuleContext
 from build.rule import Rule, build_rule
 
 
@@ -24,3 +25,6 @@ class GenericRule(Rule):
       name: Rule name.
     """
     super(GenericRule, self).__init__(name, *args, **kwargs)
+
+  def create_context(self, build_context):
+    return RuleContext(build_context, self)

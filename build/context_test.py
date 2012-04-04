@@ -91,19 +91,19 @@ class RuleContextTest(FixtureTestCase):
     build_ctx = BuildContext(self.build_env, project)
 
     rule = project.resolve_rule(':file_input')
-    rule_ctx = RuleContext(build_ctx, rule)
+    rule_ctx = rule.create_context(build_ctx)
     self.assertEqual(
         set([os.path.basename(f) for f in rule_ctx.all_input_files]),
         set(['a.txt']))
 
     rule = project.resolve_rule(':local_txt')
-    rule_ctx = RuleContext(build_ctx, rule)
+    rule_ctx = rule.create_context(build_ctx)
     self.assertEqual(
         set([os.path.basename(f) for f in rule_ctx.all_input_files]),
         set(['a.txt', 'b.txt', 'c.txt']))
 
     rule = project.resolve_rule(':recursive_txt')
-    rule_ctx = RuleContext(build_ctx, rule)
+    rule_ctx = rule.create_context(build_ctx)
     self.assertEqual(
         set([os.path.basename(f) for f in rule_ctx.all_input_files]),
         set(['a.txt', 'b.txt', 'c.txt', 'd.txt', 'e.txt']))
@@ -114,13 +114,13 @@ class RuleContextTest(FixtureTestCase):
     build_ctx = BuildContext(self.build_env, project)
 
     rule = project.resolve_rule(':local_txt_filter')
-    rule_ctx = RuleContext(build_ctx, rule)
+    rule_ctx = rule.create_context(build_ctx)
     self.assertEqual(
         set([os.path.basename(f) for f in rule_ctx.all_input_files]),
         set(['a.txt', 'b.txt', 'c.txt']))
 
     rule = project.resolve_rule(':recursive_txt_filter')
-    rule_ctx = RuleContext(build_ctx, rule)
+    rule_ctx = rule.create_context(build_ctx)
     self.assertEqual(
         set([os.path.basename(f) for f in rule_ctx.all_input_files]),
         set(['a.txt', 'b.txt', 'c.txt', 'd.txt', 'e.txt']))
@@ -132,7 +132,7 @@ class RuleContextTest(FixtureTestCase):
 
     # TODO(benvanik): test rules
     rule = project.resolve_rule(':rule_input')
-    # rule_ctx = RuleContext(build_ctx, rule)
+    # rule_ctx = rule.create_context(build_ctx)
     # self.assertEqual(
     #     set([os.path.basename(f) for f in rule_ctx.all_input_files]),
     #     set(['a.txt', 'b.txt', 'c.txt']))

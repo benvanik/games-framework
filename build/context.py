@@ -251,25 +251,25 @@ class RuleContext(object):
     return list(input_paths)
 
 
-class Task(object):
-  """
-  """
+# class Task(object):
+#   """
+#   """
 
-  def __init__(self, rule_context):
-    pass
+#   def __init__(self, rule_context):
+#     pass
 
 
-class FileDelta(object):
-  """
-  TODO(benvanik): move to another module and setup to use cache
-  """
+# class FileDelta(object):
+#   """
+#   TODO(benvanik): move to another module and setup to use cache
+#   """
 
-  def __init__(self, source_paths=None):
-    """
-    Args:
-      source_paths
-    """
-    self.all_files = []
-    self.added_files = []
-    self.removed_files = []
-    self.changed_files = []
+#   def __init__(self, source_paths=None):
+#     """
+#     Args:
+#       source_paths
+#     """
+#     self.all_files = []
+#     self.added_files = []
+#     self.removed_files = []
+#     self.changed_files = []
