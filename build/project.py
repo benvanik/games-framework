@@ -132,6 +132,9 @@ class Project(object):
     if string.find(rule_path, ':') == -1:
       raise NameError('The rule path "%s" is missing a semicolon' % (rule_path))
     (module_path, rule_name) = string.rsplit(rule_path, ':', 1)
+    if self.module_resolver.can_resolve_local:
+      if not len(module_path) and not requesting_module:
+        module_path = '.'
     if not len(module_path) and not requesting_module:
       raise KeyError('Local rule "%s" given when no resolver defined' % (
           rule_path))
@@ -164,7 +167,7 @@ class ModuleResolver(object):
 
   def __init__(self, *args, **kwargs):
     """Initializes a module resolver."""
-    pass
+    self.can_resolve_local = False
 
   def resolve_module_path(self, path, working_path=None):
     """Resolves a module path to its full, absolute path.
@@ -245,6 +248,8 @@ class FileModuleResolver(ModuleResolver):
       IOError: The given root path is not found or is not a directory.
     """
     super(FileModuleResolver, self).__init__(*args, **kwargs)
+
+    self.can_resolve_local = True
 
     self.root_path = root_path
     if not os.path.isdir(root_path):

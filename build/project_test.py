@@ -252,6 +252,7 @@ class FileModuleResolverTest(FixtureTestCase):
     module_resolver = FileModuleResolver(root_path)
 
     test_paths = [
+      ':root_rule',
       '.:root_rule',
       './:root_rule',
       './BUILD:root_rule',
@@ -325,15 +326,6 @@ class FileModuleResolverTest(FixtureTestCase):
     self.assertEqual(len(project.module_list()), 1)
     self.assertIsNone(project.resolve_rule('a/../a/BUILD:rule_y'))
     self.assertEqual(len(project.module_list()), 1)
-
-  def testBadState(self):
-    root_path = os.path.join(self.temp_path, 'resolution')
-    module_resolver = FileModuleResolver(root_path)
-
-    project = Project(module_resolver=module_resolver)
-    with self.assertRaises(KeyError):
-      project.resolve_rule(':x')
-    self.assertEqual(len(project.module_list()), 0)
 
 
 if __name__ == '__main__':
