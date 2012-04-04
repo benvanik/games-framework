@@ -120,6 +120,7 @@ class ModuleTest(unittest2.TestCase):
 
 
 class ModuleLoaderTest(FixtureTestCase):
+  """Behavioral tests for ModuleLoader."""
   fixture = 'simple'
 
   def testLoad(self):
