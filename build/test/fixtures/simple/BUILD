@@ -16,6 +16,12 @@ rule('local_txt',
 rule('recursive_txt',
     srcs='**/*.txt')
 
+rule('local_txt_filter',
+    srcs='*',
+    src_filter='*.txt')
+rule('recursive_txt_filter',
+    srcs='**/*',
+    src_filter='*.txt')
 
 rule('file_input',
     srcs='a.txt')

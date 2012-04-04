@@ -108,6 +108,23 @@ class RuleContextTest(FixtureTestCase):
         set([os.path.basename(f) for f in rule_ctx.all_input_files]),
         set(['a.txt', 'b.txt', 'c.txt', 'd.txt', 'e.txt']))
 
+  def testFileInputFilters(self):
+    root_path = os.path.join(self.temp_path, 'simple')
+    project = Project(module_resolver=FileModuleResolver(root_path))
+    build_ctx = BuildContext(self.build_env, project)
+
+    rule = project.resolve_rule(':local_txt_filter')
+    rule_ctx = RuleContext(build_ctx, rule)
+    self.assertEqual(
+        set([os.path.basename(f) for f in rule_ctx.all_input_files]),
+        set(['a.txt', 'b.txt', 'c.txt']))
+
+    rule = project.resolve_rule(':recursive_txt_filter')
+    rule_ctx = RuleContext(build_ctx, rule)
+    self.assertEqual(
+        set([os.path.basename(f) for f in rule_ctx.all_input_files]),
+        set(['a.txt', 'b.txt', 'c.txt', 'd.txt', 'e.txt']))
+
   def testRuleInputs(self):
     root_path = os.path.join(self.temp_path, 'simple')
     project = Project(module_resolver=FileModuleResolver(root_path))

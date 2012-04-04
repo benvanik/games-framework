@@ -10,6 +10,7 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
 from collections import deque
+import fnmatch
 import glob2
 import multiprocessing
 import os
@@ -222,9 +223,11 @@ class RuleContext(object):
     KeyError: A required rule was not found.
       OSError: A source path was not found or could not be accessed.
     """
-    input_paths = set([])
     base_path = os.path.dirname(self.rule.parent_module.path)
+    input_paths = set([])
     for src in self.rule.srcs:
+      # Grab all items from the source
+      src_items = None
       if util.is_rule_path(src):
         # Reference to another rule
         other_rule = self.build_context.project.resolve_rule(
@@ -232,12 +235,19 @@ class RuleContext(object):
         if not other_rule:
           raise KeyError('Source rule "%s" not found' % (src))
         other_rule_ctx = build_context.rule_contexts[other_rule.path]
-        input_paths.update(other_rule_ctx.all_output_files)
+        src_items = other_rule_ctx.all_output_files
       else:
         # File or glob - treat as the same
         # This will only return files that exist
         glob_path = os.path.join(base_path, src)
-        input_paths.update(glob2.iglob(glob_path))
+        src_items = glob2.iglob(glob_path)
+
+      # Apply the src_filter, if any
+      src_filter = self.rule.src_filter
+      for file_path in src_items:
+        if src_filter and not fnmatch.fnmatch(file_path, src_filter):
+          continue
+        input_paths.add(file_path)
     return list(input_paths)
 
 
