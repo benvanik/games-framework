@@ -68,15 +68,15 @@ class BuildContext(object):
   """
 
   def __init__(self, build_env, project,
-               worker_count=None, force=False,
+               task_executor=None, force=False,
                stop_on_error=False, raise_on_error=False):
     """Initializes a build context.
 
     Args:
       build_env: Current build environment.
       project: Project to use for building.
-      worker_count: Number of worker threads to use when building. None to use
-          as many processors as are available.
+      task_executor: Task executor to use. One will be created if none is
+          passed.
       force: True to force execution of tasks even if they have not changed.
       stop_on_error: True to stop executing tasks as soon as an error occurs.
       raise_on_error: True to rethrow exceptions to ease debugging.
@@ -84,7 +84,12 @@ class BuildContext(object):
     self.build_env = build_env
     self.project = project
 
-    self.worker_count = worker_count
+    self.task_executor = task_executor
+    self._close_task_executor = False
+    if not self.task_executor:
+      self.task_executor = MultiprocessTaskExecutor()
+      self._close_task_executor = True
+
     self.force = force
     self.stop_on_error = stop_on_error
     self.raise_on_error = raise_on_error
@@ -94,6 +99,13 @@ class BuildContext(object):
 
     # Dictionary that should be used to map rule paths to RuleContexts
     self.rule_contexts = {}
+
+  def __enter__(self):
+    return self
+
+  def __exit__(self, type, value, traceback):
+    if self._close_task_executor:
+      self.task_executor.close()
 
   def execute(self, target_rule_names):
     """Executes all rules in the context.
@@ -139,6 +151,30 @@ class BuildContext(object):
     deferred = Deferred()
     return deferred
 
+# TODO(benvanik): multiprocessing work
+# Requires basic checks for dependency of in-flight rules to ensure parallel
+# processing is possible.
+# Rule instances should be easily portable to worker threads (just metadata),
+# however synchronizing logging and things like aborting require work.
+#
+# run the list in order:
+# remaining_rules = deque(rule_sequence)
+# in_flight_rules = []
+# def pump():
+#   while len(in_flight_rules) < max_workers and len(remaining_rules):
+#     next_rule = remaining_rules[0]
+#     for in_flight_rule in in_flight_rules:
+#       if graph.has_dependency(next_rule.path, in_flight_rules.path):
+#         blocked!
+#         return
+#       else:
+#         runnable!
+#         remaining_rules.popleft()
+#         in_flight_rules.append(next_rule)
+#         kick off worker with rule
+#   if not len(in_flight_rules) and not len(remaining_rules):
+#     done!
+
   def _execute_rule(self, rule):
     """Executes a single rule.
     This assumes that all dependent rules have already been executed. Assertions
@@ -182,6 +218,13 @@ class TaskExecutor(object):
     """
     self.closed = False
     self._running_count = 0
+
+  def __enter__(self):
+    return self
+
+  def __exit__(self, type, value, traceback):
+    if not self.closed:
+      self.close()
 
   def has_any_running(self):
     """
@@ -332,7 +375,7 @@ def _task_initializer(): # pragma: no cover
   """Task executor process initializer, used by MultiprocessTaskExecutor.
   Called once on each process the TaskExecutor uses.
   """
-  print 'started! %s' % (multiprocessing.current_process().name)
+  #print 'started! %s' % (multiprocessing.current_process().name)
   pass
 
 def _task_thunk(task): # pragma: no cover
@@ -345,50 +388,10 @@ def _task_thunk(task): # pragma: no cover
   Returns:
     The result of the task execution. This is passed to the deferred.
   """
-  print 'would run task %s' % (task)
   try:
     return task.execute()
   except Exception as e:
     return e
-
-
-# TODO(benvanik): multiprocessing work
-# Requires basic checks for dependency of in-flight rules to ensure parallel
-# processing is possible.
-# Rule instances should be easily portable to worker threads (just metadata),
-# however synchronizing logging and things like aborting require work.
-#
-# run the list in order:
-# remaining_rules = deque(rule_sequence)
-# in_flight_rules = []
-# def pump():
-#   while len(in_flight_rules) < max_workers and len(remaining_rules):
-#     next_rule = remaining_rules[0]
-#     for in_flight_rule in in_flight_rules:
-#       if graph.has_dependency(next_rule.path, in_flight_rules.path):
-#         blocked!
-#         return
-#       else:
-#         runnable!
-#         remaining_rules.popleft()
-#         in_flight_rules.append(next_rule)
-#         kick off worker with rule
-#   if not len(in_flight_rules) and not len(remaining_rules):
-#     done!
-#
-# # TODO(benvanik): use multiprocessing.cpu_count() or command line args to
-# #                 pick the CPU count - right now, this will log a bunch of
-# #                 warnings if we run with too many processes on cygwin
-# mp_pool = multiprocessing.Pool(processes=worker_count)
-# mp_results = []
-# for rule in self.rule_sequence:
-#   # Queue the rule
-#   mp_results.append(mp_pool.apply_async(
-#       self._execute_rule, (rule)))
-# # Gather results
-# for result in mp_results:
-#   result.wait()
-# mp_pool.close()
 
 
 class RuleContext(object):

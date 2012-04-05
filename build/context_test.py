@@ -34,24 +34,29 @@ class BuildContextTest(unittest2.TestCase):
 
   def testConstruction(self):
     project = Project()
-    ctx = BuildContext(self.build_env, project)
+    with BuildContext(self.build_env, project): pass
 
     project = Project(modules=[Module('m', rules=[Rule('a')])])
-    ctx = BuildContext(self.build_env, project)
+    with BuildContext(self.build_env, project) as ctx:
+      self.assertIsNotNone(ctx.task_executor)
+
+    with BuildContext(self.build_env, project,
+                      task_executor=InProcessTaskExecutor()) as ctx:
+      self.assertIsNotNone(ctx.task_executor)
 
   def testExecution(self):
     project = Project(modules=[Module('m', rules=[Rule('a')])])
 
-    ctx = BuildContext(self.build_env, project)
-    with self.assertRaises(NameError):
-      ctx.execute(['a'])
-    with self.assertRaises(KeyError):
-      ctx.execute([':b'])
-    with self.assertRaises(KeyError):
-      ctx.execute(['m:b'])
+    with BuildContext(self.build_env, project) as ctx:
+      with self.assertRaises(NameError):
+        ctx.execute(['a'])
+      with self.assertRaises(KeyError):
+        ctx.execute([':b'])
+      with self.assertRaises(KeyError):
+        ctx.execute(['m:b'])
 
-    ctx = BuildContext(self.build_env, project)
-    d = ctx.execute(['m:a'])
+    with BuildContext(self.build_env, project) as ctx:
+      d = ctx.execute(['m:a'])
 
 
     # TODO(benvanik): test stop_on_error
@@ -61,19 +66,15 @@ class BuildContextTest(unittest2.TestCase):
     # TODO(benvanik): test caching and force arg
     pass
 
-  def testWorkerCount(self):
-    # TODO(benvanik): test worker_count
-    pass
-
   def testBuild(self):
     project = Project(modules=[Module('m', rules=[
         Rule('a1'),
         Rule('a2'),
         Rule('b', deps=[':a1', ':a2']),
         Rule('c', deps=[':b'])])])
-    ctx = BuildContext(self.build_env, project)
-    ctx.execute(['m:c'])
-    # TODO(benvanik): the rest of this
+    with BuildContext(self.build_env, project) as ctx:
+      ctx.execute(['m:c'])
+      # TODO(benvanik): the rest of this
 
 
 class SuccessTask(Task):
@@ -99,73 +100,68 @@ class TaskExecutorTest(AsyncTestCase):
     with self.assertRaises(RuntimeError):
       executor.close()
 
-    executor = executor_cls()
-    d = executor.run_task_async(SuccessTask(True))
-    executor.wait(d)
-    self.assertFalse(executor.has_any_running())
-    self.assertCallbackEqual(d, True)
-    executor.close()
-    self.assertFalse(executor.has_any_running())
+    with executor_cls() as executor:
+      d = executor.run_task_async(SuccessTask(True))
+      executor.wait(d)
+      self.assertFalse(executor.has_any_running())
+      self.assertCallbackEqual(d, True)
+      executor.close()
+      self.assertFalse(executor.has_any_running())
 
-    executor = executor_cls()
-    d = executor.run_task_async(FailureTask())
-    executor.wait(d)
-    self.assertFalse(executor.has_any_running())
-    self.assertErrbackWithError(d, TypeError)
-    executor.close()
+    with executor_cls() as executor:
+      d = executor.run_task_async(FailureTask())
+      executor.wait(d)
+      self.assertFalse(executor.has_any_running())
+      self.assertErrbackWithError(d, TypeError)
 
-    executor = executor_cls()
-    d = executor.run_task_async(SuccessTask(True))
-    executor.wait(d)
-    executor.wait(d)
-    self.assertFalse(executor.has_any_running())
-    self.assertCallback(d)
-    executor.close()
+    with executor_cls() as executor:
+      d = executor.run_task_async(SuccessTask(True))
+      executor.wait(d)
+      executor.wait(d)
+      self.assertFalse(executor.has_any_running())
+      self.assertCallback(d)
 
-    executor = executor_cls()
-    da = executor.run_task_async(SuccessTask('a'))
-    executor.wait(da)
-    self.assertFalse(executor.has_any_running())
-    self.assertCallbackEqual(da, 'a')
-    db = executor.run_task_async(SuccessTask('b'))
-    executor.wait(db)
-    self.assertFalse(executor.has_any_running())
-    self.assertCallbackEqual(db, 'b')
-    dc = executor.run_task_async(SuccessTask('c'))
-    executor.wait(dc)
-    self.assertFalse(executor.has_any_running())
-    self.assertCallbackEqual(dc, 'c')
-    executor.close()
+    with executor_cls() as executor:
+      da = executor.run_task_async(SuccessTask('a'))
+      executor.wait(da)
+      self.assertFalse(executor.has_any_running())
+      self.assertCallbackEqual(da, 'a')
+      db = executor.run_task_async(SuccessTask('b'))
+      executor.wait(db)
+      self.assertFalse(executor.has_any_running())
+      self.assertCallbackEqual(db, 'b')
+      dc = executor.run_task_async(SuccessTask('c'))
+      executor.wait(dc)
+      self.assertFalse(executor.has_any_running())
+      self.assertCallbackEqual(dc, 'c')
 
-    executor = executor_cls()
-    da = executor.run_task_async(SuccessTask('a'))
-    db = executor.run_task_async(SuccessTask('b'))
-    dc = executor.run_task_async(SuccessTask('c'))
-    executor.wait([da, db, dc])
-    self.assertFalse(executor.has_any_running())
-    self.assertCallbackEqual(dc, 'c')
-    self.assertCallbackEqual(db, 'b')
-    self.assertCallbackEqual(da, 'a')
-    executor.close()
+    with executor_cls() as executor:
+      da = executor.run_task_async(SuccessTask('a'))
+      db = executor.run_task_async(SuccessTask('b'))
+      dc = executor.run_task_async(SuccessTask('c'))
+      executor.wait([da, db, dc])
+      self.assertFalse(executor.has_any_running())
+      self.assertCallbackEqual(dc, 'c')
+      self.assertCallbackEqual(db, 'b')
+      self.assertCallbackEqual(da, 'a')
 
-    executor = executor_cls()
-    da = executor.run_task_async(SuccessTask('a'))
-    db = executor.run_task_async(FailureTask)
-    dc = executor.run_task_async(SuccessTask('c'))
-    executor.wait(da)
-    self.assertCallbackEqual(da, 'a')
-    executor.wait(db)
-    self.assertErrbackWithError(db, TypeError)
-    executor.wait(dc)
-    self.assertCallbackEqual(dc, 'c')
-    self.assertFalse(executor.has_any_running())
-    executor.close()
+    with executor_cls() as executor:
+      da = executor.run_task_async(SuccessTask('a'))
+      db = executor.run_task_async(FailureTask)
+      dc = executor.run_task_async(SuccessTask('c'))
+      executor.wait(da)
+      self.assertCallbackEqual(da, 'a')
+      executor.wait(db)
+      self.assertErrbackWithError(db, TypeError)
+      executor.wait(dc)
+      self.assertCallbackEqual(dc, 'c')
+      self.assertFalse(executor.has_any_running())
 
     # This test is not quite right - it's difficult to test for proper
     # early termination
-    executor = executor_cls()
-    executor.close(graceful=False)
-    self.assertFalse(executor.has_any_running())
+    with executor_cls() as executor:
+      executor.close(graceful=False)
+      self.assertFalse(executor.has_any_running())
 
   def testInProcess(self):
     self.runTestsWithExecutorType(InProcessTaskExecutor)
