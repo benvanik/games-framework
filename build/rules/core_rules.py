@@ -27,4 +27,12 @@ class GenericRule(Rule):
     super(GenericRule, self).__init__(name, *args, **kwargs)
 
   def create_context(self, build_context):
-    return RuleContext(build_context, self)
+    return _GenericRuleContext(build_context, self)
+
+
+class _GenericRuleContext(RuleContext):
+  def begin(self):
+    result = super(_GenericRuleContext, self).begin()
+    self.all_output_files.extend(self.all_input_files)
+    self._succeed()
+    return result

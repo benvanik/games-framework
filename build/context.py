@@ -226,9 +226,11 @@ class RuleContext(object):
     self.build_context = build_context
     self.rule = rule
 
+    self.deferred = Deferred()
     self.status = Status.WAITING
     self.start_time = None
     self.end_time = None
+    self.exception = None
 
     # TODO(benvanik): logger
     self.logger = None
@@ -294,15 +296,34 @@ class RuleContext(object):
     Returns:
       A Deferred that can will be called back when the rule has completed.
     """
-    self.status = Status.SUCCEEDED
+    self.status = Status.RUNNING
     self.start_time = time.time()
-    self.end_time = self.start_time
+    return self.deferred
 
-    self.all_output_files.extend(self.all_input_files)
+  def _succeed(self):
+    """Signals that rule execution has completed successfully.
+    This will set all state and issue the callback on the deferred.
+    """
+    self.status = Status.SUCCEEDED
+    self.end_time = time.time()
+    self.deferred.callback()
 
-    deferred = Deferred()
-    deferred.callback()
-    return deferred
+  def _fail(self, exception=None):
+    """Signals that rule execution has completed in failure.
+    This will set all state and issue the errback on the deferred.
+    If an exception is provided it will be set on the context and passed as
+    the first argument to the deferred.
+
+    Args:
+      exception: The exception that resulted in the rule failure, if any.
+    """
+    self.status = Status.FAILED
+    self.end_time = time.time()
+    self.exception = exception
+    if exception:
+      self.deferred.errback(exception)
+    else:
+      self.deferred.errback()
 
 
 # class FileDelta(object):

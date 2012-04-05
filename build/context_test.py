@@ -85,6 +85,51 @@ class RuleContextTest(FixtureTestCase):
     super(RuleContextTest, self).setUp()
     self.build_env = BuildEnvironment()
 
+  def testStatus(self):
+    root_path = os.path.join(self.temp_path, 'simple')
+    project = Project(module_resolver=FileModuleResolver(root_path))
+    build_ctx = BuildContext(self.build_env, project)
+    project = Project(module_resolver=FileModuleResolver(root_path))
+    rule = project.resolve_rule(':a')
+
+    class SuccessfulRuleContext(RuleContext):
+      def begin(self):
+        result = super(SuccessfulRuleContext, self).begin()
+        self._succeed()
+        return result
+
+    rule_ctx = SuccessfulRuleContext(build_ctx, rule)
+    self.assertEqual(rule_ctx.status, Status.WAITING)
+    d = rule_ctx.begin()
+    self.assertTrue(d.is_done())
+    self.assertEqual(rule_ctx.status, Status.SUCCEEDED)
+
+    class FailedRuleContext(RuleContext):
+      def begin(self):
+        result = super(FailedRuleContext, self).begin()
+        self._fail()
+        return result
+
+    rule_ctx = FailedRuleContext(build_ctx, rule)
+    self.assertEqual(rule_ctx.status, Status.WAITING)
+    d = rule_ctx.begin()
+    self.assertTrue(d.is_done())
+    self.assertEqual(rule_ctx.status, Status.FAILED)
+    self.assertIsNone(rule_ctx.exception)
+
+    class FailedWithErrorRuleContext(RuleContext):
+      def begin(self):
+        result = super(FailedWithErrorRuleContext, self).begin()
+        self._fail(RuntimeError('Failure'))
+        return result
+
+    rule_ctx = FailedWithErrorRuleContext(build_ctx, rule)
+    self.assertEqual(rule_ctx.status, Status.WAITING)
+    d = rule_ctx.begin()
+    self.assertTrue(d.is_done())
+    self.assertEqual(rule_ctx.status, Status.FAILED)
+    self.assertIsInstance(rule_ctx.exception, RuntimeError)
+
   def testFileInputs(self):
     root_path = os.path.join(self.temp_path, 'simple')
     project = Project(module_resolver=FileModuleResolver(root_path))
