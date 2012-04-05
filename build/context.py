@@ -68,23 +68,21 @@ class BuildContext(object):
   """
 
   def __init__(self, build_env, project,
-               worker_count=2, force=False,
+               worker_count=None, force=False,
                stop_on_error=False, raise_on_error=False):
     """Initializes a build context.
 
     Args:
       build_env: Current build environment.
       project: Project to use for building.
-      worker_count: Number of worker threads to use when building.
+      worker_count: Number of worker threads to use when building. None to use
+          as many processors as are available.
       force: True to force execution of tasks even if they have not changed.
       stop_on_error: True to stop executing tasks as soon as an error occurs.
       raise_on_error: True to rethrow exceptions to ease debugging.
     """
     self.build_env = build_env
     self.project = project
-
-    if not worker_count:
-      raise ValueError('Invalid worker count %s' % (worker_count))
 
     self.worker_count = worker_count
     self.force = force
@@ -106,7 +104,7 @@ class BuildContext(object):
       target_rule_names: A list of rule names that are to be executed.
 
     Returns:
-      TODO
+      A Deferred that is called back when all rules have completed executing.
 
     Raises:
       KeyError: One of the given target rules was not found in the project.
@@ -125,20 +123,21 @@ class BuildContext(object):
 
     # Execute all rules in order
     # TODO(benvanik): make this execution multithreaded (see notes below)
-    any_failed = False
-    remaining_rules = deque(rule_sequence)
-    while len(remaining_rules):
-      rule = remaining_rules.popleft()
-      start_time = time.clock()
-      #result = self._execute_rule(rule)
-      result = None
-      duration = time.clock() - start_time
-      if not result:
-        any_failed = True
-      if any_failed and self.stop_on_error:
-        break
+    # any_failed = False
+    # remaining_rules = deque(rule_sequence)
+    # while len(remaining_rules):
+    #   rule = remaining_rules.popleft()
+    #   start_time = time.clock()
+    #   deferred = self._execute_rule(rule)
+    #   result = None
+    #   duration = time.clock() - start_time
+    #   if not result:
+    #     any_failed = True
+    #   if any_failed and self.stop_on_error:
+    #     break
 
-    return any_failed
+    deferred = Deferred()
+    return deferred
 
   def _execute_rule(self, rule):
     """Executes a single rule.

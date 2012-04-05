@@ -35,8 +35,6 @@ class BuildContextTest(unittest2.TestCase):
   def testConstruction(self):
     project = Project()
     ctx = BuildContext(self.build_env, project)
-    with self.assertRaises(ValueError):
-      BuildContext(self.build_env, project, worker_count=0)
 
     project = Project(modules=[Module('m', rules=[Rule('a')])])
     ctx = BuildContext(self.build_env, project)
@@ -53,7 +51,7 @@ class BuildContextTest(unittest2.TestCase):
       ctx.execute(['m:b'])
 
     ctx = BuildContext(self.build_env, project)
-    self.assertTrue(ctx.execute(['m:a']))
+    d = ctx.execute(['m:a'])
 
     # TODO(benvanik): test stop_on_error
     # TODO(benvanik): test raise_on_error
