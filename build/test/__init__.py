@@ -13,6 +13,65 @@ import sys
 import unittest2
 
 
+class AsyncTestCase(unittest2.TestCase):
+  """Test case adding additional asserts for async results."""
+
+  def assertCallback(self, deferred):
+    self.assertTrue(deferred.is_done())
+    done = []
+    def _callback(*args, **kwargs):
+      done.append(True)
+    def _errback(*args, **kwargs):
+      self.fail('Deferred failed when it should have succeeded')
+    deferred.add_errback_fn(_errback)
+    deferred.add_callback_fn(_callback)
+    if not len(done):
+      self.fail('Deferred not called back with success')
+
+  def assertCallbackEqual(self, deferred, value):
+    self.assertTrue(deferred.is_done())
+    done = []
+    def _callback(*args, **kwargs):
+      if isinstance(value, list):
+        self.assertEqual(args, value)
+      else:
+        self.assertEqual(args[0], value)
+      done.append(True)
+    def _errback(*args, **kwargs):
+      self.fail('Deferred failed when it should have succeeded')
+    deferred.add_errback_fn(_errback)
+    deferred.add_callback_fn(_callback)
+    if not len(done):
+      self.fail('Deferred not called back with success')
+
+  def assertErrback(self, deferred):
+    self.assertTrue(deferred.is_done())
+    done = []
+    def _callback(*args, **kwargs):
+      self.fail('Deferred succeeded when it should have failed')
+    def _errback(*args, **kwargs):
+      done.append(True)
+    deferred.add_callback_fn(_callback)
+    deferred.add_errback_fn(_errback)
+    if not len(done):
+      self.fail('Deferred not called back with error')
+
+  def assertErrbackWithError(self, deferred, error_cls):
+    self.assertTrue(deferred.is_done())
+    done = []
+    def _callback(*args, **kwargs):
+      self.fail('Deferred succeeded when it should have failed')
+    def _errback(*args, **kwargs):
+      done.append(True)
+      if not len(args):
+        self.fail('Deferred failed with no error')
+      self.assertIsInstance(args[0], error_cls)
+    deferred.add_callback_fn(_callback)
+    deferred.add_errback_fn(_errback)
+    if not len(done):
+      self.fail('Deferred not called back with error')
+
+
 class FixtureTestCase(unittest2.TestCase):
   """Test case supporting static fixture/output support.
   Set self.fixture to a folder name from the test/fixtures/ path.
