@@ -14,11 +14,12 @@ import fnmatch
 import glob2
 import multiprocessing
 import os
+import time
 
+from async import Deferred
 import build
 import graph
 import project
-import time
 import util
 
 
@@ -129,7 +130,8 @@ class BuildContext(object):
     while len(remaining_rules):
       rule = remaining_rules.popleft()
       start_time = time.clock()
-      result = self.execute_rule(rule)
+      #result = self._execute_rule(rule)
+      result = None
       duration = time.clock() - start_time
       if not result:
         any_failed = True
@@ -138,10 +140,38 @@ class BuildContext(object):
 
     return any_failed
 
-  def execute_rule(self, rule):
+  def _execute_rule(self, rule):
+    """Executes a single rule.
+    This assumes that all dependent rules have already been executed. Assertions
+    will be raised if all dependent rules have not completed successfully or
+    if the given rule has been executed already.
+
+    Args:
+      rule: Rule to execute.
+
+    Returns:
+      A Deferred that will callback when the rule has completed executing.
     """
+    assert not self.rule_contexts.has_key(rule.path)
+    rule_ctx = rule.create_context(self)
+    self.rule_contexts[rule.path] = rule_ctx
+    return rule_ctx.begin()
+
+  def _get_rule_outputs(self, rule):
+    """Gets the output files of the given rule.
+    It is only valid to call this on rules that have already been executed
+    and have succeeded.
+
+    Args:
+      rule: Rule to get the outputs of.
+
+    Returns:
+      A list of all output files from the rule.
     """
-    pass
+    assert self.rule_contexts.has_key(rule.path)
+    rule_ctx = self.rule_contexts[rule.path]
+    assert rule_ctx.status == Status.SUCCEEDED
+    return rule_ctx.all_output_files[:]
 
 # TODO(benvanik): multiprocessing work
 # Requires basic checks for dependency of in-flight rules to ensure parallel
@@ -220,8 +250,9 @@ class RuleContext(object):
       A list of all file paths from srcs.
 
     Raises:
-    KeyError: A required rule was not found.
+      KeyError: A required rule was not found.
       OSError: A source path was not found or could not be accessed.
+      RuntimeError: Internal runtime error (rule executed out of order/etc)
     """
     base_path = os.path.dirname(self.rule.parent_module.path)
     input_paths = set([])
@@ -234,7 +265,9 @@ class RuleContext(object):
             src, requesting_module=self.rule.parent_module)
         if not other_rule:
           raise KeyError('Source rule "%s" not found' % (src))
-        other_rule_ctx = build_context.rule_contexts[other_rule.path]
+        if not self.build_context.rule_contexts.has_key(other_rule.path):
+          raise RuntimeError('Source rule "%s" not yet executed' % (src))
+        other_rule_ctx = self.build_context.rule_contexts[other_rule.path]
         src_items = other_rule_ctx.all_output_files
       else:
         # File or glob - treat as the same
@@ -249,6 +282,29 @@ class RuleContext(object):
           continue
         input_paths.add(file_path)
     return list(input_paths)
+
+  def begin(self):
+    """Begins asynchronous rule execution.
+    Custom RuleContext implementations should override this method to perform
+    their behavior (spawning tasks/etc). When the returned Deferred is called
+    back the rule context should be completed, with all_output_files properly
+    set.
+
+    The default implementation ends immediately, passing all input files through
+    as output.
+
+    Returns:
+      A Deferred that can will be called back when the rule has completed.
+    """
+    self.status = Status.SUCCEEDED
+    self.start_time = time.time()
+    self.end_time = self.start_time
+
+    self.all_output_files.extend(self.all_input_files)
+
+    deferred = Deferred()
+    deferred.callback()
+    return deferred
 
 
 # class Task(object):

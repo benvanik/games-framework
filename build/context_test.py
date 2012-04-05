@@ -91,21 +91,27 @@ class RuleContextTest(FixtureTestCase):
     build_ctx = BuildContext(self.build_env, project)
 
     rule = project.resolve_rule(':file_input')
-    rule_ctx = rule.create_context(build_ctx)
+    d = build_ctx._execute_rule(rule)
+    self.assertTrue(d.is_done())
+    rule_outputs = build_ctx._get_rule_outputs(rule)
     self.assertEqual(
-        set([os.path.basename(f) for f in rule_ctx.all_input_files]),
+        set([os.path.basename(f) for f in rule_outputs]),
         set(['a.txt']))
 
     rule = project.resolve_rule(':local_txt')
-    rule_ctx = rule.create_context(build_ctx)
+    d = build_ctx._execute_rule(rule)
+    self.assertTrue(d.is_done())
+    rule_outputs = build_ctx._get_rule_outputs(rule)
     self.assertEqual(
-        set([os.path.basename(f) for f in rule_ctx.all_input_files]),
+        set([os.path.basename(f) for f in rule_outputs]),
         set(['a.txt', 'b.txt', 'c.txt']))
 
     rule = project.resolve_rule(':recursive_txt')
-    rule_ctx = rule.create_context(build_ctx)
+    d = build_ctx._execute_rule(rule)
+    self.assertTrue(d.is_done())
+    rule_outputs = build_ctx._get_rule_outputs(rule)
     self.assertEqual(
-        set([os.path.basename(f) for f in rule_ctx.all_input_files]),
+        set([os.path.basename(f) for f in rule_outputs]),
         set(['a.txt', 'b.txt', 'c.txt', 'd.txt', 'e.txt']))
 
   def testFileInputFilters(self):
@@ -114,15 +120,19 @@ class RuleContextTest(FixtureTestCase):
     build_ctx = BuildContext(self.build_env, project)
 
     rule = project.resolve_rule(':local_txt_filter')
-    rule_ctx = rule.create_context(build_ctx)
+    d = build_ctx._execute_rule(rule)
+    self.assertTrue(d.is_done())
+    rule_outputs = build_ctx._get_rule_outputs(rule)
     self.assertEqual(
-        set([os.path.basename(f) for f in rule_ctx.all_input_files]),
+        set([os.path.basename(f) for f in rule_outputs]),
         set(['a.txt', 'b.txt', 'c.txt']))
 
     rule = project.resolve_rule(':recursive_txt_filter')
-    rule_ctx = rule.create_context(build_ctx)
+    d = build_ctx._execute_rule(rule)
+    self.assertTrue(d.is_done())
+    rule_outputs = build_ctx._get_rule_outputs(rule)
     self.assertEqual(
-        set([os.path.basename(f) for f in rule_ctx.all_input_files]),
+        set([os.path.basename(f) for f in rule_outputs]),
         set(['a.txt', 'b.txt', 'c.txt', 'd.txt', 'e.txt']))
 
   def testRuleInputs(self):
@@ -130,14 +140,36 @@ class RuleContextTest(FixtureTestCase):
     project = Project(module_resolver=FileModuleResolver(root_path))
     build_ctx = BuildContext(self.build_env, project)
 
-    # TODO(benvanik): test rules
-    rule = project.resolve_rule(':rule_input')
-    # rule_ctx = rule.create_context(build_ctx)
-    # self.assertEqual(
-    #     set([os.path.basename(f) for f in rule_ctx.all_input_files]),
-    #     set(['a.txt', 'b.txt', 'c.txt']))
+    rule = project.resolve_rule(':file_input')
+    d = build_ctx._execute_rule(rule)
+    self.assertTrue(d.is_done())
+    rule_outputs = build_ctx._get_rule_outputs(rule)
+    self.assertNotEqual(len(rule_outputs), 0)
 
-    # TODO(benvanik): test mixed (rule|file) inputs
+    rule = project.resolve_rule(':rule_input')
+    d = build_ctx._execute_rule(rule)
+    self.assertTrue(d.is_done())
+    rule_outputs = build_ctx._get_rule_outputs(rule)
+    self.assertEqual(
+        set([os.path.basename(f) for f in rule_outputs]),
+        set(['a.txt']))
+
+    rule = project.resolve_rule(':mixed_input')
+    d = build_ctx._execute_rule(rule)
+    self.assertTrue(d.is_done())
+    rule_outputs = build_ctx._get_rule_outputs(rule)
+    self.assertEqual(
+        set([os.path.basename(f) for f in rule_outputs]),
+        set(['a.txt', 'b.txt']))
+
+    rule = project.resolve_rule(':missing_input')
+    with self.assertRaises(KeyError):
+      build_ctx._execute_rule(rule)
+
+    build_ctx = BuildContext(self.build_env, project)
+    rule = project.resolve_rule(':rule_input')
+    with self.assertRaises(RuntimeError):
+      build_ctx._execute_rule(rule)
 
 
 if __name__ == '__main__':

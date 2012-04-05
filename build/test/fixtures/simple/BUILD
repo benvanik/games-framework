@@ -26,6 +26,8 @@ rule('recursive_txt_filter',
 rule('file_input',
     srcs='a.txt')
 rule('rule_input',
-    srcs=':a')
+    srcs=':file_input')
 rule('mixed_input',
-    srcs=['a.txt', ':b'])
+    srcs=['b.txt', ':file_input'])
+rule('missing_input',
+    srcs=':x')
