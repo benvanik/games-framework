@@ -44,6 +44,8 @@ class BuildEnvironment(object):
 
   The build environment should be kept constant throughout a build, and should
   be treated as read-only while in use by a context.
+
+  This object may be passed to other processes, and must be pickeable.
   """
 
   def __init__(self):
@@ -110,14 +112,13 @@ class BuildContext(object):
 
   def execute(self, target_rule_names):
     """Executes all rules in the context.
-    Rules are executed in order and, depending on the value of worker_count,
-    in parallel when possible.
+    Rules are executed in order and where possible in parallel.
 
     Args:
       target_rule_names: A list of rule names that are to be executed.
 
     Returns:
-      A Deferred that is called back when all rules have completed executing.
+      TODO
 
     Raises:
       KeyError: One of the given target rules was not found in the project.
@@ -149,8 +150,7 @@ class BuildContext(object):
     #   if any_failed and self.stop_on_error:
     #     break
 
-    deferred = Deferred()
-    return deferred
+    return True
 
 # TODO(benvanik): multiprocessing work
 # Requires basic checks for dependency of in-flight rules to ensure parallel

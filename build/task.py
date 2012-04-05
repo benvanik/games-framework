@@ -1,8 +1,6 @@
 # Copyright 2012 Google Inc. All Rights Reserved.
 
 """Task/multiprocessing support.
-
-Tasks are small, pickleable
 """
 
 __author__ = 'benvanik@google.com (Ben Vanik)'
@@ -15,13 +13,39 @@ from async import Deferred
 
 
 class Task(object):
-  """
+  """Abstract base type for small tasks.
+  A task should be the smallest possible unit of work a Rule may want to
+  perform. Examples include copying a set of files, converting an mp3, or
+  compiling some code.
+
+  Tasks can execute in parallel with other tasks, and are run in a seperate
+  process. They must be pickleable and should access no global state.
+
+  TODO(benvanik): add support for logging - a Queue that pushes back
+      log/progress messages?
   """
 
-  def __init__(self):
-    pass
+  def __init__(self, build_env, *args, **kwargs):
+    """Initializes a task.
+
+    Args:
+      build_env: The build environment to use when requiring state.
+    """
+    self.build_env = build_env
 
   def execute(self):
+    """Executes the task.
+    This method will be called in a separate process and should not use any
+    state not accessible from the Task. The Task will have been pickled and
+    will not be merged back with the parent.
+
+    The result of this method must be pickleable and will be sent back to the
+    deferred callback. If an exception is raised it will be wrapped in the
+    deferred's errback.
+
+    Returns:
+      A result to pass back to the deferred callback.
+    """
     raise NotImplementedError()
 
 

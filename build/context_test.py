@@ -57,8 +57,7 @@ class BuildContextTest(unittest2.TestCase):
         ctx.execute(['m:b'])
 
     with BuildContext(self.build_env, project) as ctx:
-      d = ctx.execute(['m:a'])
-
+      result = ctx.execute(['m:a'])
 
     # TODO(benvanik): test stop_on_error
     # TODO(benvanik): test raise_on_error
