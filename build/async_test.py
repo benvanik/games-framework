@@ -10,7 +10,8 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 import unittest2
 
-from async import Deferred
+from async import Deferred, gather_deferreds
+from test import AsyncTestCase
 
 
 class DeferredTest(unittest2.TestCase):
@@ -202,6 +203,44 @@ class DeferredTest(unittest2.TestCase):
     self.assertEqual(cbs[0]['args'][0], 'a')
     self.assertEqual(cbs[1]['args'][0], 'a')
     cbs[:] = []
+
+
+class GatherTest(AsyncTestCase):
+  """Behavioral tests for the async gather function."""
+
+  def testGather(self):
+    d = gather_deferreds([])
+    self.assertCallbackEqual(d, [])
+
+    da = Deferred()
+    db = Deferred()
+    dc = Deferred()
+    df = Deferred()
+    d = gather_deferreds([da, db, dc, df])
+    df.errback()
+    dc.callback('c')
+    db.callback('b')
+    da.callback('a')
+    self.assertCallbackEqual(d, [
+        (True, ('a',), {}),
+        (True, ('b',), {}),
+        (True, ('c',), {}),
+        (False, (), {})])
+
+    da = Deferred()
+    db = Deferred()
+    dc = Deferred()
+    df = Deferred()
+    df.errback('f')
+    dc.callback('c')
+    d = gather_deferreds([da, db, dc, df])
+    db.callback('b')
+    da.callback('a')
+    self.assertCallbackEqual(d, [
+        (True, ('a',), {}),
+        (True, ('b',), {}),
+        (True, ('c',), {}),
+        (False, ('f',), {})])
 
 
 if __name__ == '__main__':

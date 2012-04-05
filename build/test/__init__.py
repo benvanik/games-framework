@@ -32,10 +32,7 @@ class AsyncTestCase(unittest2.TestCase):
     self.assertTrue(deferred.is_done())
     done = []
     def _callback(*args, **kwargs):
-      if isinstance(value, list):
-        self.assertEqual(args, value)
-      else:
-        self.assertEqual(args[0], value)
+      self.assertEqual(args[0], value)
       done.append(True)
     def _errback(*args, **kwargs):
       self.fail('Deferred failed when it should have succeeded')

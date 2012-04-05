@@ -88,3 +88,49 @@ class Deferred(object):
     self._errbacks = []
     for fn in errbacks:
       fn(*args, **kwargs)
+
+
+def gather_deferreds(deferreds):
+  """Waits until all of the given deferreds callback.
+  Once all have completed this deferred will issue a callback
+  with a list corresponding to each waiter, with a (success, args, kwargs)
+  tuple for each deferred.
+
+  The deferred returned by this will only ever issue callbacks, never errbacks.
+
+  Args:
+    deferreds: A list of deferreds to wait on.
+
+  Returns:
+    A deferred that is called back with a list of tuples corresponding to each
+    input deferred. The tuples are of (success, args, kwargs) with success
+    being a boolean True if the deferred used callback and False if it used
+    errback.
+  """
+  gather_deferred = Deferred()
+  deferred_len = len(deferreds)
+  if not deferred_len:
+    gather_deferred.callback([])
+    return gather_deferred
+
+  pending = [deferred_len]
+  result_tuples = deferred_len * [None]
+  def _complete():
+    pending[0] -= 1
+    if not pending[0]:
+      gather_deferred.callback(result_tuples)
+
+  def _makecapture(n, deferred):
+    def _callback(*args, **kwargs):
+      result_tuples[n] = (True, args, kwargs)
+      _complete()
+    def _errback(*args, **kwargs):
+      result_tuples[n] = (False, args, kwargs)
+      _complete()
+    deferred.add_callback_fn(_callback)
+    deferred.add_errback_fn(_errback)
+
+  for n in xrange(deferred_len):
+    _makecapture(n, deferreds[n])
+
+  return gather_deferred
