@@ -54,14 +54,12 @@ class TaskExecutorTest(AsyncTestCase):
       self.assertFalse(executor.has_any_running())
       self.assertErrbackWithError(d, TypeError)
 
-    with executor_cls() as executor:
       d = executor.run_task_async(SuccessTask(build_env, True))
       executor.wait(d)
       executor.wait(d)
       self.assertFalse(executor.has_any_running())
       self.assertCallback(d)
 
-    with executor_cls() as executor:
       da = executor.run_task_async(SuccessTask(build_env, 'a'))
       executor.wait(da)
       self.assertFalse(executor.has_any_running())
@@ -75,7 +73,6 @@ class TaskExecutorTest(AsyncTestCase):
       self.assertFalse(executor.has_any_running())
       self.assertCallbackEqual(dc, 'c')
 
-    with executor_cls() as executor:
       da = executor.run_task_async(SuccessTask(build_env, 'a'))
       db = executor.run_task_async(SuccessTask(build_env, 'b'))
       dc = executor.run_task_async(SuccessTask(build_env, 'c'))
@@ -85,7 +82,6 @@ class TaskExecutorTest(AsyncTestCase):
       self.assertCallbackEqual(db, 'b')
       self.assertCallbackEqual(da, 'a')
 
-    with executor_cls() as executor:
       da = executor.run_task_async(SuccessTask(build_env, 'a'))
       db = executor.run_task_async(FailureTask(build_env))
       dc = executor.run_task_async(SuccessTask(build_env, 'c'))
