@@ -17,6 +17,7 @@ import multiprocessing
 import os
 import time
 
+import async
 from async import Deferred
 import build
 import graph
@@ -418,7 +419,7 @@ class RuleContext(object):
     self.end_time = time.time()
     self.deferred.callback()
 
-  def _fail(self, exception=None):
+  def _fail(self, exception=None, *args, **kwargs):
     """Signals that rule execution has completed in failure.
     This will set all state and issue the errback on the deferred.
     If an exception is provided it will be set on the context and passed as
@@ -435,18 +436,25 @@ class RuleContext(object):
     else:
       self.deferred.errback()
 
-  def _chain(self, deferred):
+  def _chain(self, deferreds):
     """Chains the completion of the rule on the given deferred.
     Depending on the success or failure the deferred, the rule context will
     succeeed or fail.
 
     Args:
-      deferred: A Deferred that will be called back.
+      deferred: A Deferred or list of deferreds that will be called back.
     """
+    deferred = async.gather_deferreds(deferreds, errback_if_any_fail=True)
     def _callback(*args, **kwargs):
       self._succeed()
-    def _errback(exception=None, *args, **kwargs):
-      self._fail(exception)
+    def _errback(*args, **kwargs):
+      exception = None
+      for arg in args[0]:
+        if not arg[0]:
+          if len(arg[1]) and isinstance(arg[1][0], Exception):
+            exception = arg[1][0]
+            break
+      self._fail(exception=exception)
     deferred.add_callback_fn(_callback)
     deferred.add_errback_fn(_errback)
 

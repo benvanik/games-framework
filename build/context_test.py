@@ -238,6 +238,22 @@ class RuleContextTest(FixtureTestCase):
     self.assertEqual(rule_ctx.status, Status.FAILED)
     self.assertIsInstance(rule_ctx.exception, RuntimeError)
 
+    class FailedManyAsyncRuleContext(RuleContext):
+      def begin(self):
+        super(FailedManyAsyncRuleContext, self).begin()
+        d1 = Deferred()
+        d2 = Deferred()
+        self._chain([d1, d2])
+        d1.callback()
+        d2.errback(RuntimeError('Failure'))
+
+    rule_ctx = FailedManyAsyncRuleContext(build_ctx, rule)
+    self.assertEqual(rule_ctx.status, Status.WAITING)
+    rule_ctx.begin()
+    self.assertTrue(rule_ctx.deferred.is_done())
+    self.assertEqual(rule_ctx.status, Status.FAILED)
+    self.assertIsInstance(rule_ctx.exception, RuntimeError)
+
   def testFileInputs(self):
     root_path = os.path.join(self.temp_path, 'simple')
     project = Project(module_resolver=FileModuleResolver(root_path))

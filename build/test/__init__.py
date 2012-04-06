@@ -53,6 +53,19 @@ class AsyncTestCase(unittest2.TestCase):
     if not len(done):
       self.fail('Deferred not called back with error')
 
+  def assertErrbackEqual(self, deferred, value):
+    self.assertTrue(deferred.is_done())
+    done = []
+    def _callback(*args, **kwargs):
+      self.fail('Deferred succeeded when it should have failed')
+    def _errback(*args, **kwargs):
+      self.assertEqual(args[0], value)
+      done.append(True)
+    deferred.add_callback_fn(_callback)
+    deferred.add_errback_fn(_errback)
+    if not len(done):
+      self.fail('Deferred not called back with error')
+
   def assertErrbackWithError(self, deferred, error_cls):
     self.assertTrue(deferred.is_done())
     done = []

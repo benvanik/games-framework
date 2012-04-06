@@ -242,6 +242,51 @@ class GatherTest(AsyncTestCase):
         (True, ('c',), {}),
         (False, ('f',), {})])
 
+  def testErrback(self):
+    d = gather_deferreds([], errback_if_any_fail=True)
+    self.assertCallbackEqual(d, [])
+
+    da = Deferred()
+    db = Deferred()
+    dc = Deferred()
+    d = gather_deferreds([da, db, dc], errback_if_any_fail=True)
+    dc.callback('c')
+    db.callback('b')
+    da.callback('a')
+    self.assertCallbackEqual(d, [
+        (True, ('a',), {}),
+        (True, ('b',), {}),
+        (True, ('c',), {})])
+
+    da = Deferred()
+    db = Deferred()
+    dc = Deferred()
+    df = Deferred()
+    d = gather_deferreds([da, db, dc, df], errback_if_any_fail=True)
+    df.errback()
+    dc.callback('c')
+    db.callback('b')
+    da.callback('a')
+    self.assertErrbackEqual(d, [
+        (True, ('a',), {}),
+        (True, ('b',), {}),
+        (True, ('c',), {}),
+        (False, (), {})])
+
+    da = Deferred()
+    db = Deferred()
+    dc = Deferred()
+    df = Deferred()
+    df.errback('f')
+    dc.callback('c')
+    d = gather_deferreds([da, db, dc, df], errback_if_any_fail=True)
+    db.callback('b')
+    da.callback('a')
+    self.assertErrbackEqual(d, [
+        (True, ('a',), {}),
+        (True, ('b',), {}),
+        (True, ('c',), {}),
+        (False, ('f',), {})])
 
 if __name__ == '__main__':
   unittest2.main()
