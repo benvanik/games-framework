@@ -91,8 +91,11 @@ class BuildContext(object):
     self.task_executor = task_executor
     self._close_task_executor = False
     if not self.task_executor:
-      #self.task_executor = task.InProcessTaskExecutor()
-      self.task_executor = task.MultiProcessTaskExecutor()
+      # HACK: multiprocessing on cygwin is really slow, so unless the caller
+      # specifies we try to use the in-process executor to keep test times
+      # low (any non-test callers should be specifying their own anyway)
+      self.task_executor = task.InProcessTaskExecutor()
+      #self.task_executor = task.MultiProcessTaskExecutor()
       self._close_task_executor = True
 
     self.force = force
