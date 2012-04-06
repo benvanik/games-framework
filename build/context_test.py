@@ -78,7 +78,7 @@ class BuildContextTest(FixtureTestCase):
       class _Context(RuleContext):
         def begin(self):
           super(SucceedRule._Context, self).begin()
-          print 'hello from rule %s' % (self.rule.path)
+          #print 'hello from rule %s' % (self.rule.path)
           self._succeed()
       def create_context(self, build_context):
         return SucceedRule._Context(build_context, self)
@@ -86,7 +86,7 @@ class BuildContextTest(FixtureTestCase):
       class _Context(RuleContext):
         def begin(self):
           super(FailRule._Context, self).begin()
-          print 'hello from rule %s' % (self.rule.path)
+          #print 'hello from rule %s' % (self.rule.path)
           self._fail()
       def create_context(self, build_context):
         return FailRule._Context(build_context, self)

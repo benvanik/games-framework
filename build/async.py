@@ -134,7 +134,6 @@ def gather_deferreds(deferreds, errback_if_any_fail=False):
             any_failed = True
             break
         if any_failed:
-          print 'any failed %s' % result_tuples
           gather_deferred.errback(result_tuples)
         else:
           gather_deferred.callback(result_tuples)
