@@ -194,8 +194,7 @@ class MultiProcessTaskExecutor(TaskExecutor):
     for deferred in deferreds:
       if deferred.is_done():
         continue
-      async_result = self._waiting_deferreds.get(deferred, None)
-      assert async_result
+      async_result = self._waiting_deferreds[deferred]
       async_result.wait()
 
   def close(self, graceful=True):

@@ -77,19 +77,17 @@ class BuildContextTest(FixtureTestCase):
     class SucceedRule(Rule):
       class _Context(RuleContext):
         def begin(self):
-          result = super(SucceedRule._Context, self).begin()
+          super(SucceedRule._Context, self).begin()
           print 'hello from rule %s' % (self.rule.path)
           self._succeed()
-          return result
       def create_context(self, build_context):
         return SucceedRule._Context(build_context, self)
     class FailRule(Rule):
       class _Context(RuleContext):
         def begin(self):
-          result = super(FailRule._Context, self).begin()
+          super(FailRule._Context, self).begin()
           print 'hello from rule %s' % (self.rule.path)
           self._fail()
-          return result
       def create_context(self, build_context):
         return FailRule._Context(build_context, self)
 
@@ -180,39 +178,63 @@ class RuleContextTest(FixtureTestCase):
 
     class SuccessfulRuleContext(RuleContext):
       def begin(self):
-        result = super(SuccessfulRuleContext, self).begin()
+        super(SuccessfulRuleContext, self).begin()
         self._succeed()
-        return result
 
     rule_ctx = SuccessfulRuleContext(build_ctx, rule)
     self.assertEqual(rule_ctx.status, Status.WAITING)
-    d = rule_ctx.begin()
-    self.assertTrue(d.is_done())
+    rule_ctx.begin()
+    self.assertTrue(rule_ctx.deferred.is_done())
     self.assertEqual(rule_ctx.status, Status.SUCCEEDED)
 
     class FailedRuleContext(RuleContext):
       def begin(self):
-        result = super(FailedRuleContext, self).begin()
+        super(FailedRuleContext, self).begin()
         self._fail()
-        return result
 
     rule_ctx = FailedRuleContext(build_ctx, rule)
     self.assertEqual(rule_ctx.status, Status.WAITING)
-    d = rule_ctx.begin()
-    self.assertTrue(d.is_done())
+    rule_ctx.begin()
+    self.assertTrue(rule_ctx.deferred.is_done())
     self.assertEqual(rule_ctx.status, Status.FAILED)
     self.assertIsNone(rule_ctx.exception)
 
     class FailedWithErrorRuleContext(RuleContext):
       def begin(self):
-        result = super(FailedWithErrorRuleContext, self).begin()
+        super(FailedWithErrorRuleContext, self).begin()
         self._fail(RuntimeError('Failure'))
-        return result
 
     rule_ctx = FailedWithErrorRuleContext(build_ctx, rule)
     self.assertEqual(rule_ctx.status, Status.WAITING)
-    d = rule_ctx.begin()
-    self.assertTrue(d.is_done())
+    rule_ctx.begin()
+    self.assertTrue(rule_ctx.deferred.is_done())
+    self.assertEqual(rule_ctx.status, Status.FAILED)
+    self.assertIsInstance(rule_ctx.exception, RuntimeError)
+
+    class SuccessfulAsyncRuleContext(RuleContext):
+      def begin(self):
+        super(SuccessfulAsyncRuleContext, self).begin()
+        d = Deferred()
+        self._chain(d)
+        d.callback()
+
+    rule_ctx = SuccessfulAsyncRuleContext(build_ctx, rule)
+    self.assertEqual(rule_ctx.status, Status.WAITING)
+    rule_ctx.begin()
+    self.assertTrue(rule_ctx.deferred.is_done())
+    self.assertEqual(rule_ctx.status, Status.SUCCEEDED)
+
+    class FailedAsyncRuleContext(RuleContext):
+      def begin(self):
+        super(FailedAsyncRuleContext, self).begin()
+        d = Deferred()
+        self._chain(d)
+        d.errback(RuntimeError('Failure'))
+
+    rule_ctx = FailedAsyncRuleContext(build_ctx, rule)
+    self.assertEqual(rule_ctx.status, Status.WAITING)
+    rule_ctx.begin()
+    self.assertTrue(rule_ctx.deferred.is_done())
     self.assertEqual(rule_ctx.status, Status.FAILED)
     self.assertIsInstance(rule_ctx.exception, RuntimeError)
 

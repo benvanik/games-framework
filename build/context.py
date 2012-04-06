@@ -243,7 +243,8 @@ class BuildContext(object):
     if rule_ctx.check_predecessor_failures():
       return rule_ctx.cascade_failure()
     else:
-      return rule_ctx.begin()
+      rule_ctx.begin()
+      return rule_ctx.deferred
 
   def get_rule_results(self, rule):
     """Gets the status/output of a rule.
@@ -433,6 +434,21 @@ class RuleContext(object):
       self.deferred.errback(exception=exception)
     else:
       self.deferred.errback()
+
+  def _chain(self, deferred):
+    """Chains the completion of the rule on the given deferred.
+    Depending on the success or failure the deferred, the rule context will
+    succeeed or fail.
+
+    Args:
+      deferred: A Deferred that will be called back.
+    """
+    def _callback(*args, **kwargs):
+      self._succeed()
+    def _errback(exception=None, *args, **kwargs):
+      self._fail(exception)
+    deferred.add_callback_fn(_callback)
+    deferred.add_errback_fn(_errback)
 
 
 # class FileDelta(object):
