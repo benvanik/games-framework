@@ -15,7 +15,6 @@ import itertools
 import multiprocessing
 import os
 import stat
-import time
 
 import async
 from async import Deferred
@@ -395,7 +394,7 @@ class RuleContext(object):
       A Deferred that can will be called back when the rule has completed.
     """
     self.status = Status.RUNNING
-    self.start_time = time.time()
+    self.start_time = util.timer()
     return self.deferred
 
   def cascade_failure(self):
@@ -410,7 +409,7 @@ class RuleContext(object):
       A Deferred that has had its errback called.
     """
     # TODO(benvanik): special CascadingError exception
-    self.start_time = time.time()
+    self.start_time = util.timer()
     self._fail()
     return self.deferred
 
@@ -419,7 +418,7 @@ class RuleContext(object):
     This will set all state and issue the callback on the deferred.
     """
     self.status = Status.SUCCEEDED
-    self.end_time = time.time()
+    self.end_time = util.timer()
     self.deferred.callback()
 
   def _fail(self, exception=None, *args, **kwargs):
@@ -432,7 +431,7 @@ class RuleContext(object):
       exception: The exception that resulted in the rule failure, if any.
     """
     self.status = Status.FAILED
-    self.end_time = time.time()
+    self.end_time = util.timer()
     self.exception = exception
     if exception:
       self.deferred.errback(exception=exception)

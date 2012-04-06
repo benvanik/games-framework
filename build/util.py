@@ -4,6 +4,16 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
 import string
+import sys
+import time
+
+
+# Unfortunately there is no one-true-timer in python
+# This should always be preferred over direct use of the time module
+if sys.platform == 'win32' or sys.platform == 'cygwin':
+  timer = time.clock # pragma: no cover
+else:
+  timer = time.time # pragma: no cover
 
 
 def is_rule_path(value):
