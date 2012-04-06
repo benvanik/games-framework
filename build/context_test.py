@@ -288,6 +288,16 @@ class RuleContextTest(FixtureTestCase):
     project = Project(module_resolver=FileModuleResolver(root_path))
     build_ctx = BuildContext(self.build_env, project)
 
+    rule = project.resolve_rule(':missing_txt')
+    with self.assertRaises(OSError):
+      build_ctx._execute_rule(rule)
+
+    rule = project.resolve_rule(':missing_glob_txt')
+    d = build_ctx._execute_rule(rule)
+    self.assertTrue(d.is_done())
+    rule_outputs = build_ctx.get_rule_outputs(rule)
+    self.assertEqual(len(rule_outputs), 0)
+
     rule = project.resolve_rule(':local_txt_filter')
     d = build_ctx._execute_rule(rule)
     self.assertTrue(d.is_done())

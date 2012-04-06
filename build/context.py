@@ -11,10 +11,10 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 from collections import deque
 import fnmatch
-import glob2
 import itertools
 import multiprocessing
 import os
+import stat
 import time
 
 import async
@@ -349,10 +349,13 @@ class RuleContext(object):
         other_rule_ctx = self.build_context.rule_contexts[other_rule.path]
         src_items = other_rule_ctx.all_output_files
       else:
-        # File or glob - treat as the same
-        # This will only return files that exist
-        glob_path = os.path.join(base_path, src)
-        src_items = glob2.iglob(glob_path)
+        # File or folder path
+        src_path = os.path.join(base_path, src)
+        mode = os.stat(src_path).st_mode
+        if stat.S_ISDIR(mode):
+          src_items = os.listdir(src_path)
+        else:
+          src_items = [src_path]
 
       # Apply the src_filter, if any
       src_filter = self.rule.src_filter

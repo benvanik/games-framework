@@ -16,7 +16,9 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
 import ast
+import glob2
 import io
+import os
 
 import rule
 from rule import RuleNamespace
@@ -191,9 +193,26 @@ class ModuleLoader(object):
     Args:
       scope: Scope dictionary.
     """
+    scope['glob'] = self.glob
     scope['select_one'] = self.select_one
     scope['select_any'] = self.select_any
     scope['select_many'] = self.select_many
+
+  def glob(self, expr):
+    """Globs the given expression with the base path of the module.
+    This uses the glob2 module and supports recursive globs ('**/*').
+
+    Args:
+      expr: Glob expression.
+
+    Returns:
+      A list of all files that match the glob expression.
+    """
+    if not expr or not len(expr):
+      return []
+    base_path = os.path.dirname(self.path)
+    glob_path = os.path.join(base_path, expr)
+    return list(glob2.iglob(glob_path))
 
   def select_one(self, d, default_value):
     """Selects a single value from the given tuple list based on the current

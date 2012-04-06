@@ -8,6 +8,7 @@
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
+import glob2
 import os
 import unittest2
 
@@ -222,6 +223,57 @@ class ModuleLoaderTest(FixtureTestCase):
     self.assertEqual(len(module.rule_list()), 1)
     self.assertIsNotNone(module.get_rule(':a'))
     self.assertEqual(module.get_rule(':a').name, 'a')
+
+  def testGlob(self):
+    module_path = os.path.join(self.temp_path, 'simple', 'BUILD')
+
+    loader = ModuleLoader(module_path)
+    loader.load(source_string='rule("a", srcs=glob(""))')
+    module = loader.execute()
+    self.assertEqual(len(module.rule_list()), 1)
+    self.assertIsNotNone(module.get_rule(':a'))
+    rule = module.get_rule(':a')
+    self.assertEqual(len(rule.srcs), 0)
+
+    loader = ModuleLoader(module_path)
+    loader.load(source_string='rule("a", srcs=glob("*.txt"))')
+    module = loader.execute()
+    self.assertEqual(len(module.rule_list()), 1)
+    self.assertIsNotNone(module.get_rule(':a'))
+    rule = module.get_rule(':a')
+    self.assertEqual(len(rule.srcs), 3)
+
+    loader = ModuleLoader(module_path)
+    loader.load(source_string='rule("a", srcs=glob("**/*.txt"))')
+    module = loader.execute()
+    self.assertEqual(len(module.rule_list()), 1)
+    self.assertIsNotNone(module.get_rule(':a'))
+    rule = module.get_rule(':a')
+    self.assertEqual(len(rule.srcs), 5)
+
+    loader = ModuleLoader(module_path)
+    loader.load(source_string='rule("a", srcs=glob("a.txt"))')
+    module = loader.execute()
+    self.assertEqual(len(module.rule_list()), 1)
+    self.assertIsNotNone(module.get_rule(':a'))
+    rule = module.get_rule(':a')
+    self.assertEqual(len(rule.srcs), 1)
+
+    loader = ModuleLoader(module_path)
+    loader.load(source_string='rule("a", srcs=glob("x.txt"))')
+    module = loader.execute()
+    self.assertEqual(len(module.rule_list()), 1)
+    self.assertIsNotNone(module.get_rule(':a'))
+    rule = module.get_rule(':a')
+    self.assertEqual(len(rule.srcs), 0)
+
+    loader = ModuleLoader(module_path)
+    loader.load(source_string='rule("a", srcs=glob("*.notpresent"))')
+    module = loader.execute()
+    self.assertEqual(len(module.rule_list()), 1)
+    self.assertIsNotNone(module.get_rule(':a'))
+    rule = module.get_rule(':a')
+    self.assertEqual(len(rule.srcs), 0)
 
 
 class ModuleLoaderSelectionTest(unittest2.TestCase):

@@ -12,15 +12,19 @@ rule('c',
     deps=[':a', ':b'])
 
 rule('local_txt',
-    srcs='*.txt')
+    srcs=glob('*.txt'))
 rule('recursive_txt',
-    srcs='**/*.txt')
+    srcs=glob('**/*.txt'))
+rule('missing_txt',
+    srcs='x.txt')
+rule('missing_glob_txt',
+    srcs=glob('*.notpresent'))
 
 rule('local_txt_filter',
-    srcs='*',
+    srcs=glob('*'),
     src_filter='*.txt')
 rule('recursive_txt_filter',
-    srcs='**/*',
+    srcs=glob('**/*'),
     src_filter='*.txt')
 
 rule('file_input',
