@@ -132,7 +132,7 @@ class InProcessTaskExecutor(TaskExecutor):
       result = task.execute()
       deferred.callback(result)
     except Exception as e:
-      deferred.errback(e)
+      deferred.errback(exception=e)
     return deferred
 
   def wait(self, deferreds):
@@ -174,7 +174,7 @@ class MultiProcessTaskExecutor(TaskExecutor):
       self._running_count = self._running_count - 1
       del self._waiting_deferreds[deferred]
       if len(args) and isinstance(args[0], Exception):
-        deferred.errback(*args)
+        deferred.errback(exception=args[0])
       else:
         deferred.callback(*args)
 

@@ -58,11 +58,9 @@ class AsyncTestCase(unittest2.TestCase):
     done = []
     def _callback(*args, **kwargs):
       self.fail('Deferred succeeded when it should have failed')
-    def _errback(*args, **kwargs):
+    def _errback(exception=None, *args, **kwargs):
       done.append(True)
-      if not len(args):
-        self.fail('Deferred failed with no error')
-      self.assertIsInstance(args[0], error_cls)
+      self.assertIsInstance(exception, error_cls)
     deferred.add_callback_fn(_callback)
     deferred.add_errback_fn(_errback)
     if not len(done):

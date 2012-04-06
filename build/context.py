@@ -157,7 +157,7 @@ class BuildContext(object):
         in_flight_rules.remove(rule)
         _pump(previous_succeeded=True)
 
-      def _rule_errback(*args, **kwargs):
+      def _rule_errback(exception=None, *args, **kwargs):
         in_flight_rules.remove(rule)
         # TODO(benvanik): log result/exception/etc?
         _pump(previous_succeeded=False)
@@ -430,7 +430,7 @@ class RuleContext(object):
     self.end_time = time.time()
     self.exception = exception
     if exception:
-      self.deferred.errback(exception)
+      self.deferred.errback(exception=exception)
     else:
       self.deferred.errback()
 
