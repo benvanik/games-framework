@@ -69,7 +69,7 @@ class AsyncTestCase(unittest2.TestCase):
       self.fail('Deferred not called back with error')
 
 
-class FixtureTestCase(unittest2.TestCase):
+class FixtureTestCase(AsyncTestCase):
   """Test case supporting static fixture/output support.
   Set self.fixture to a folder name from the test/fixtures/ path.
   """

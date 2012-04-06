@@ -146,7 +146,7 @@ class InProcessTaskExecutor(TaskExecutor):
     self._running_count = 0
 
 
-class MultiprocessTaskExecutor(TaskExecutor):
+class MultiProcessTaskExecutor(TaskExecutor):
   """A pool for multiprocess task execution.
   """
 
@@ -158,7 +158,7 @@ class MultiprocessTaskExecutor(TaskExecutor):
       worker_count: Number of worker threads to use when building. None to use
           as many processors as are available.
     """
-    super(MultiprocessTaskExecutor, self).__init__(*args, **kwargs)
+    super(MultiProcessTaskExecutor, self).__init__(*args, **kwargs)
     self.worker_count = worker_count
     self._pool = multiprocessing.Pool(processes=self.worker_count,
                                       initializer=_task_initializer)
@@ -212,14 +212,14 @@ class MultiprocessTaskExecutor(TaskExecutor):
     self._waiting_deferreds.clear()
 
 def _task_initializer(): # pragma: no cover
-  """Task executor process initializer, used by MultiprocessTaskExecutor.
+  """Task executor process initializer, used by MultiProcessTaskExecutor.
   Called once on each process the TaskExecutor uses.
   """
   #print 'started! %s' % (multiprocessing.current_process().name)
   pass
 
 def _task_thunk(task): # pragma: no cover
-  """Thunk for executing tasks, used by MultiprocessTaskExecutor.
+  """Thunk for executing tasks, used by MultiProcessTaskExecutor.
   This is called from separate processes so do not access any global state.
 
   Args:

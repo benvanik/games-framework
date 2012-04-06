@@ -167,7 +167,9 @@ class RuleGraph(object):
     # Note that all nodes are present if we got this far, so no need to check
     sequence_graph = nx.DiGraph()
     for rule_path in target_rule_paths:
-      rule_node = self.rule_nodes.get(rule_path, None)
+      rule = self.project.resolve_rule(rule_path)
+      assert rule
+      rule_node = self.rule_nodes.get(rule.path, None)
       assert rule_node
       path = list(nx.topological_sort(reverse_graph, [rule_node]))
       if len(path) == 1:

@@ -26,13 +26,13 @@ class GenericRule(Rule):
     """
     super(GenericRule, self).__init__(name, *args, **kwargs)
 
+  class _Context(RuleContext):
+    def begin(self):
+      result = super(GenericRule._Context, self).begin()
+      self.all_output_files.extend(self.all_input_files)
+      self._succeed()
+      return result
+
   def create_context(self, build_context):
-    return _GenericRuleContext(build_context, self)
+    return GenericRule._Context(build_context, self)
 
-
-class _GenericRuleContext(RuleContext):
-  def begin(self):
-    result = super(_GenericRuleContext, self).begin()
-    self.all_output_files.extend(self.all_input_files)
-    self._succeed()
-    return result

@@ -107,7 +107,7 @@ class TaskExecutorTest(AsyncTestCase):
     self.runTestsWithExecutorType(InProcessTaskExecutor)
 
   def testMultiprocess(self):
-    self.runTestsWithExecutorType(MultiprocessTaskExecutor)
+    self.runTestsWithExecutorType(MultiProcessTaskExecutor)
 
 
 if __name__ == '__main__':

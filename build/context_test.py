@@ -11,6 +11,7 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 import os
 import unittest2
 
+import async
 from context import *
 from module import *
 from rule import *
@@ -26,8 +27,9 @@ class BuildEnvironmentTest(unittest2.TestCase):
     build_env = BuildEnvironment()
 
 
-class BuildContextTest(unittest2.TestCase):
+class BuildContextTest(FixtureTestCase):
   """Behavioral tests of the BuildContext type."""
+  fixture = 'simple'
 
   def setUp(self):
     super(BuildContextTest, self).setUp()
@@ -46,18 +48,102 @@ class BuildContextTest(unittest2.TestCase):
       self.assertIsNotNone(ctx.task_executor)
 
   def testExecution(self):
-    project = Project(modules=[Module('m', rules=[Rule('a')])])
+    root_path = os.path.join(self.temp_path, 'simple')
+    project = Project(module_resolver=FileModuleResolver(root_path))
 
     with BuildContext(self.build_env, project) as ctx:
       with self.assertRaises(NameError):
-        ctx.execute(['a'])
+        ctx.execute(['x'])
       with self.assertRaises(KeyError):
-        ctx.execute([':b'])
-      with self.assertRaises(KeyError):
-        ctx.execute(['m:b'])
+        ctx.execute([':x'])
+      with self.assertRaises(OSError):
+        ctx.execute(['x:x'])
 
     with BuildContext(self.build_env, project) as ctx:
-      result = ctx.execute(['m:a'])
+      d = ctx.execute([':a'])
+      ctx.wait(d)
+      self.assertCallback(d)
+      results = ctx.get_rule_results(':a')
+      self.assertEqual(results[0], Status.SUCCEEDED)
+
+    with BuildContext(self.build_env, project) as ctx:
+      d = ctx.execute([':mixed_input'])
+      ctx.wait(d)
+      self.assertCallback(d)
+      results = ctx.get_rule_results(':mixed_input')
+      self.assertEqual(results[0], Status.SUCCEEDED)
+      self.assertEqual(len(results[1]), 2)
+
+    class SucceedRule(Rule):
+      class _Context(RuleContext):
+        def begin(self):
+          result = super(SucceedRule._Context, self).begin()
+          print 'hello from rule %s' % (self.rule.path)
+          self._succeed()
+          return result
+      def create_context(self, build_context):
+        return SucceedRule._Context(build_context, self)
+    class FailRule(Rule):
+      class _Context(RuleContext):
+        def begin(self):
+          result = super(FailRule._Context, self).begin()
+          print 'hello from rule %s' % (self.rule.path)
+          self._fail()
+          return result
+      def create_context(self, build_context):
+        return FailRule._Context(build_context, self)
+
+    project = Project(modules=[Module('m', rules=[SucceedRule('a')])])
+    with BuildContext(self.build_env, project) as ctx:
+      d = ctx.execute(['m:a'])
+      ctx.wait(d)
+      self.assertCallback(d)
+      results = ctx.get_rule_results('m:a')
+      self.assertEqual(results[0], Status.SUCCEEDED)
+
+    project = Project(modules=[Module('m', rules=[
+        SucceedRule('a'),
+        SucceedRule('b', deps=[':a'])])])
+    with BuildContext(self.build_env, project) as ctx:
+      d = ctx.execute(['m:b'])
+      ctx.wait(d)
+      self.assertCallback(d)
+      results = ctx.get_rule_results('m:a')
+      self.assertEqual(results[0], Status.SUCCEEDED)
+      results = ctx.get_rule_results('m:b')
+      self.assertEqual(results[0], Status.SUCCEEDED)
+
+    project = Project(modules=[Module('m', rules=[FailRule('a')])])
+    with BuildContext(self.build_env, project) as ctx:
+      d = ctx.execute(['m:a'])
+      ctx.wait(d)
+      self.assertErrback(d)
+      results = ctx.get_rule_results('m:a')
+      self.assertEqual(results[0], Status.FAILED)
+
+    project = Project(modules=[Module('m', rules=[
+        FailRule('a'),
+        SucceedRule('b', deps=[':a'])])])
+    with BuildContext(self.build_env, project) as ctx:
+      d = ctx.execute(['m:b'])
+      ctx.wait(d)
+      self.assertErrback(d)
+      results = ctx.get_rule_results('m:a')
+      self.assertEqual(results[0], Status.FAILED)
+      results = ctx.get_rule_results('m:b')
+      self.assertEqual(results[0], Status.FAILED)
+
+    project = Project(modules=[Module('m', rules=[
+        FailRule('a'),
+        SucceedRule('b', deps=[':a'])])])
+    with BuildContext(self.build_env, project, stop_on_error=True) as ctx:
+      d = ctx.execute(['m:b'])
+      ctx.wait(d)
+      self.assertErrback(d)
+      results = ctx.get_rule_results('m:a')
+      self.assertEqual(results[0], Status.FAILED)
+      results = ctx.get_rule_results('m:b')
+      self.assertEqual(results[0], Status.WAITING)
 
     # TODO(benvanik): test stop_on_error
     # TODO(benvanik): test raise_on_error
@@ -67,13 +153,13 @@ class BuildContextTest(unittest2.TestCase):
     pass
 
   def testBuild(self):
-    project = Project(modules=[Module('m', rules=[
-        Rule('a1'),
-        Rule('a2'),
-        Rule('b', deps=[':a1', ':a2']),
-        Rule('c', deps=[':b'])])])
+    root_path = os.path.join(self.temp_path, 'simple')
+    project = Project(module_resolver=FileModuleResolver(root_path))
+
     with BuildContext(self.build_env, project) as ctx:
-      ctx.execute(['m:c'])
+      d = ctx.execute([':a'])
+      ctx.wait(d)
+      self.assertCallback(d)
       # TODO(benvanik): the rest of this
 
 
@@ -138,7 +224,7 @@ class RuleContextTest(FixtureTestCase):
     rule = project.resolve_rule(':file_input')
     d = build_ctx._execute_rule(rule)
     self.assertTrue(d.is_done())
-    rule_outputs = build_ctx._get_rule_outputs(rule)
+    rule_outputs = build_ctx.get_rule_outputs(rule)
     self.assertEqual(
         set([os.path.basename(f) for f in rule_outputs]),
         set(['a.txt']))
@@ -146,7 +232,7 @@ class RuleContextTest(FixtureTestCase):
     rule = project.resolve_rule(':local_txt')
     d = build_ctx._execute_rule(rule)
     self.assertTrue(d.is_done())
-    rule_outputs = build_ctx._get_rule_outputs(rule)
+    rule_outputs = build_ctx.get_rule_outputs(rule)
     self.assertEqual(
         set([os.path.basename(f) for f in rule_outputs]),
         set(['a.txt', 'b.txt', 'c.txt']))
@@ -154,7 +240,7 @@ class RuleContextTest(FixtureTestCase):
     rule = project.resolve_rule(':recursive_txt')
     d = build_ctx._execute_rule(rule)
     self.assertTrue(d.is_done())
-    rule_outputs = build_ctx._get_rule_outputs(rule)
+    rule_outputs = build_ctx.get_rule_outputs(rule)
     self.assertEqual(
         set([os.path.basename(f) for f in rule_outputs]),
         set(['a.txt', 'b.txt', 'c.txt', 'd.txt', 'e.txt']))
@@ -167,7 +253,7 @@ class RuleContextTest(FixtureTestCase):
     rule = project.resolve_rule(':local_txt_filter')
     d = build_ctx._execute_rule(rule)
     self.assertTrue(d.is_done())
-    rule_outputs = build_ctx._get_rule_outputs(rule)
+    rule_outputs = build_ctx.get_rule_outputs(rule)
     self.assertEqual(
         set([os.path.basename(f) for f in rule_outputs]),
         set(['a.txt', 'b.txt', 'c.txt']))
@@ -175,7 +261,7 @@ class RuleContextTest(FixtureTestCase):
     rule = project.resolve_rule(':recursive_txt_filter')
     d = build_ctx._execute_rule(rule)
     self.assertTrue(d.is_done())
-    rule_outputs = build_ctx._get_rule_outputs(rule)
+    rule_outputs = build_ctx.get_rule_outputs(rule)
     self.assertEqual(
         set([os.path.basename(f) for f in rule_outputs]),
         set(['a.txt', 'b.txt', 'c.txt', 'd.txt', 'e.txt']))
@@ -188,13 +274,13 @@ class RuleContextTest(FixtureTestCase):
     rule = project.resolve_rule(':file_input')
     d = build_ctx._execute_rule(rule)
     self.assertTrue(d.is_done())
-    rule_outputs = build_ctx._get_rule_outputs(rule)
+    rule_outputs = build_ctx.get_rule_outputs(rule)
     self.assertNotEqual(len(rule_outputs), 0)
 
     rule = project.resolve_rule(':rule_input')
     d = build_ctx._execute_rule(rule)
     self.assertTrue(d.is_done())
-    rule_outputs = build_ctx._get_rule_outputs(rule)
+    rule_outputs = build_ctx.get_rule_outputs(rule)
     self.assertEqual(
         set([os.path.basename(f) for f in rule_outputs]),
         set(['a.txt']))
@@ -202,7 +288,7 @@ class RuleContextTest(FixtureTestCase):
     rule = project.resolve_rule(':mixed_input')
     d = build_ctx._execute_rule(rule)
     self.assertTrue(d.is_done())
-    rule_outputs = build_ctx._get_rule_outputs(rule)
+    rule_outputs = build_ctx.get_rule_outputs(rule)
     self.assertEqual(
         set([os.path.basename(f) for f in rule_outputs]),
         set(['a.txt', 'b.txt']))

@@ -12,6 +12,7 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 from collections import deque
 import fnmatch
 import glob2
+import itertools
 import multiprocessing
 import os
 import time
@@ -90,7 +91,8 @@ class BuildContext(object):
     self.task_executor = task_executor
     self._close_task_executor = False
     if not self.task_executor:
-      self.task_executor = task.MultiprocessTaskExecutor()
+      #self.task_executor = task.InProcessTaskExecutor()
+      self.task_executor = task.MultiProcessTaskExecutor()
       self._close_task_executor = True
 
     self.force = force
@@ -118,7 +120,8 @@ class BuildContext(object):
       target_rule_names: A list of rule names that are to be executed.
 
     Returns:
-      TODO
+      A Deferred that completes when all rules have completed. If an error
+      occurs in any rule an errback will be called.
 
     Raises:
       KeyError: One of the given target rules was not found in the project.
@@ -135,46 +138,89 @@ class BuildContext(object):
     # Calculate the sequence of rules to execute
     rule_sequence = self.rule_graph.calculate_rule_sequence(target_rule_names)
 
-    # Execute all rules in order
-    # TODO(benvanik): make this execution multithreaded (see notes below)
-    # any_failed = False
-    # remaining_rules = deque(rule_sequence)
-    # while len(remaining_rules):
-    #   rule = remaining_rules.popleft()
-    #   start_time = time.clock()
-    #   deferred = self._execute_rule(rule)
-    #   result = None
-    #   duration = time.clock() - start_time
-    #   if not result:
-    #     any_failed = True
-    #   if any_failed and self.stop_on_error:
-    #     break
+    any_failed = [False]
+    main_deferred = Deferred()
+    remaining_rules = deque(rule_sequence)
+    in_flight_rules = []
 
-    return True
+    def _issue_rule(rule):
+      """Issues a single rule into the current execution context.
+      Updates the in_flight_rules list and pumps when the rule completes.
 
-# TODO(benvanik): multiprocessing work
-# Requires basic checks for dependency of in-flight rules to ensure parallel
-# processing is possible.
-# Rule instances should be easily portable to worker threads (just metadata),
-# however synchronizing logging and things like aborting require work.
-#
-# run the list in order:
-# remaining_rules = deque(rule_sequence)
-# in_flight_rules = []
-# def pump():
-#   while len(in_flight_rules) < max_workers and len(remaining_rules):
-#     next_rule = remaining_rules[0]
-#     for in_flight_rule in in_flight_rules:
-#       if graph.has_dependency(next_rule.path, in_flight_rules.path):
-#         blocked!
-#         return
-#       else:
-#         runnable!
-#         remaining_rules.popleft()
-#         in_flight_rules.append(next_rule)
-#         kick off worker with rule
-#   if not len(in_flight_rules) and not len(remaining_rules):
-#     done!
+      Args:
+        rule: Rule to issue.
+      """
+      def _rule_callback(*args, **kwargs):
+        in_flight_rules.remove(rule)
+        _pump(previous_succeeded=True)
+
+      def _rule_errback(*args, **kwargs):
+        in_flight_rules.remove(rule)
+        # TODO(benvanik): log result/exception/etc?
+        _pump(previous_succeeded=False)
+
+      in_flight_rules.append(rule)
+      rule_deferred = self._execute_rule(rule)
+      rule_deferred.add_callback_fn(_rule_callback)
+      rule_deferred.add_errback_fn(_rule_errback)
+      return rule_deferred
+
+    def _pump(previous_succeeded=True):
+      """Attempts to run another rule and signals the main_deferred if done.
+
+      Args:
+        previous_succeeded: Whether the previous rule succeeded.
+      """
+      # If we're already done, gracefully exit
+      if main_deferred.is_done():
+        return
+
+      # If we failed and we are supposed to stop, gracefully stop by
+      # killing all future rules
+      # This is better than terminating immediately, as it allows legit tasks
+      # to finish
+      if not previous_succeeded:
+        any_failed[0] = True
+      if not previous_succeeded and self.stop_on_error:
+        remaining_rules.clear()
+
+      if len(remaining_rules):
+        # Peek the next rule
+        next_rule = remaining_rules[0]
+
+        # See if it has any dependency on currently running rules
+        for in_flight_rule in in_flight_rules:
+          if self.rule_graph.has_dependency(next_rule.path,
+                                            in_flight_rule.path):
+            # Blocked on a previous rule, so pass and wait for the next pump
+            return
+
+        # If here then we found no conflicting rules, so run!
+        remaining_rules.popleft()
+        _issue_rule(next_rule)
+      else:
+        # Done!
+        # TODO(benvanik): better errbacks? some kind of BuildResults?
+        if not any_failed[0]:
+          main_deferred.callback()
+        else:
+          main_deferred.errback()
+
+    # Kick off execution (once for each rule as a heuristic for flooding the
+    # pipeline)
+    for rule in rule_sequence:
+      _pump()
+
+    return main_deferred
+
+  def wait(self, deferreds):
+    """Blocks waiting on a list of deferreds until they all complete.
+    The deferreds must have been returned from execute.
+
+    Args:
+      deferreds: A list of Deferreds (or one).
+    """
+    self.task_executor.wait(deferreds)
 
   def _execute_rule(self, rule):
     """Executes a single rule.
@@ -191,23 +237,51 @@ class BuildContext(object):
     assert not self.rule_contexts.has_key(rule.path)
     rule_ctx = rule.create_context(self)
     self.rule_contexts[rule.path] = rule_ctx
-    return rule_ctx.begin()
+    if rule_ctx.check_predecessor_failures():
+      return rule_ctx.cascade_failure()
+    else:
+      return rule_ctx.begin()
 
-  def _get_rule_outputs(self, rule):
+  def get_rule_results(self, rule):
+    """Gets the status/output of a rule.
+    This is not thread safe and should only be used to query the result of a
+    rule after it has been run.
+
+    Args:
+      rule: Rule to query - can be a Rule object or a rule path that will be
+          resolved.
+
+    Returns:
+      A tuple containing (status, output_paths) for the given rule.
+
+    Raises:
+      KeyError: The rule was not found.
+    """
+    if isinstance(rule, str):
+      rule = self.project.resolve_rule(rule)
+    if self.rule_contexts.has_key(rule.path):
+      rule_ctx = self.rule_contexts[rule.path]
+      return (rule_ctx.status, rule_ctx.all_output_files[:])
+    else:
+      return (Status.WAITING, [])
+
+  def get_rule_outputs(self, rule):
     """Gets the output files of the given rule.
     It is only valid to call this on rules that have already been executed
     and have succeeded.
 
     Args:
-      rule: Rule to get the outputs of.
+      rule: Rule to query - can be a Rule object or a rule path that will be
+          resolved.
 
     Returns:
-      A list of all output files from the rule.
+      A list of all output files from the rule or None if the rule did not yet
+      execute.
+    Raises:
+      KeyError: The rule was not found.
     """
-    assert self.rule_contexts.has_key(rule.path)
-    rule_ctx = self.rule_contexts[rule.path]
-    assert rule_ctx.status == Status.SUCCEEDED
-    return rule_ctx.all_output_files[:]
+    results = self.get_rule_results(rule)
+    return results[1]
 
 
 class RuleContext(object):
@@ -283,6 +357,22 @@ class RuleContext(object):
         input_paths.add(file_path)
     return list(input_paths)
 
+  def check_predecessor_failures(self):
+    """Checks all dependencies for failure.
+
+    Returns:
+      True if any dependency has failed.
+    """
+    for dep in itertools.chain(self.rule.srcs, self.rule.deps):
+      if util.is_rule_path(dep):
+        other_rule = self.build_context.project.resolve_rule(
+            dep, requesting_module=self.rule.parent_module)
+        other_rule_ctx = self.build_context.rule_contexts.get(
+            other_rule.path, None)
+        if other_rule_ctx.status == Status.FAILED:
+          return True
+    return False
+
   def begin(self):
     """Begins asynchronous rule execution.
     Custom RuleContext implementations should override this method to perform
@@ -298,6 +388,22 @@ class RuleContext(object):
     """
     self.status = Status.RUNNING
     self.start_time = time.time()
+    return self.deferred
+
+  def cascade_failure(self):
+    """Instantly fails a rule, signaling that a rule prior to it has failed
+    and it should not be run.
+
+    Use this if a call to check_predecessor_failures returns True to properly
+    set a rule context up for cascading failures.
+    After calling this begin should not be called.
+
+    Returns:
+      A Deferred that has had its errback called.
+    """
+    # TODO(benvanik): special CascadingError exception
+    self.start_time = time.time()
+    self._fail()
     return self.deferred
 
   def _succeed(self):
