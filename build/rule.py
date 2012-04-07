@@ -296,7 +296,9 @@ class build_rule(object):
     rule_definition.rule_name = self.rule_name
 
     # Add the (wrapped) rule type to the global namespace
+    # We support not having an active namespace so that tests can import
+    # rule files without dying
     global _RULE_NAMESPACE
-    assert _RULE_NAMESPACE
-    _RULE_NAMESPACE.add_rule_type_fn(rule_definition)
+    if _RULE_NAMESPACE:
+      _RULE_NAMESPACE.add_rule_type_fn(rule_definition)
     return cls

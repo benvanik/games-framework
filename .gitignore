@@ -16,6 +16,7 @@ Desktop.ini
 
 # Sublime Text
 *.sublime-project
+*.sublime-workspace
 
 # VIM
 .*.sw[a-z]

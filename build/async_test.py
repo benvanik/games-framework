@@ -288,5 +288,6 @@ class GatherTest(AsyncTestCase):
         (True, ('c',), {}),
         (False, ('f',), {})])
 
+
 if __name__ == '__main__':
   unittest2.main()
