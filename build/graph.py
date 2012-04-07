@@ -107,7 +107,8 @@ class RuleGraph(object):
     # Ensure the graph is a DAG (no cycles)
     if not nx.is_directed_acyclic_graph(self.graph):
       # TODO(benvanik): use nx.simple_cycles() to print the cycles
-      raise ValueError('Cycle detected in the rule graph')
+      raise ValueError('Cycle detected in the rule graph: %s' % (
+          nx.simple_cycles(self.graph)))
 
   def add_rules_from_module(self, module):
     """Adds all rules (and their dependencies) from the given module.
@@ -162,20 +163,30 @@ class RuleGraph(object):
     # cached
     reverse_graph = self.graph.reverse()
 
-    # Add all paths for targets
     # Paths are added in reverse (from target to dependencies)
-    # Note that all nodes are present if we got this far, so no need to check
     sequence_graph = nx.DiGraph()
+
+    def _add_rule_node_dependencies(rule_node):
+      if sequence_graph.has_node(rule_node):
+        # Already present in the sequence graph, no need to add again
+        return
+      # Add node
+      sequence_graph.add_node(rule_node)
+      # Recursively add all dependent children
+      for out_edge in reverse_graph.out_edges_iter(rule_node):
+        out_rule_node = out_edge[1]
+        if not sequence_graph.has_node(out_rule_node):
+          _add_rule_node_dependencies(out_rule_node)
+        sequence_graph.add_edge(rule_node, out_rule_node)
+
+    # Add all paths for targets
+    # Note that all nodes are present if we got this far, so no need to check
     for rule_path in target_rule_paths:
       rule = self.project.resolve_rule(rule_path)
       assert rule
       rule_node = self.rule_nodes.get(rule.path, None)
       assert rule_node
-      path = list(nx.topological_sort(reverse_graph, [rule_node]))
-      if len(path) == 1:
-        sequence_graph.add_node(path[0])
-      else:
-        sequence_graph.add_path(path)
+      _add_rule_node_dependencies(rule_node)
 
     # Reverse the graph so that it's dependencies -> targets
     reversed_sequence_graph = sequence_graph.reverse()
