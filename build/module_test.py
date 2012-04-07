@@ -187,7 +187,7 @@ class ModuleLoaderTest(FixtureTestCase):
     self.assertEqual(len(module.rule_list()), 0)
 
     loader = ModuleLoader(module_path)
-    loader.load(source_string='rule("a")\nrule("b")')
+    loader.load(source_string='file_set("a")\nfile_set("b")')
     module = loader.execute()
     self.assertEqual(len(module.rule_list()), 2)
     self.assertIsNotNone(module.get_rule(':a'))
@@ -200,10 +200,10 @@ class ModuleLoaderTest(FixtureTestCase):
 
     loader = ModuleLoader(module_path, modes=['A'])
     loader.load(source_string=(
-        'rule("a", srcs=select_any({"A": "sa"}, "sx"))\n'
-        'rule("b", srcs=select_any({"B": "sb"}, "sx"))\n'
-        'rule("c", srcs=select_one([("A", "sa")], "sx"))\n'
-        'rule("d", srcs=select_many({"B": "sb"}, "sx"))\n'))
+        'file_set("a", srcs=select_any({"A": "sa"}, "sx"))\n'
+        'file_set("b", srcs=select_any({"B": "sb"}, "sx"))\n'
+        'file_set("c", srcs=select_one([("A", "sa")], "sx"))\n'
+        'file_set("d", srcs=select_many({"B": "sb"}, "sx"))\n'))
     module = loader.execute()
     self.assertEqual(module.get_rule(':a').srcs[0], 'sa')
     self.assertEqual(module.get_rule(':b').srcs[0], 'sx')
@@ -228,7 +228,7 @@ class ModuleLoaderTest(FixtureTestCase):
     module_path = os.path.join(self.temp_path, 'simple', 'BUILD')
 
     loader = ModuleLoader(module_path)
-    loader.load(source_string='rule("a", srcs=glob(""))')
+    loader.load(source_string='file_set("a", srcs=glob(""))')
     module = loader.execute()
     self.assertEqual(len(module.rule_list()), 1)
     self.assertIsNotNone(module.get_rule(':a'))
@@ -236,7 +236,7 @@ class ModuleLoaderTest(FixtureTestCase):
     self.assertEqual(len(rule.srcs), 0)
 
     loader = ModuleLoader(module_path)
-    loader.load(source_string='rule("a", srcs=glob("*.txt"))')
+    loader.load(source_string='file_set("a", srcs=glob("*.txt"))')
     module = loader.execute()
     self.assertEqual(len(module.rule_list()), 1)
     self.assertIsNotNone(module.get_rule(':a'))
@@ -244,7 +244,7 @@ class ModuleLoaderTest(FixtureTestCase):
     self.assertEqual(len(rule.srcs), 3)
 
     loader = ModuleLoader(module_path)
-    loader.load(source_string='rule("a", srcs=glob("**/*.txt"))')
+    loader.load(source_string='file_set("a", srcs=glob("**/*.txt"))')
     module = loader.execute()
     self.assertEqual(len(module.rule_list()), 1)
     self.assertIsNotNone(module.get_rule(':a'))
@@ -252,7 +252,7 @@ class ModuleLoaderTest(FixtureTestCase):
     self.assertEqual(len(rule.srcs), 5)
 
     loader = ModuleLoader(module_path)
-    loader.load(source_string='rule("a", srcs=glob("a.txt"))')
+    loader.load(source_string='file_set("a", srcs=glob("a.txt"))')
     module = loader.execute()
     self.assertEqual(len(module.rule_list()), 1)
     self.assertIsNotNone(module.get_rule(':a'))
@@ -260,7 +260,7 @@ class ModuleLoaderTest(FixtureTestCase):
     self.assertEqual(len(rule.srcs), 1)
 
     loader = ModuleLoader(module_path)
-    loader.load(source_string='rule("a", srcs=glob("x.txt"))')
+    loader.load(source_string='file_set("a", srcs=glob("x.txt"))')
     module = loader.execute()
     self.assertEqual(len(module.rule_list()), 1)
     self.assertIsNotNone(module.get_rule(':a'))
@@ -268,7 +268,7 @@ class ModuleLoaderTest(FixtureTestCase):
     self.assertEqual(len(rule.srcs), 0)
 
     loader = ModuleLoader(module_path)
-    loader.load(source_string='rule("a", srcs=glob("*.notpresent"))')
+    loader.load(source_string='file_set("a", srcs=glob("*.notpresent"))')
     module = loader.execute()
     self.assertEqual(len(module.rule_list()), 1)
     self.assertIsNotNone(module.get_rule(':a'))

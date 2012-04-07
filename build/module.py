@@ -307,7 +307,6 @@ class ModuleLoader(object):
     Raises:
       TypeError: The type of a value does not match the expected type.
     """
-    results = None
     if isinstance(default_value, list):
       results = []
     elif isinstance(default_value, dict):

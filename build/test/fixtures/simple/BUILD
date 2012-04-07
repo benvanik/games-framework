@@ -1,37 +1,37 @@
 # Simple sample build file
 # Does nothing but provide some rules
 
-rule('a',
+file_set('a',
      srcs=['a.txt'])
 
-rule('b',
+file_set('b',
     srcs=['b.txt'])
 
-rule('c',
+file_set('c',
     srcs=['c.txt'],
     deps=[':a', ':b'])
 
-rule('local_txt',
+file_set('local_txt',
     srcs=glob('*.txt'))
-rule('recursive_txt',
+file_set('recursive_txt',
     srcs=glob('**/*.txt'))
-rule('missing_txt',
+file_set('missing_txt',
     srcs='x.txt')
-rule('missing_glob_txt',
+file_set('missing_glob_txt',
     srcs=glob('*.notpresent'))
 
-rule('local_txt_filter',
+file_set('local_txt_filter',
     srcs=glob('*'),
     src_filter='*.txt')
-rule('recursive_txt_filter',
+file_set('recursive_txt_filter',
     srcs=glob('**/*'),
     src_filter='*.txt')
 
-rule('file_input',
+file_set('file_input',
     srcs='a.txt')
-rule('rule_input',
+file_set('rule_input',
     srcs=':file_input')
-rule('mixed_input',
+file_set('mixed_input',
     srcs=['b.txt', ':file_input'])
-rule('missing_input',
+file_set('missing_input',
     srcs=':x')

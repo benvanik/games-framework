@@ -175,13 +175,13 @@ class RuleNamespaceTest(FixtureTestCase):
   def testDiscovery(self):
     ns = RuleNamespace()
     ns.discover()
-    self.assertTrue(ns.rule_types.has_key('rule'))
+    self.assertTrue(ns.rule_types.has_key('file_set'))
 
     rule_path = os.path.join(self.temp_path, 'rules')
     ns = RuleNamespace()
     ns.discover(rule_path)
     self.assertEqual(len(ns.rule_types), 3)
-    self.assertFalse(ns.rule_types.has_key('rule'))
+    self.assertFalse(ns.rule_types.has_key('file_set'))
     self.assertTrue(ns.rule_types.has_key('rule_a'))
     self.assertTrue(ns.rule_types.has_key('rule_b'))
     self.assertTrue(ns.rule_types.has_key('rule_c'))

@@ -1,1 +1,1 @@
-rule('root_rule', deps=['a:rule_a'])
+file_set('root_rule', deps=['a:rule_a'])

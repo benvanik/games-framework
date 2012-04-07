@@ -1,1 +1,1 @@
-rule('rule_c_file')
+file_set('rule_c_file')
