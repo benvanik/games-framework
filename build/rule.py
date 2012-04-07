@@ -66,7 +66,9 @@ class Rule(object):
     self.parent_module = None
     self.path = ':%s' % (name)
 
-    # Note that all srcs/deps are copied in
+    # All file/rule paths this rule depends on - as a set so no duplicates
+    self._dependent_paths = set([])
+
     self.srcs = []
     if isinstance(srcs, str):
       if len(srcs):
@@ -75,6 +77,7 @@ class Rule(object):
       self.srcs.extend(srcs)
     elif srcs != None:
       raise TypeError('Invalid srcs type')
+    self._append_dependent_paths(self.srcs)
 
     self.deps = []
     if isinstance(deps, str):
@@ -84,9 +87,7 @@ class Rule(object):
       self.deps.extend(deps)
     elif deps != None:
       raise TypeError('Invalid deps type')
-
-    util.validate_names(self.srcs)
-    util.validate_names(self.deps, require_semicolon=True)
+    self._append_dependent_paths(self.deps, require_semicolon=True)
 
     self.src_filter = None
     if src_filter and len(src_filter):
@@ -94,6 +95,31 @@ class Rule(object):
 
     self.out = out
     self.gen = gen
+
+  def _append_dependent_paths(self, paths, require_semicolon=False):
+    """Appends a list of paths to the rule's dependent paths.
+    A dependent path is a file/rule that is required for execution and, if
+    changed, will invalidate cached versions of this rule.
+
+    Args:
+      paths: A list of paths to depend on.
+      require_semicolon: True if all of the given paths require a semicolon
+          (so they must be rules).
+
+    Raises:
+      NameError: One of the given paths is invalid.
+    """
+    util.validate_names(paths, require_semicolon=require_semicolon)
+    self._dependent_paths.update(paths)
+
+  def get_dependent_paths(self):
+    """Gets a list of all dependent paths.
+    Paths may be file paths or rule paths.
+
+    Returns:
+      A list of file/rule paths.
+    """
+    return self._dependent_paths.copy()
 
   def set_parent_module(self, module):
     """Sets the parent module of a rule.

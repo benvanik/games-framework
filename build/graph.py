@@ -10,7 +10,6 @@ information such as build rule sets/etc.
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
-import itertools
 import networkx as nx
 
 import build
@@ -84,7 +83,7 @@ class RuleGraph(object):
 
       # Recursively resolve all dependent rules
       dependent_rule_paths = []
-      for dep in itertools.chain(rule.srcs, rule.deps):
+      for dep in rule.get_dependent_paths():
         if util.is_rule_path(dep):
           dependent_rule_paths.append(dep)
       if len(dependent_rule_paths):
@@ -95,7 +94,7 @@ class RuleGraph(object):
     # be added to the graph)
     for rule in rules:
       rule_node = self.rule_nodes[rule.path]
-      for dep in itertools.chain(rule_node.rule.srcs, rule_node.rule.deps):
+      for dep in rule_node.rule.get_dependent_paths():
         if util.is_rule_path(dep):
           dep_rule = self.project.resolve_rule(dep,
               requesting_module=rule.parent_module)

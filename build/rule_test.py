@@ -112,6 +112,39 @@ class RuleTest(unittest2.TestCase):
     with self.assertRaises(NameError):
       Rule('r', deps=' a ')
 
+  def testRuleDependentPaths(self):
+    rule = Rule('r')
+    self.assertEqual(rule.get_dependent_paths(), set([]))
+
+    rule = Rule('r', srcs=[':a', 'a.txt'])
+    self.assertEqual(rule.get_dependent_paths(), set([':a', 'a.txt']))
+
+    rule = Rule('r', deps=[':a', 'm:b'])
+    self.assertEqual(rule.get_dependent_paths(), set([':a', 'm:b']))
+
+    rule = Rule('r', srcs=['a.txt'], deps=[':b'])
+    self.assertEqual(rule.get_dependent_paths(), set(['a.txt', ':b']))
+
+    rule = Rule('r', srcs=[':b'], deps=[':b'])
+    self.assertEqual(rule.get_dependent_paths(), set([':b']))
+
+    with self.assertRaises(NameError):
+      Rule('r', deps=['a.txt'])
+
+    class RuleWithAttrs(Rule):
+      def __init__(self, name, extra_srcs=None, extra_deps=None,
+                   *args, **kwargs):
+        super(RuleWithAttrs, self).__init__(name, *args, **kwargs)
+        self.extra_srcs = extra_srcs[:]
+        self._append_dependent_paths(self.extra_srcs)
+        self.extra_deps = extra_deps[:]
+        self._append_dependent_paths(self.extra_deps, require_semicolon=True)
+
+    rule = RuleWithAttrs('r', srcs=['a.txt'], deps=[':b'],
+                         extra_srcs=['c.txt'], extra_deps=[':d'])
+    self.assertEqual(rule.get_dependent_paths(), set([
+        'a.txt', ':b', 'c.txt', ':d']))
+
   def testRuleCacheKey(self):
     rule1 = Rule('r1')
     rule1_key = rule1.compute_cache_key()

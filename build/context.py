@@ -11,7 +11,6 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 from collections import deque
 import fnmatch
-import itertools
 import multiprocessing
 import os
 import stat
@@ -344,19 +343,27 @@ class RuleContext(object):
     # TODO(benvanik): logger
     self.logger = None
 
-    # The fully resolved (and de-duped) list of all files from srcs
-    self.all_input_files = self._gather_input_files()
+    # Resolve all src paths
+    # If rules have their own attrs they'll have to do them themselves
+    self.src_paths = self._resolve_input_files(rule.srcs, apply_src_filter=True)
 
     # This list of all files this rule outputted, upon completion
     self.all_output_files = []
 
-  def _gather_input_files(self):
-    """Gathers and returns a list of all files that a rule needs based on srcs.
+  def _resolve_input_files(self, paths, apply_src_filter=False):
+    """Resolves the given paths into real file system paths, ready for use.
     This adds direct file references, recursively enumerates paths, expands
     globs, and grabs outputs from other rules.
 
+    Since this actually checks to see if specific files are present and raises
+    if not, this should be called in the initializer of all subclasses to
+    resolve all paths in a place where a good stack will occur.
+
+    Args:
+      paths: Paths to resolve.
+
     Returns:
-      A list of all file paths from srcs.
+      A list of all file paths from the given paths.
 
     Raises:
       KeyError: A required rule was not found.
@@ -365,7 +372,7 @@ class RuleContext(object):
     """
     base_path = os.path.dirname(self.rule.parent_module.path)
     input_paths = set([])
-    for src in self.rule.srcs:
+    for src in paths:
       # Grab all items from the source
       src_items = None
       if util.is_rule_path(src):
@@ -388,12 +395,23 @@ class RuleContext(object):
           src_items = [src_path]
 
       # Apply the src_filter, if any
-      src_filter = self.rule.src_filter
-      for file_path in src_items:
-        if src_filter and not fnmatch.fnmatch(file_path, src_filter):
-          continue
-        input_paths.add(file_path)
+      if apply_src_filter and self.rule.src_filter:
+        for file_path in src_items:
+          if fnmatch.fnmatch(file_path, self.rule.src_filter):
+            input_paths.add(file_path)
+      else:
+        input_paths.update(src_items)
     return list(input_paths)
+
+  def _append_output_paths(self, paths):
+    """Appends the given paths to the output list.
+    Other rules that depend on this rule will receive these paths when it
+    is used as a source.
+
+    Args:
+      paths: A list of paths to add to the list.
+    """
+    self.all_output_files.extend(paths)
 
   def check_predecessor_failures(self):
     """Checks all dependencies for failure.
@@ -401,7 +419,7 @@ class RuleContext(object):
     Returns:
       True if any dependency has failed.
     """
-    for dep in itertools.chain(self.rule.srcs, self.rule.deps):
+    for dep in self.rule.get_dependent_paths():
       if util.is_rule_path(dep):
         other_rule = self.build_context.project.resolve_rule(
             dep, requesting_module=self.rule.parent_module)

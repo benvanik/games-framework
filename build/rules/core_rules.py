@@ -38,7 +38,7 @@ class FileSetRule(Rule):
   class _Context(RuleContext):
     def begin(self):
       super(FileSetRule._Context, self).begin()
-      self.all_output_files.extend(self.all_input_files)
+      self._append_output_paths(self.src_paths)
       self._succeed()
 
   def create_context(self, build_context):
@@ -77,7 +77,7 @@ class CopyFilesRule(Rule):
   class _Context(RuleContext):
     def begin(self):
       super(CopyFilesRule._Context, self).begin()
-      self.all_output_files.extend(self.all_input_files)
+      self._append_output_paths(self.src_paths)
       self._succeed()
 
   def create_context(self, build_context):
@@ -115,7 +115,7 @@ class ConcatFilesRule(Rule):
   class _Context(RuleContext):
     def begin(self):
       super(ConcatFilesRule._Context, self).begin()
-      self.all_output_files.extend(self.all_input_files)
+      self._append_output_paths(self.src_paths)
       self._succeed()
 
   def create_context(self, build_context):
@@ -151,7 +151,7 @@ class TemplateFilesRule(Rule):
   class _Context(RuleContext):
     def begin(self):
       super(TemplateFilesRule._Context, self).begin()
-      self.all_output_files.extend(self.all_input_files)
+      self._append_output_paths(self.src_paths)
       self._succeed()
 
   def create_context(self, build_context):
