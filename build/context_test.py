@@ -53,21 +53,26 @@ class BuildContextTest(FixtureTestCase):
 
     with BuildContext(self.build_env, project) as ctx:
       with self.assertRaises(NameError):
-        ctx.execute(['x'])
+        ctx.execute_async(['x'])
       with self.assertRaises(KeyError):
-        ctx.execute([':x'])
+        ctx.execute_async([':x'])
       with self.assertRaises(OSError):
-        ctx.execute(['x:x'])
+        ctx.execute_async(['x:x'])
 
     with BuildContext(self.build_env, project) as ctx:
-      d = ctx.execute([':a'])
+      self.assertTrue(ctx.execute_sync([':a']))
+      results = ctx.get_rule_results(':a')
+      self.assertEqual(results[0], Status.SUCCEEDED)
+
+    with BuildContext(self.build_env, project) as ctx:
+      d = ctx.execute_async([':a'])
       ctx.wait(d)
       self.assertCallback(d)
       results = ctx.get_rule_results(':a')
       self.assertEqual(results[0], Status.SUCCEEDED)
 
     with BuildContext(self.build_env, project) as ctx:
-      d = ctx.execute([':mixed_input'])
+      d = ctx.execute_async([':mixed_input'])
       ctx.wait(d)
       self.assertCallback(d)
       results = ctx.get_rule_results(':mixed_input')
@@ -93,7 +98,7 @@ class BuildContextTest(FixtureTestCase):
 
     project = Project(modules=[Module('m', rules=[SucceedRule('a')])])
     with BuildContext(self.build_env, project) as ctx:
-      d = ctx.execute(['m:a'])
+      d = ctx.execute_async(['m:a'])
       ctx.wait(d)
       self.assertCallback(d)
       results = ctx.get_rule_results('m:a')
@@ -103,7 +108,7 @@ class BuildContextTest(FixtureTestCase):
         SucceedRule('a'),
         SucceedRule('b', deps=[':a'])])])
     with BuildContext(self.build_env, project) as ctx:
-      d = ctx.execute(['m:b'])
+      d = ctx.execute_async(['m:b'])
       ctx.wait(d)
       self.assertCallback(d)
       results = ctx.get_rule_results('m:a')
@@ -113,9 +118,15 @@ class BuildContextTest(FixtureTestCase):
 
     project = Project(modules=[Module('m', rules=[FailRule('a')])])
     with BuildContext(self.build_env, project) as ctx:
-      d = ctx.execute(['m:a'])
+      d = ctx.execute_async(['m:a'])
       ctx.wait(d)
       self.assertErrback(d)
+      results = ctx.get_rule_results('m:a')
+      self.assertEqual(results[0], Status.FAILED)
+
+    project = Project(modules=[Module('m', rules=[FailRule('a')])])
+    with BuildContext(self.build_env, project) as ctx:
+      self.assertFalse(ctx.execute_sync(['m:a']))
       results = ctx.get_rule_results('m:a')
       self.assertEqual(results[0], Status.FAILED)
 
@@ -123,7 +134,7 @@ class BuildContextTest(FixtureTestCase):
         FailRule('a'),
         SucceedRule('b', deps=[':a'])])])
     with BuildContext(self.build_env, project) as ctx:
-      d = ctx.execute(['m:b'])
+      d = ctx.execute_async(['m:b'])
       ctx.wait(d)
       self.assertErrback(d)
       results = ctx.get_rule_results('m:a')
@@ -135,7 +146,7 @@ class BuildContextTest(FixtureTestCase):
         FailRule('a'),
         SucceedRule('b', deps=[':a'])])])
     with BuildContext(self.build_env, project, stop_on_error=True) as ctx:
-      d = ctx.execute(['m:b'])
+      d = ctx.execute_async(['m:b'])
       ctx.wait(d)
       self.assertErrback(d)
       results = ctx.get_rule_results('m:a')
@@ -155,7 +166,7 @@ class BuildContextTest(FixtureTestCase):
     project = Project(module_resolver=FileModuleResolver(root_path))
 
     with BuildContext(self.build_env, project) as ctx:
-      d = ctx.execute([':a'])
+      d = ctx.execute_async([':a'])
       ctx.wait(d)
       self.assertCallback(d)
       # TODO(benvanik): the rest of this

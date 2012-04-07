@@ -115,9 +115,40 @@ class BuildContext(object):
     if self._close_task_executor:
       self.task_executor.close()
 
-  def execute(self, target_rule_names):
-    """Executes all rules in the context.
-    Rules are executed in order and where possible in parallel.
+  def execute_sync(self, target_rule_names):
+    """Synchronously executes the given target rules in the context.
+    Rules are executed in the order and, where possible, in parallel.
+
+    This is equivalent to calling execute_async and then waiting on the
+    deferred.
+
+    Args:
+      target_rule_names: A list of rule names that are to be executed.
+
+    Returns:
+      A boolean indicating whether execution succeeded.
+
+    Raises:
+      KeyError: One of the given target rules was not found in the project.
+      NameError: An invalid target rule was given.
+      TypeError: An invalid target rule was given.
+      RuntimeError: Execution failed to complete.
+    """
+    d = self.execute_async(target_rule_names)
+    self.wait(d)
+    result = [None]
+    def _callback():
+      result[0] = True
+    def _errback():
+      result[0] = False
+    d.add_callback_fn(_callback)
+    d.add_errback_fn(_errback)
+    assert result[0] is not None
+    return result[0]
+
+  def execute_async(self, target_rule_names):
+    """Executes the given target rules in the context.
+    Rules are executed in the order and, where possible, in parallel.
 
     Args:
       target_rule_names: A list of rule names that are to be executed.
