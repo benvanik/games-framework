@@ -35,7 +35,7 @@ class Rule(object):
   _whitespace_re = re.compile('\s', re.M)
 
   def __init__(self, name, srcs=None, deps=None, src_filter=None,
-               *args, **kwargs):
+               out=None, gen=None, *args, **kwargs):
     """Initializes a rule.
 
     Args:
@@ -45,6 +45,10 @@ class Rule(object):
       deps: A list of depdendency strings or a single dependency string.
       src_filter: An inclusionary file name filter for all non-rule paths. If
           defined only srcs that match this filter will be included.
+      out: Path, relative to BuildEnvironment.out_path, where outputs will be
+          placed.
+      gen: Path, relative to BuildEnvironment.out_path, where generated files
+          will be placed.
 
     Raises:
       NameError: The given name is invalid (None/0-length).
@@ -87,6 +91,9 @@ class Rule(object):
     self.src_filter = None
     if src_filter and len(src_filter):
       self.src_filter = src_filter
+
+    self.out = out
+    self.gen = gen
 
   def set_parent_module(self, module):
     """Sets the parent module of a rule.
