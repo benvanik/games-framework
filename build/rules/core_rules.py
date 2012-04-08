@@ -8,6 +8,7 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 import io
 import os
+import shutil
 import string
 
 from build.context import RuleContext
@@ -61,11 +62,11 @@ class CopyFilesRule(Rule):
 
   If a src_filter is provided then it is used to filter all sources.
 
+  This copies all files and preserves all file metadata, but does not preserve
+  directory metadata.
+
   Inputs:
     srcs: Source file paths.
-    out: Optional path, relative to the output path, to base file paths.
-        For example, srcs='dir/a.txt' with out='place/' would result in an
-        output file of '$out/place/dir/a.txt'.
 
   Outputs:
     All of the copied files in the output path.
@@ -79,11 +80,32 @@ class CopyFilesRule(Rule):
     """
     super(CopyFilesRule, self).__init__(name, *args, **kwargs)
 
+  class _Task(Task):
+    def __init__(self, build_env, file_pairs, *args, **kwargs):
+      super(CopyFilesRule._Task, self).__init__(build_env, *args, **kwargs)
+      self.file_pairs = file_pairs
+
+    def execute(self):
+      for file_pair in self.file_pairs:
+        shutil.copy2(file_pair[0], file_pair[1])
+      return True
+
   class _Context(RuleContext):
     def begin(self):
       super(CopyFilesRule._Context, self).begin()
-      self._append_output_paths(self.src_paths)
-      self._succeed()
+
+      # Get all source -> output paths (and ensure directories exist)
+      file_pairs = []
+      for src_path in self.src_paths:
+        out_path = self._get_out_path_for_src(src_path)
+        self._ensure_output_exists(os.path.dirname(out_path))
+        self._append_output_paths([out_path])
+        file_pairs.append((src_path, out_path))
+
+      # Async issue copying task
+      d = self._run_task_async(CopyFilesRule._Task(
+          self.build_env, file_pairs))
+      self._chain(d)
 
   def create_context(self, build_context):
     return CopyFilesRule._Context(build_context, self)

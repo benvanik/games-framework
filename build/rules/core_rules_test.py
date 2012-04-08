@@ -24,13 +24,8 @@ class RuleTestCase(FixtureTestCase):
     self.assertEqual(results[0], Status.SUCCEEDED)
     output_paths = results[1]
 
-    rule = build_ctx.project.resolve_rule(rule_path)
-    output_base = os.path.join(os.path.dirname(rule.parent_module.path),
-                               output_prefix)
-    # print output_base
-    # print output_paths
-    # print expected_file_matches
-    result_file_list = [os.path.relpath(f, output_base) for f in output_paths]
+    root_path = os.path.join(build_ctx.build_env.root_path, output_prefix)
+    result_file_list = [os.path.relpath(f, root_path) for f in output_paths]
     self.assertEqual(
         set(result_file_list),
         set(expected_file_matches))
@@ -72,22 +67,45 @@ class FileSetRuleTest(RuleTestCase):
       self.assertRuleResultsEqual(ctx,
           ':dupes', ['a.txt', 'dir/b.txt',])
       self.assertRuleResultsEqual(ctx,
-          'dir:b', ['b.txt',])
+          'dir:b', ['dir/b.txt',])
       self.assertRuleResultsEqual(ctx,
-          'dir:b_glob', ['b.txt',])
+          'dir:b_glob', ['dir/b.txt',])
 
 
 class CopyFilesRuleTest(RuleTestCase):
   """Behavioral tests of the CopyFilesRule type."""
-  fixture='core_rules'
+  fixture='core_rules/copy_files'
 
   def setUp(self):
     super(CopyFilesRuleTest, self).setUp()
     self.build_env = BuildEnvironment(root_path=self.root_path)
 
   def test(self):
-    rule = CopyFilesRule('a')
-    pass
+    project = Project(module_resolver=FileModuleResolver(self.root_path))
+
+    with BuildContext(self.build_env, project) as ctx:
+      self.assertTrue(ctx.execute_sync([
+          ':copy_all_txt',
+          'dir:copy_c',
+          ]))
+
+      self.assertRuleResultsEqual(ctx,
+          ':copy_all_txt', ['a.txt',
+                            'dir/b.txt'],
+          output_prefix='build-out')
+      self.assertFileContents(
+          os.path.join(self.root_path, 'build-out/a.txt'),
+          'a\n')
+      self.assertFileContents(
+          os.path.join(self.root_path, 'build-out/dir/b.txt'),
+          'b\n')
+
+      self.assertRuleResultsEqual(ctx,
+          'dir:copy_c', ['dir/c.not-txt',],
+          output_prefix='build-out')
+      self.assertFileContents(
+          os.path.join(self.root_path, 'build-out/dir/c.not-txt'),
+          'c\n')
 
 
 class ConcatFilesRuleTest(RuleTestCase):
@@ -110,24 +128,28 @@ class ConcatFilesRuleTest(RuleTestCase):
           ]))
 
       self.assertRuleResultsEqual(ctx,
-          ':concat', ['build-out/concat',])
+          ':concat', ['concat',],
+          output_prefix='build-out')
       self.assertFileContents(
           os.path.join(self.root_path, 'build-out/concat'),
           '1\n2\n3\n4\n')
 
       self.assertRuleResultsEqual(ctx,
-          ':concat_out', ['build-out/concat.txt',])
+          ':concat_out', ['concat.txt',],
+          output_prefix='build-out')
       self.assertFileContents(
           os.path.join(self.root_path, 'build-out/concat.txt'),
           '1\n2\n3\n4\n')
 
       self.assertRuleResultsEqual(ctx,
-          ':concat_template', ['build-out/concat_template',])
+          ':concat_template', ['concat_template',],
+          output_prefix='build-out')
       self.assertFileContents(
           os.path.join(self.root_path, 'build-out/concat_template'),
           '1\n2\n3\n4\nx${hello}x\n1\n2\n3\n4\n')
       self.assertRuleResultsEqual(ctx,
-          ':templated', ['build-out/concat_template.out',])
+          ':templated', ['concat_template.out',],
+          output_prefix='build-out')
       self.assertFileContents(
           os.path.join(self.root_path, 'build-out/concat_template.out'),
           '1\n2\n3\n4\nxworld!x\n1\n2\n3\n4\n')
@@ -151,8 +173,9 @@ class TemplateFilesRuleTest(RuleTestCase):
           ]))
 
       self.assertRuleResultsEqual(ctx,
-          ':template_all', ['build-out/a.txt',
-                            'build-out/dir/b.txt'])
+          ':template_all', ['a.txt',
+                            'dir/b.txt'],
+          output_prefix='build-out')
       self.assertFileContents(
           os.path.join(self.root_path, 'build-out/a.txt'),
           '123world456\n')
@@ -161,8 +184,9 @@ class TemplateFilesRuleTest(RuleTestCase):
           'b123world456\n')
 
       self.assertRuleResultsEqual(ctx,
-          ':template_dep_1', ['build-out/a.nfo',
-                              'build-out/dir/b.nfo'])
+          ':template_dep_1', ['a.nfo',
+                              'dir/b.nfo'],
+          output_prefix='build-out')
       self.assertFileContents(
           os.path.join(self.root_path, 'build-out/a.nfo'),
           '123${arg2}456\n')
@@ -171,8 +195,9 @@ class TemplateFilesRuleTest(RuleTestCase):
           'b123${arg2}456\n')
 
       self.assertRuleResultsEqual(ctx,
-          ':template_dep_2', ['build-out/a.out',
-                              'build-out/dir/b.out'])
+          ':template_dep_2', ['a.out',
+                              'dir/b.out'],
+          output_prefix='build-out')
       self.assertFileContents(
           os.path.join(self.root_path, 'build-out/a.out'),
           '123world!456\n')
