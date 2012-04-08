@@ -12,7 +12,36 @@ import unittest2
 
 from context import BuildEnvironment
 from task import *
-from test import AsyncTestCase
+from test import AsyncTestCase, FixtureTestCase
+
+
+class ExecutableTaskTest(FixtureTestCase):
+  """Behavioral tests for ExecutableTask."""
+  fixture = 'simple'
+
+  def setUp(self):
+    super(ExecutableTaskTest, self).setUp()
+    self.build_env = BuildEnvironment(root_path=self.root_path)
+
+  def testExecution(self):
+    task = ExecutableTask(self.build_env, 'cat', [
+        os.path.join(self.root_path, 'a.txt')])
+    self.assertEqual(task.execute(),
+        ('hello!\n', ''))
+
+    task = ExecutableTask(self.build_env, 'cat', [
+        os.path.join(self.root_path, 'x.txt')])
+    with self.assertRaises(ExecutableError):
+      task.execute()
+
+  def testJava(self):
+    version = JavaExecutableTask.detect_java_version()
+    self.assertNotEqual(len(version), 0)
+    self.assertIsNone(
+        JavaExecutableTask.detect_java_version(java_executable='xxx'))
+
+    # TODO(benvanik): test a JAR somehow
+    task = JavaExecutableTask(self.build_env, 'some_jar')
 
 
 class SuccessTask(Task):

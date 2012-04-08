@@ -132,6 +132,14 @@ class UnderscoreToPascalCaseTest(unittest2.TestCase):
         util.underscore_to_pascalcase('a  b'),
         'A  b')
 
+class WhichTest(unittest2.TestCase):
+  """Behavioral tests of the which method."""
+
+  def test(self):
+    self.assertEqual(util.which('/bin/sh'), '/bin/sh')
+    self.assertIsNone(util.which('xxx'))
+    self.assertIsNotNone(util.which('cat'))
+
 
 if __name__ == '__main__':
   unittest2.main()

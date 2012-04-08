@@ -1,34 +1,5 @@
 Some ideas for rules, based on old code:
 
-build_env:
-  BUILD_ROOT .root_path - main dir of project
-  BUILD_OUT  .out_path  - where normal output goes
-  BUILD_GEN  .gen_path  - where generated code goes
-  BUILD_BIN  .bin_path  - where release results go
-
-gen= and out= paths are relative to gen_path and out_path
-srcs= paths are all relative to module path
-when out= is not a single file, the path for each output is:
-  join(build_env.[out|gen|bin]_path,
-       [out|gen|bin],
-       relpath(relpath(module, build_env.root_path), src))
-some rules may choose to generate files not based on srcs, in which case they
-should be:
-  join(build_env.[out|gen|bin]_path,
-       [out|gen|bin],
-       relpath(relpath(module, build_env.root_path), rule.name))
-
-Rule:
-  need to split srcs|deps from dependent file paths (enables args that are not
-  srcs to have files in them)
-  get_all_dependent_paths()
-  _append_dependent_path(path|paths)
-
-RuleContext:
-  _get_[out|gen|bin]_path(name=None, suffix=None)
-  _get_[out|gen|bin]_path_for_src(src)
-  _append_output_path(path|paths)
-
 # ==============================================================================
 # Common Tasks
 # ==============================================================================
@@ -50,8 +21,7 @@ copy_files(
 
 copy_files(
     name='a',
-    srcs=glob('**/*.txt'),
-    out='things/')
+    srcs=glob('**/*.txt'))
 - results in out/things/a/file.txt + others
 
 concat_files(
@@ -69,10 +39,10 @@ template_files(
     name='templated_txt',
     srcs=glob('**/*.txt'),
     params={
-        '%AUTHOR%': 'bob',
-        '%YEAR%': '2012',
+        'author': 'bob',
+        'year': '2012',
         })
-- results in out/...txt with %AUTHOR% and %YEAR% replaced
+- results in out/...txt with ${author} and ${year} replaced
 
 # ==============================================================================
 # Audio
@@ -106,8 +76,7 @@ generate_soundbank_js(
 
 compile_tracklist(
     name='music',
-    srcs=['*.ogg'],
-    out='assets/audio/')
+    srcs=['*.ogg'],)
 - creates out/assets/audio/music.ogg (copy) + music.json
 
 TRACKLIST_FORMATS=select_any({

@@ -3,6 +3,7 @@
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
+import os
 import string
 import sys
 import time
@@ -66,3 +67,24 @@ def underscore_to_pascalcase(value):
     for word in seq:
       yield word.capitalize()
   return ''.join(__CapWord(word if word else '_' for word in value.split('_')))
+
+
+def which(executable_name):
+  """Gets the full path to the given executable.
+  If the given path exists in the CWD or is already absolute it is returned.
+  Otherwise this method will look through the system PATH to try to find it.
+
+  Args:
+    executable_name: Name or path to the executable.
+
+  Returns:
+    The full path to the executable or None if it was not found.
+  """
+  if (os.path.exists(executable_name) and
+      not os.path.isdir(executable_name)):
+    return os.path.abspath(executable_name)
+  for path in os.environ.get('PATH', '').split(':'):
+    if (os.path.exists(os.path.join(path, executable_name)) and
+        not os.path.isdir(os.path.join(path, executable_name))):
+      return os.path.join(path, executable_name)
+  return None

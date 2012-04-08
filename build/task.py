@@ -8,6 +8,8 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 import multiprocessing
 import os
+import re
+import subprocess
 
 from async import Deferred
 
@@ -29,7 +31,7 @@ class Task(object):
     """Initializes a task.
 
     Args:
-      build_env: The build environment to use when requiring state.
+      build_env: The build environment for state.
     """
     self.build_env = build_env
 
@@ -47,6 +49,103 @@ class Task(object):
       A result to pass back to the deferred callback.
     """
     raise NotImplementedError()
+
+
+class ExecutableError(Exception):
+  """An exception concerning the execution of a command.
+  """
+
+  def __init__(self, return_code, *args, **kwargs):
+    """Initializes an executable error.
+
+    Args:
+      return_code: The return code of the application.
+    """
+    super(ExecutableError, self).__init__(*args, **kwargs)
+    self.return_code = return_code
+
+  def __str__(self):
+    return 'ExecutableError: call returned %s' % (self.return_code)
+
+
+class ExecutableTask(Task):
+  """A task that executes a command in the shell.
+
+  If the call returns an error an ExecutableError is raised.
+  """
+
+  def __init__(self, build_env, executable_name, call_args=None,
+               *args, **kwargs):
+    """Initializes an executable task.
+
+    Args:
+      build_env: The build environment for state.
+      executable_name: The name (or full path) of an executable.
+      call_args: Arguments to pass to the executable.
+    """
+    super(ExecutableTask, self).__init__(build_env, *args, **kwargs)
+    self.executable_name = executable_name
+    self.call_args = call_args if call_args else []
+
+  def execute(self):
+    p = subprocess.Popen([self.executable_name] + self.call_args,
+                         bufsize=-1, # system default
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+
+    # TODO(benvanik): would be nice to support a few modes here - enabling
+    #     streaming output from the process (for watching progress/etc).
+    #     This right now just waits until it exits and grabs everything.
+    (stdoutdata, stderrdata) = p.communicate()
+
+    return_code = p.returncode
+    if return_code != 0:
+      raise ExecutableError(return_code=return_code)
+
+    return (stdoutdata, stderrdata)
+
+
+class JavaExecutableTask(ExecutableTask):
+  """A task that executes a Java class in the shell.
+  """
+
+  def __init__(self, build_env, jar_path, call_args=None, *args, **kwargs):
+    """Initializes an executable task.
+
+    Args:
+      build_env: The build environment for state.
+      jar_path: The name (or full path) of a jar to execute.
+      call_args: Arguments to pass to the executable.
+    """
+    executable_name = 'java'
+    call_args = ['-jar', jar_path] + call_args if call_args else []
+    super(JavaExecutableTask, self).__init__(build_env, executable_name,
+        call_args, *args, **kwargs)
+
+  @classmethod
+  def detect_java_version(cls, java_executable='java'):
+    """Gets the version number of Java.
+
+    Returns:
+      The version in the form of '1.7.0', or None if Java is not found.
+    """
+    try:
+      p = subprocess.Popen([java_executable, '-version'],
+                           stderr=subprocess.PIPE)
+      line = p.communicate()[1]
+      return re.search(r'[0-9\.]+', line).group()
+    except:
+      return None
+
+
+# TODO(benvanik): node.js-specific executable task
+# class NodeExecutableTask(ExecutableTask):
+#   pass
+
+
+# TODO(benvanik): python-specific executable task
+# class PythonExecutableTask(ExecutableTask):
+#   pass
 
 
 class TaskExecutor(object):
