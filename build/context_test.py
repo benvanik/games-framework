@@ -99,16 +99,12 @@ class BuildContextTest(FixtureTestCase):
           super(SucceedRule._Context, self).begin()
           #print 'hello from rule %s' % (self.rule.path)
           self._succeed()
-      def create_context(self, build_context):
-        return SucceedRule._Context(build_context, self)
     class FailRule(Rule):
       class _Context(RuleContext):
         def begin(self):
           super(FailRule._Context, self).begin()
           #print 'hello from rule %s' % (self.rule.path)
           self._fail()
-      def create_context(self, build_context):
-        return FailRule._Context(build_context, self)
 
     project = Project(modules=[Module('m', rules=[SucceedRule('a')])])
     with BuildContext(self.build_env, project) as ctx:

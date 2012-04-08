@@ -30,6 +30,11 @@ class Rule(object):
   Sources can also refer to files, folders, or file globs. When a rule goes to
   run a list of sources will be compiled from the outputs from the previous
   rules as well as all real files on the file system.
+
+  Rules must define a _Context class that extends RuleContext. This context
+  will be used when executing the rule to store any temporary state and
+  execution progress. Rules should not be modified after their initial
+  construction, and instead the _Context should be used.
   """
 
   _whitespace_re = re.compile('\s', re.M)
@@ -159,7 +164,8 @@ class Rule(object):
     Returns:
       A new RuleContext.
     """
-    raise NotImplementedError();
+    assert self._Context
+    return self._Context(build_context, self)
 
 
 # Active rule namespace that is capturing all new rule definitions

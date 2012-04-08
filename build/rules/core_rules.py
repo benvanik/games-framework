@@ -47,9 +47,6 @@ class FileSetRule(Rule):
       self._append_output_paths(self.src_paths)
       self._succeed()
 
-  def create_context(self, build_context):
-    return FileSetRule._Context(build_context, self)
-
 
 @build_rule('copy_files')
 class CopyFilesRule(Rule):
@@ -106,9 +103,6 @@ class CopyFilesRule(Rule):
       d = self._run_task_async(CopyFilesRule._Task(
           self.build_env, file_pairs))
       self._chain(d)
-
-  def create_context(self, build_context):
-    return CopyFilesRule._Context(build_context, self)
 
 
 @build_rule('concat_files')
@@ -168,9 +162,6 @@ class ConcatFilesRule(Rule):
       d = self._run_task_async(ConcatFilesRule._Task(
           self.build_env, self.src_paths, output_path))
       self._chain(d)
-
-  def create_context(self, build_context):
-    return ConcatFilesRule._Context(build_context, self)
 
 
 @build_rule('template_files')
@@ -247,6 +238,3 @@ class TemplateFilesRule(Rule):
       d = self._run_task_async(TemplateFilesRule._Task(
           self.build_env, file_pairs, self.rule.params))
       self._chain(d)
-
-  def create_context(self, build_context):
-    return TemplateFilesRule._Context(build_context, self)
