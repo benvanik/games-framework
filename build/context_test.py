@@ -20,12 +20,29 @@ from task import *
 from test import AsyncTestCase, FixtureTestCase
 
 
-class BuildEnvironmentTest(unittest2.TestCase):
+class BuildEnvironmentTest(FixtureTestCase):
   """Behavioral tests of the BuildEnvironment type."""
+  fixture='simple'
 
   def testConstruction(self):
     build_env = BuildEnvironment()
+    self.assertTrue(os.path.isdir(build_env.root_path))
 
+    build_env = BuildEnvironment(root_path='.')
+    self.assertTrue(os.path.isdir(build_env.root_path))
+
+    root_path = os.path.join(self.temp_path, 'simple')
+    build_env = BuildEnvironment(root_path=root_path)
+    self.assertTrue(os.path.isdir(build_env.root_path))
+    self.assertEqual(build_env.root_path, root_path)
+
+    root_path = os.path.join(self.temp_path, 'simple')
+    build_env = BuildEnvironment(root_path=os.path.join(root_path, 'dir'))
+    self.assertTrue(os.path.isdir(build_env.root_path))
+    self.assertEqual(build_env.root_path, os.path.join(root_path, 'dir'))
+
+    with self.assertRaises(OSError):
+      BuildEnvironment(root_path='/not/found')
 
 class BuildContextTest(FixtureTestCase):
   """Behavioral tests of the BuildContext type."""
@@ -178,7 +195,8 @@ class RuleContextTest(FixtureTestCase):
 
   def setUp(self):
     super(RuleContextTest, self).setUp()
-    self.build_env = BuildEnvironment()
+    root_path = os.path.join(self.temp_path, 'simple')
+    self.build_env = BuildEnvironment(root_path=root_path)
 
   def testStatus(self):
     root_path = os.path.join(self.temp_path, 'simple')
@@ -361,6 +379,75 @@ class RuleContextTest(FixtureTestCase):
     with self.assertRaises(RuntimeError):
       build_ctx._execute_rule(rule)
 
+  def testTargetPaths(self):
+    root_path = os.path.join(self.temp_path, 'simple')
+    project = Project(module_resolver=FileModuleResolver(root_path))
+    build_ctx = BuildContext(self.build_env, project)
+
+    def _compare_path(result, expected):
+      result = os.path.relpath(result, root_path)
+      self.assertEqual(result, expected)
+
+    class SuccessfulRuleContext(RuleContext):
+      def begin(self):
+        super(SuccessfulRuleContext, self).begin()
+        self._succeed()
+
+    rule = project.resolve_rule(':a')
+    rule_ctx = SuccessfulRuleContext(build_ctx, rule)
+    _compare_path(rule_ctx._get_out_path(), 'build-out/a')
+    _compare_path(rule_ctx._get_out_path(suffix='.txt'), 'build-out/a.txt')
+    _compare_path(rule_ctx._get_out_path('f'), 'build-out/f')
+    _compare_path(rule_ctx._get_out_path('f', suffix='.txt'), 'build-out/f.txt')
+    _compare_path(rule_ctx._get_out_path('dir/f'), 'build-out/dir/f')
+    # Note that both are implemented the same way
+    _compare_path(rule_ctx._get_gen_path(), 'build-gen/a')
+    _compare_path(rule_ctx._get_gen_path(suffix='.txt'), 'build-gen/a.txt')
+    _compare_path(rule_ctx._get_gen_path('f'), 'build-gen/f')
+    _compare_path(rule_ctx._get_gen_path('f', suffix='.txt'), 'build-gen/f.txt')
+    _compare_path(rule_ctx._get_gen_path('dir/f'), 'build-gen/dir/f')
+
+    rule = project.resolve_rule('dir/dir_2:d')
+    rule_ctx = SuccessfulRuleContext(build_ctx, rule)
+    _compare_path(rule_ctx._get_out_path(), 'build-out/dir/dir_2/d')
+    _compare_path(rule_ctx._get_out_path(suffix='.txt'),
+                  'build-out/dir/dir_2/d.txt')
+    _compare_path(rule_ctx._get_out_path('f'),
+                  'build-out/dir/dir_2/f')
+    _compare_path(rule_ctx._get_out_path('f', suffix='.txt'),
+                  'build-out/dir/dir_2/f.txt')
+    _compare_path(rule_ctx._get_out_path('dir/f'),
+                  'build-out/dir/dir_2/dir/f')
+
+  def testTargetSrcPaths(self):
+    root_path = os.path.join(self.temp_path, 'simple')
+    project = Project(module_resolver=FileModuleResolver(root_path))
+    build_ctx = BuildContext(self.build_env, project)
+
+    def _compare_path(result, expected):
+      result = os.path.relpath(result, root_path)
+      self.assertEqual(result, expected)
+
+    class SuccessfulRuleContext(RuleContext):
+      def begin(self):
+        super(SuccessfulRuleContext, self).begin()
+        self._succeed()
+
+    rule = project.resolve_rule(':a')
+    rule_ctx = SuccessfulRuleContext(build_ctx, rule)
+    _compare_path(
+        rule_ctx._get_out_path_for_src(os.path.join(root_path, 'a.txt')),
+        'build-out/a.txt')
+    _compare_path(
+        rule_ctx._get_out_path_for_src(os.path.join(root_path, 'dir/a.txt')),
+        'build-out/dir/a.txt')
+    # Note that both are implemented the same way
+    _compare_path(
+        rule_ctx._get_gen_path_for_src(os.path.join(root_path, 'a.txt')),
+        'build-gen/a.txt')
+    _compare_path(
+        rule_ctx._get_gen_path_for_src(os.path.join(root_path, 'dir/a.txt')),
+        'build-gen/dir/a.txt')
 
 if __name__ == '__main__':
   unittest2.main()

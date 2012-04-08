@@ -48,13 +48,27 @@ class BuildEnvironment(object):
   This object may be passed to other processes, and must be pickeable.
   """
 
-  def __init__(self):
+  def __init__(self, root_path=None):
     """Initializes a build environment.
+
+    Args:
+      root_path: Root path for base path resolution. If none is provided then
+          the current working directory will be used.
+
+    Raises:
+      OSError: A path was not found or is wrong type.
     """
     # TODO(benvanik): cwd for path resolution
     # TODO(benvanik): environment variables
     # TODO(benvanik): user-defined options dict
-    pass
+
+    if not root_path or not len(root_path):
+      self.root_path = os.getcwd()
+    else:
+      self.root_path = os.path.abspath(root_path)
+    if not os.path.isdir(self.root_path):
+      raise OSError('Root path "%s" not found or not a directory' % (
+          self.root_path))
 
 
 class BuildContext(object):
@@ -402,6 +416,107 @@ class RuleContext(object):
       else:
         input_paths.update(src_items)
     return list(input_paths)
+
+  def __get_target_path(self, base_path, name=None, suffix=None):
+    """Handling of _get_*_path() methods.
+
+    Args:
+      base_path: Base path to the project root.
+      name: If a name is provided it will be used instead of the rule name.
+      suffix: Suffix to add to whatever path is built, such as '.txt' to add
+          an extension.
+
+    Returns:
+      A full path that can be used to write a file.
+    """
+    if not name or not len(name):
+      name = self.rule.name
+    if suffix and len(suffix):
+      name += suffix
+    root_path = self.build_context.build_env.root_path
+    module_path = os.path.dirname(self.rule.parent_module.path)
+    rel_path = os.path.relpath(module_path, root_path)
+    return os.path.normpath(os.path.join(base_path, rel_path, name))
+
+  def _get_out_path(self, name=None, suffix=None):
+    """Gets the 'out' path for an output.
+    If no name is provided then the rule name will be used.
+
+    The 'out' path should be used for all content/binary results.
+
+    Args:
+      name: If a name is provided it will be used instead of the rule name.
+      suffix: Suffix to add to whatever path is built, such as '.txt' to add
+          an extension.
+
+    Returns:
+      A full path that can be used to write a file to the proper 'out' path.
+    """
+    base_path = os.path.join(self.build_context.build_env.root_path,
+                             'build-out')
+    return self.__get_target_path(base_path, name=name, suffix=suffix)
+
+  def _get_gen_path(self, name=None, suffix=None):
+    """Gets the 'gen' path for an output.
+    If no name is provided then the rule name will be used.
+
+    The 'gen' path should be used for generated code only.
+
+    Args:
+      name: If a name is provided it will be used instead of the rule name.
+      suffix: Suffix to add to whatever path is built, such as '.txt' to add
+          an extension.
+
+    Returns:
+      A full path that can be used to write a file to the proper 'gen' path.
+    """
+    base_path = os.path.join(self.build_context.build_env.root_path,
+                             'build-gen')
+    return self.__get_target_path(base_path, name=name, suffix=suffix)
+
+  def __get_target_path_for_src(self, base_path, src):
+    """Handling of _get_*_path_for_src() methods.
+
+    Args:
+      base_path: Base path to the project root.
+      src: Absolute source path.
+
+    Returns:
+      A full path that can be used to write a file.
+    """
+    root_path = self.build_context.build_env.root_path
+    rel_path = os.path.relpath(src, root_path)
+    return os.path.normpath(os.path.join(base_path, rel_path))
+
+  def _get_out_path_for_src(self, src):
+    """Gets the 'out' path for a source file.
+
+    The 'out' path should be used for all content/binary results.
+
+    Args:
+      src: Absolute source path.
+
+    Returns:
+      A full path that can be used to write a file to the proper 'out' path.
+    """
+    base_path = os.path.join(self.build_context.build_env.root_path,
+                             'build-out')
+    return self.__get_target_path_for_src(base_path, src)
+
+  def _get_gen_path_for_src(self, src):
+    """Gets the 'gen' path for a source file.
+
+    The 'gen' path should be used for generated code only.
+
+    Args:
+      src: Absolute source path.
+
+    Returns:
+      A full path that can be used to write a file to the proper 'gen' path.
+    """
+    base_path = os.path.join(self.build_context.build_env.root_path,
+                             'build-gen')
+    return self.__get_target_path_for_src(base_path, src)
 
   def _append_output_paths(self, paths):
     """Appends the given paths to the output list.
