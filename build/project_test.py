@@ -178,38 +178,35 @@ class FileModuleResolverTest(FixtureTestCase):
   fixture = 'resolution'
 
   def testResolverInit(self):
-    root_path = os.path.join(self.temp_path, 'resolution')
-
-    FileModuleResolver(root_path)
+    FileModuleResolver(self.root_path)
 
     with self.assertRaises(IOError):
-      FileModuleResolver(os.path.join(root_path, 'x'))
+      FileModuleResolver(os.path.join(self.root_path, 'x'))
 
   def testResolveModulePath(self):
-    root_path = os.path.join(self.temp_path, 'resolution')
-    module_resolver = FileModuleResolver(root_path)
+    module_resolver = FileModuleResolver(self.root_path)
 
     self.assertEqual(module_resolver.resolve_module_path('BUILD'),
-                     os.path.join(root_path, 'BUILD'))
+                     os.path.join(self.root_path, 'BUILD'))
     self.assertEqual(module_resolver.resolve_module_path('./BUILD'),
-                     os.path.join(root_path, 'BUILD'))
+                     os.path.join(self.root_path, 'BUILD'))
     self.assertEqual(module_resolver.resolve_module_path('.'),
-                     os.path.join(root_path, 'BUILD'))
+                     os.path.join(self.root_path, 'BUILD'))
     self.assertEqual(module_resolver.resolve_module_path('./a/..'),
-                     os.path.join(root_path, 'BUILD'))
+                     os.path.join(self.root_path, 'BUILD'))
     self.assertEqual(module_resolver.resolve_module_path('./a/../BUILD'),
-                     os.path.join(root_path, 'BUILD'))
+                     os.path.join(self.root_path, 'BUILD'))
 
     self.assertEqual(module_resolver.resolve_module_path('BUILD', 'a'),
-                     os.path.join(root_path, 'a', 'BUILD'))
+                     os.path.join(self.root_path, 'a', 'BUILD'))
     self.assertEqual(module_resolver.resolve_module_path('.', 'a'),
-                     os.path.join(root_path, 'a', 'BUILD'))
+                     os.path.join(self.root_path, 'a', 'BUILD'))
     self.assertEqual(module_resolver.resolve_module_path('..', 'a'),
-                     os.path.join(root_path, 'BUILD'))
+                     os.path.join(self.root_path, 'BUILD'))
     self.assertEqual(module_resolver.resolve_module_path('../.', 'a'),
-                     os.path.join(root_path, 'BUILD'))
+                     os.path.join(self.root_path, 'BUILD'))
     self.assertEqual(module_resolver.resolve_module_path('../BUILD', 'a'),
-                     os.path.join(root_path, 'BUILD'))
+                     os.path.join(self.root_path, 'BUILD'))
 
     with self.assertRaises(IOError):
       module_resolver.resolve_module_path('empty')
@@ -218,8 +215,7 @@ class FileModuleResolverTest(FixtureTestCase):
       module_resolver.resolve_module_path('/dev/null')
 
   def testFileResolution(self):
-    root_path = os.path.join(self.temp_path, 'resolution')
-    module_resolver = FileModuleResolver(root_path)
+    module_resolver = FileModuleResolver(self.root_path)
 
     project = Project(module_resolver=module_resolver)
     self.assertEqual(len(project.module_list()), 0)
@@ -228,8 +224,7 @@ class FileModuleResolverTest(FixtureTestCase):
     self.assertEqual(len(project.module_list()), 1)
 
   def testModuleNameMatching(self):
-    root_path = os.path.join(self.temp_path, 'resolution')
-    module_resolver = FileModuleResolver(root_path)
+    module_resolver = FileModuleResolver(self.root_path)
 
     project = Project(module_resolver=module_resolver)
     self.assertEqual(len(project.module_list()), 0)
@@ -248,8 +243,7 @@ class FileModuleResolverTest(FixtureTestCase):
     self.assertEqual(len(project.module_list()), 2)
 
   def testValidModulePaths(self):
-    root_path = os.path.join(self.temp_path, 'resolution')
-    module_resolver = FileModuleResolver(root_path)
+    module_resolver = FileModuleResolver(self.root_path)
 
     test_paths = [
       ':root_rule',
@@ -275,8 +269,7 @@ class FileModuleResolverTest(FixtureTestCase):
       self.assertEqual(len(project.module_list()), 1)
 
   def testInvalidModulePaths(self):
-    root_path = os.path.join(self.temp_path, 'resolution')
-    module_resolver = FileModuleResolver(root_path)
+    module_resolver = FileModuleResolver(self.root_path)
 
     invalid_test_paths = [
       '.',
@@ -289,8 +282,7 @@ class FileModuleResolverTest(FixtureTestCase):
       self.assertEqual(len(project.module_list()), 0)
 
   def testMissingModules(self):
-    root_path = os.path.join(self.temp_path, 'resolution')
-    module_resolver = FileModuleResolver(root_path)
+    module_resolver = FileModuleResolver(self.root_path)
 
     project = Project(module_resolver=module_resolver)
     with self.assertRaises(OSError):
@@ -308,8 +300,7 @@ class FileModuleResolverTest(FixtureTestCase):
     self.assertEqual(len(project.module_list()), 0)
 
   def testMissingRules(self):
-    root_path = os.path.join(self.temp_path, 'resolution')
-    module_resolver = FileModuleResolver(root_path)
+    module_resolver = FileModuleResolver(self.root_path)
 
     project = Project(module_resolver=module_resolver)
     self.assertEqual(len(project.module_list()), 0)

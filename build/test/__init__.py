@@ -105,9 +105,11 @@ class FixtureTestCase(AsyncTestCase):
     # Root output path
     self.temp_path = tempfile.mkdtemp()
     self.addCleanup(shutil.rmtree, self.temp_path)
+    self.root_path = self.temp_path
 
     # Copy fixture files
     if self.fixture:
+      self.root_path = os.path.join(self.root_path, self.fixture)
       build_path = self._find_build_path()
       if not build_path:
         raise Error('Unable to find build path')

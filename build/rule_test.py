@@ -210,7 +210,7 @@ class RuleNamespaceTest(FixtureTestCase):
     ns.discover()
     self.assertTrue(ns.rule_types.has_key('file_set'))
 
-    rule_path = os.path.join(self.temp_path, 'rules')
+    rule_path = self.root_path
     ns = RuleNamespace()
     ns.discover(rule_path)
     self.assertEqual(len(ns.rule_types), 3)
@@ -220,13 +220,13 @@ class RuleNamespaceTest(FixtureTestCase):
     self.assertTrue(ns.rule_types.has_key('rule_c'))
     self.assertFalse(ns.rule_types.has_key('rule_x'))
 
-    rule_path = os.path.join(self.temp_path, 'rules', 'dupe.py')
+    rule_path = os.path.join(self.root_path, 'dupe.py')
     ns = RuleNamespace()
     with self.assertRaises(KeyError):
       ns.discover(rule_path)
     self.assertEqual(len(ns.rule_types), 0)
 
-    rule_path = os.path.join(self.temp_path, 'rules', 'more', 'more_rules.py')
+    rule_path = os.path.join(self.root_path, 'more', 'more_rules.py')
     ns = RuleNamespace()
     ns.discover(rule_path)
     self.assertEqual(len(ns.rule_types), 1)

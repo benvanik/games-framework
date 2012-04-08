@@ -42,11 +42,10 @@ class FileSetRuleTest(RuleTestCase):
 
   def setUp(self):
     super(FileSetRuleTest, self).setUp()
-    self.build_env = BuildEnvironment()
+    self.build_env = BuildEnvironment(root_path=self.root_path)
 
   def test(self):
-    root_path = os.path.join(self.temp_path, 'core_rules/file_set')
-    project = Project(module_resolver=FileModuleResolver(root_path))
+    project = Project(module_resolver=FileModuleResolver(self.root_path))
 
     with BuildContext(self.build_env, project) as ctx:
       self.assertTrue(ctx.execute_sync([
