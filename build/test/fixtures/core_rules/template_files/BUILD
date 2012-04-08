@@ -21,4 +21,5 @@ template_files(
 template_files(
     name='template_dep_2',
     srcs=':template_dep_1',
+    new_extension='.out',
     params={'arg2': 'world!',})

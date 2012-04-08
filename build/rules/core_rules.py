@@ -103,25 +103,49 @@ class ConcatFilesRule(Rule):
   Inputs:
     srcs: Source file paths. The order is the order in which they will be
         concatenated.
+    out: Optional output name. If none is provided than the rule name will be
+        used.
 
   Outputs:
     All of the srcs concatenated into a single file path. If no out is specified
     a file with the name of the rule will be created.
   """
 
-  def __init__(self, name, *args, **kwargs):
+  def __init__(self, name, out=None, *args, **kwargs):
     """Initializes a concatenate files rule.
 
     Args:
       name: Rule name.
+      out: Optional output name.
     """
     super(ConcatFilesRule, self).__init__(name, *args, **kwargs)
+    self.out = out
+
+  class _Task(Task):
+    def __init__(self, build_env, src_paths, output_path, *args, **kwargs):
+      super(ConcatFilesRule._Task, self).__init__(build_env, *args, **kwargs)
+      self.src_paths = src_paths
+      self.output_path = output_path
+
+    def execute(self):
+      with io.open(self.output_path, 'wt') as out_file:
+        for src_path in self.src_paths:
+          with io.open(src_path, 'rt') as in_file:
+            out_file.write(in_file.read())
+      return True
 
   class _Context(RuleContext):
     def begin(self):
       super(ConcatFilesRule._Context, self).begin()
-      self._append_output_paths(self.src_paths)
-      self._succeed()
+
+      output_path = self._get_out_path(name=self.rule.out)
+      self._ensure_output_exists(os.path.dirname(output_path))
+      self._append_output_paths([output_path])
+
+      # Async issue concat task
+      d = self._run_task_async(ConcatFilesRule._Task(
+          self.build_env, self.src_paths, output_path))
+      self._chain(d)
 
   def create_context(self, build_context):
     return ConcatFilesRule._Context(build_context, self)
@@ -139,24 +163,32 @@ class TemplateFilesRule(Rule):
   Identifiers in the source template should be of the form "${identifier}", each
   of which maps to a key in the params dictionary.
 
+  In order to prevent conflicts, it is strongly encouraged that a new_extension
+  value is provided. If a source file has an extension it will be replaced with
+  the specified one, and files without extensions will have it added.
+
   TODO(benvanik): more advanced template vars? perhaps regex?
 
   Inputs:
     srcs: Source file paths.
+    new_extension: The extension to replace (or add) to all output files, with a
+        leading dot ('.txt').
     params: A dictionary of key-value replacement parameters.
 
   Outputs:
     One file for each source file with the templating rules applied.
   """
 
-  def __init__(self, name, params=None, *args, **kwargs):
+  def __init__(self, name, new_extension=None, params=None, *args, **kwargs):
     """Initializes a file templating rule.
 
     Args:
       name: Rule name.
+      new_extension: Replacement extension ('.txt').
       params: A dictionary of key-value replacement parameters.
     """
     super(TemplateFilesRule, self).__init__(name, *args, **kwargs)
+    self.new_extension = new_extension
     self.params = params
 
   class _Task(Task):
@@ -183,6 +215,8 @@ class TemplateFilesRule(Rule):
       file_pairs = []
       for src_path in self.src_paths:
         out_path = self._get_out_path_for_src(src_path)
+        if self.rule.new_extension:
+          out_path = os.path.splitext(out_path)[0] + self.rule.new_extension
         self._ensure_output_exists(os.path.dirname(out_path))
         self._append_output_paths([out_path])
         file_pairs.append((src_path, out_path))

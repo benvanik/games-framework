@@ -92,15 +92,45 @@ class CopyFilesRuleTest(RuleTestCase):
 
 class ConcatFilesRuleTest(RuleTestCase):
   """Behavioral tests of the ConcatFilesRule type."""
-  fixture='core_rules'
+  fixture='core_rules/concat_files'
 
   def setUp(self):
     super(ConcatFilesRuleTest, self).setUp()
     self.build_env = BuildEnvironment(root_path=self.root_path)
 
   def test(self):
-    rule = ConcatFilesRule('a')
-    pass
+    project = Project(module_resolver=FileModuleResolver(self.root_path))
+
+    with BuildContext(self.build_env, project) as ctx:
+      self.assertTrue(ctx.execute_sync([
+          ':concat',
+          ':concat_out',
+          ':concat_template',
+          ':templated',
+          ]))
+
+      self.assertRuleResultsEqual(ctx,
+          ':concat', ['build-out/concat',])
+      self.assertFileContents(
+          os.path.join(self.root_path, 'build-out/concat'),
+          '1\n2\n3\n4\n')
+
+      self.assertRuleResultsEqual(ctx,
+          ':concat_out', ['build-out/concat.txt',])
+      self.assertFileContents(
+          os.path.join(self.root_path, 'build-out/concat.txt'),
+          '1\n2\n3\n4\n')
+
+      self.assertRuleResultsEqual(ctx,
+          ':concat_template', ['build-out/concat_template',])
+      self.assertFileContents(
+          os.path.join(self.root_path, 'build-out/concat_template'),
+          '1\n2\n3\n4\nx${hello}x\n1\n2\n3\n4\n')
+      self.assertRuleResultsEqual(ctx,
+          ':templated', ['build-out/concat_template.out',])
+      self.assertFileContents(
+          os.path.join(self.root_path, 'build-out/concat_template.out'),
+          '1\n2\n3\n4\nxworld!x\n1\n2\n3\n4\n')
 
 
 class TemplateFilesRuleTest(RuleTestCase):
@@ -131,13 +161,23 @@ class TemplateFilesRuleTest(RuleTestCase):
           'b123world456\n')
 
       self.assertRuleResultsEqual(ctx,
-          ':template_dep_2', ['build-out/a.nfo',
+          ':template_dep_1', ['build-out/a.nfo',
                               'build-out/dir/b.nfo'])
       self.assertFileContents(
           os.path.join(self.root_path, 'build-out/a.nfo'),
-          '123world!456\n')
+          '123${arg2}456\n')
       self.assertFileContents(
           os.path.join(self.root_path, 'build-out/dir/b.nfo'),
+          'b123${arg2}456\n')
+
+      self.assertRuleResultsEqual(ctx,
+          ':template_dep_2', ['build-out/a.out',
+                              'build-out/dir/b.out'])
+      self.assertFileContents(
+          os.path.join(self.root_path, 'build-out/a.out'),
+          '123world!456\n')
+      self.assertFileContents(
+          os.path.join(self.root_path, 'build-out/dir/b.out'),
           'b123world!456\n')
 
 
