@@ -204,6 +204,8 @@ class BuildContext(object):
       def _rule_errback(exception=None, *args, **kwargs):
         in_flight_rules.remove(rule)
         # TODO(benvanik): log result/exception/etc?
+        if exception: # pragma: no cover
+          print exception
         _pump(previous_succeeded=False)
 
       in_flight_rules.append(rule)
@@ -346,6 +348,7 @@ class RuleContext(object):
       rule: Rule this context wraps.
     """
     self.build_context = build_context
+    self.build_env = build_context.build_env
     self.rule = rule
 
     self.deferred = Deferred()
@@ -474,7 +477,7 @@ class RuleContext(object):
                              'build-gen')
     return self.__get_target_path(base_path, name=name, suffix=suffix)
 
-  def __get_target_path_for_src(self, base_path, src):
+  def __get_target_path_for_src(self, base_path, src, opt_path=None):
     """Handling of _get_*_path_for_src() methods.
 
     Args:
@@ -486,6 +489,8 @@ class RuleContext(object):
     """
     root_path = self.build_context.build_env.root_path
     rel_path = os.path.relpath(src, root_path)
+    # Need to strip build-out and build-gen (so we can reference any file)
+    rel_path = rel_path.replace('build-out/', '').replace('build-gen/', '')
     return os.path.normpath(os.path.join(base_path, rel_path))
 
   def _get_out_path_for_src(self, src):
@@ -518,6 +523,15 @@ class RuleContext(object):
                              'build-gen')
     return self.__get_target_path_for_src(base_path, src)
 
+  def _ensure_output_exists(self, path):
+    """Makes the given path exist, if it doesn't.
+
+    Arg:
+      path: An absolute path to a folder that should exist.
+    """
+    if not os.path.isdir(path):
+      os.makedirs(path)
+
   def _append_output_paths(self, paths):
     """Appends the given paths to the output list.
     Other rules that depend on this rule will receive these paths when it
@@ -527,6 +541,18 @@ class RuleContext(object):
       paths: A list of paths to add to the list.
     """
     self.all_output_files.extend(paths)
+
+  def _run_task_async(self, task):
+    """Runs a task asynchronously.
+    This is a utility method that makes it easier to execute tasks.
+
+    Args:
+      task: Task to execute.
+
+    Returns:
+      A deferred that signals when the task completes.
+    """
+    return self.build_context.task_executor.run_task_async(task)
 
   def check_predecessor_failures(self):
     """Checks all dependencies for failure.
@@ -619,6 +645,9 @@ class RuleContext(object):
         if not arg[0]:
           if len(arg[1]) and isinstance(arg[1][0], Exception):
             exception = arg[1][0]
+            break
+          exception = arg[2].get('exception', None)
+          if exception:
             break
       self._fail(exception=exception)
     deferred.add_callback_fn(_callback)

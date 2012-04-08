@@ -6,8 +6,13 @@
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
+import io
+import os
+import string
+
 from build.context import RuleContext
 from build.rule import Rule, build_rule
+from build.task import Task
 
 
 @build_rule('file_set')
@@ -128,6 +133,12 @@ class TemplateFilesRule(Rule):
   Processes each source file replacing a list of strings with corresponding
   strings.
 
+  This uses the Python string templating functionality documented here:
+  http://docs.python.org/library/string.html#template-strings
+
+  Identifiers in the source template should be of the form "${identifier}", each
+  of which maps to a key in the params dictionary.
+
   TODO(benvanik): more advanced template vars? perhaps regex?
 
   Inputs:
@@ -148,11 +159,38 @@ class TemplateFilesRule(Rule):
     super(TemplateFilesRule, self).__init__(name, *args, **kwargs)
     self.params = params
 
+  class _Task(Task):
+    def __init__(self, build_env, file_pairs, params, *args, **kwargs):
+      super(TemplateFilesRule._Task, self).__init__(build_env, *args, **kwargs)
+      self.file_pairs = file_pairs
+      self.params = params
+
+    def execute(self):
+      for file_pair in self.file_pairs:
+        with io.open(file_pair[0], 'rt') as f:
+          template_str = f.read()
+        template = string.Template(template_str)
+        result_str = template.substitute(self.params)
+        with io.open(file_pair[1], 'wt') as f:
+          f.write(result_str)
+      return True
+
   class _Context(RuleContext):
     def begin(self):
       super(TemplateFilesRule._Context, self).begin()
-      self._append_output_paths(self.src_paths)
-      self._succeed()
+
+      # Get all source -> output paths (and ensure directories exist)
+      file_pairs = []
+      for src_path in self.src_paths:
+        out_path = self._get_out_path_for_src(src_path)
+        self._ensure_output_exists(os.path.dirname(out_path))
+        self._append_output_paths([out_path])
+        file_pairs.append((src_path, out_path))
+
+      # Async issue templating task
+      d = self._run_task_async(TemplateFilesRule._Task(
+          self.build_env, file_pairs, self.rule.params))
+      self._chain(d)
 
   def create_context(self, build_context):
     return TemplateFilesRule._Context(build_context, self)

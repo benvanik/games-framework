@@ -6,6 +6,7 @@
 __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
+import io
 import os
 import tempfile
 import shutil
@@ -116,3 +117,9 @@ class FixtureTestCase(AsyncTestCase):
       fixture_path = os.path.join(build_path, 'test', 'fixtures', self.fixture)
       target_path = self.temp_path + '/' + self.fixture
       shutil.copytree(fixture_path, target_path)
+
+  def assertFileContents(self, path, contents):
+    self.assertTrue(os.path.isfile(path))
+    with io.open(path, 'rt') as f:
+      file_contents = f.read()
+    self.assertEqual(file_contents, contents)
