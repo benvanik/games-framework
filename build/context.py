@@ -376,6 +376,10 @@ class RuleContext(object):
     if not, this should be called in the initializer of all subclasses to
     resolve all paths in a place where a good stack will occur.
 
+    Note that the resulting list is not deduplicated - certain rules may want
+    the exact list in the exact order defined. If you want a de-duped list,
+    simply use list(set(result)) to quickly de-dupe.
+
     Args:
       paths: Paths to resolve.
 
@@ -388,7 +392,7 @@ class RuleContext(object):
       RuntimeError: Internal runtime error (rule executed out of order/etc)
     """
     base_path = os.path.dirname(self.rule.parent_module.path)
-    input_paths = set([])
+    input_paths = []
     for src in paths:
       # Grab all items from the source
       src_items = None
@@ -415,10 +419,10 @@ class RuleContext(object):
       if apply_src_filter and self.rule.src_filter:
         for file_path in src_items:
           if fnmatch.fnmatch(file_path, self.rule.src_filter):
-            input_paths.add(file_path)
+            input_paths.append(file_path)
       else:
-        input_paths.update(src_items)
-    return list(input_paths)
+        input_paths.extend(src_items)
+    return input_paths
 
   def __get_target_path(self, base_path, name=None, suffix=None):
     """Handling of _get_*_path() methods.
