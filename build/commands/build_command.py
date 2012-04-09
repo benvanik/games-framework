@@ -19,10 +19,22 @@ from build.task import InProcessTaskExecutor, MultiProcessTaskExecutor
 def _get_options_parser():
   """Gets an options parser for the given args."""
   parser = argparse.ArgumentParser(prog='manage.py build')
+
+  # Threading/execution control
+  parser.add_argument('-j', '--jobs',
+                      dest='jobs',
+                      type=int,
+                      default=None,
+                      help=('Specifies the number of tasks to run '
+                            'simultaneously. If omitted then all processors '
+                            'will be used.'))
+
+  # 'build' specific
   parser.add_argument('targets',
                       nargs='+',
                       metavar='target',
                       help='Target build rule (such as :a or foo/bar:a)')
+
   return parser
 
 
@@ -36,9 +48,12 @@ def build(args, cwd):
   module_resolver = FileModuleResolver(cwd)
   project = Project(module_resolver=module_resolver)
 
-  # TODO(benvanik): -j
-  task_executor = InProcessTaskExecutor()
-  #task_executor = MultiProcessTaskExecutor(worker_count=None)
+  # -j/--jobs switch to change execution mode
+  # TODO(benvanik): force -j 1 on Cygwin?
+  if parsed_args.jobs == 1:
+    task_executor = InProcessTaskExecutor()
+  else:
+    task_executor = MultiProcessTaskExecutor(worker_count=parsed_args.jobs)
 
   # TODO(benvanik): good logging/info - resolve rules in project and print
   #     info?
