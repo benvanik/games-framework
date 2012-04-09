@@ -17,8 +17,8 @@ import pickle
 import re
 import sys
 
-import build
 import util
+import version
 
 
 class Rule(object):
@@ -148,7 +148,7 @@ class Rule(object):
     pickled_str = base64.b64encode(pickled_self)
     # Include framework version in the string to enable forced rebuilds on
     # version change
-    unique_str = build.VERSION_STR + pickled_str
+    unique_str = version.VERSION_STR + pickled_str
     # Hash so that we return a reasonably-sized string
     return hashlib.md5(unique_str).hexdigest()
 
