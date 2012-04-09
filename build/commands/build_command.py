@@ -10,6 +10,7 @@ import argparse
 import os
 import sys
 
+from build.commands import add_common_build_args
 from build.context import BuildEnvironment, BuildContext
 from build.manage import manage_command
 from build.project import FileModuleResolver, Project
@@ -20,16 +21,21 @@ def _get_options_parser():
   """Gets an options parser for the given args."""
   parser = argparse.ArgumentParser(prog='manage.py build')
 
-  # Threading/execution control
-  parser.add_argument('-j', '--jobs',
-                      dest='jobs',
-                      type=int,
-                      default=None,
-                      help=('Specifies the number of tasks to run '
-                            'simultaneously. If omitted then all processors '
-                            'will be used.'))
+  # Add all common args
+  add_common_build_args(parser)
 
   # 'build' specific
+  parser.add_argument('-f', '--force',
+                      dest='force',
+                      action='store_true',
+                      default=False,
+                      help=('Force a full rebuild by cleaning all output '
+                            'and clearing the cache before building.'))
+  parser.add_argument('--stop_on_error',
+                      dest='stop_on_error',
+                      action='store_true',
+                      default=False,
+                      help=('Stop building when an error is encountered.'))
   parser.add_argument('targets',
                       nargs='+',
                       metavar='target',
@@ -62,8 +68,8 @@ def build(args, cwd):
   # TODO(benvanik): take additional args from command line
   with BuildContext(build_env, project,
                     task_executor=task_executor,
-                    force=False,
-                    stop_on_error=False,
+                    force=parsed_args.force,
+                    stop_on_error=parsed_args.stop_on_error,
                     raise_on_error=False) as build_ctx:
     result = build_ctx.execute_sync(parsed_args.targets)
 
