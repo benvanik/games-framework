@@ -77,16 +77,6 @@ class CopyFilesRule(Rule):
     """
     super(CopyFilesRule, self).__init__(name, *args, **kwargs)
 
-  class _Task(Task):
-    def __init__(self, build_env, file_pairs, *args, **kwargs):
-      super(CopyFilesRule._Task, self).__init__(build_env, *args, **kwargs)
-      self.file_pairs = file_pairs
-
-    def execute(self):
-      for file_pair in self.file_pairs:
-        shutil.copy2(file_pair[0], file_pair[1])
-      return True
-
   class _Context(RuleContext):
     def begin(self):
       super(CopyFilesRule._Context, self).begin()
@@ -100,9 +90,20 @@ class CopyFilesRule(Rule):
         file_pairs.append((src_path, out_path))
 
       # Async issue copying task
-      d = self._run_task_async(CopyFilesRule._Task(
+      d = self._run_task_async(_CopyFilesTask(
           self.build_env, file_pairs))
       self._chain(d)
+
+
+class _CopyFilesTask(Task):
+  def __init__(self, build_env, file_pairs, *args, **kwargs):
+    super(_CopyFilesTask, self).__init__(build_env, *args, **kwargs)
+    self.file_pairs = file_pairs
+
+  def execute(self):
+    for file_pair in self.file_pairs:
+      shutil.copy2(file_pair[0], file_pair[1])
+    return True
 
 
 @build_rule('concat_files')
@@ -137,19 +138,6 @@ class ConcatFilesRule(Rule):
     super(ConcatFilesRule, self).__init__(name, *args, **kwargs)
     self.out = out
 
-  class _Task(Task):
-    def __init__(self, build_env, src_paths, output_path, *args, **kwargs):
-      super(ConcatFilesRule._Task, self).__init__(build_env, *args, **kwargs)
-      self.src_paths = src_paths
-      self.output_path = output_path
-
-    def execute(self):
-      with io.open(self.output_path, 'wt') as out_file:
-        for src_path in self.src_paths:
-          with io.open(src_path, 'rt') as in_file:
-            out_file.write(in_file.read())
-      return True
-
   class _Context(RuleContext):
     def begin(self):
       super(ConcatFilesRule._Context, self).begin()
@@ -159,9 +147,23 @@ class ConcatFilesRule(Rule):
       self._append_output_paths([output_path])
 
       # Async issue concat task
-      d = self._run_task_async(ConcatFilesRule._Task(
+      d = self._run_task_async(_ConcatFilesTask(
           self.build_env, self.src_paths, output_path))
       self._chain(d)
+
+
+class _ConcatFilesTask(Task):
+  def __init__(self, build_env, src_paths, output_path, *args, **kwargs):
+    super(_ConcatFilesTask, self).__init__(build_env, *args, **kwargs)
+    self.src_paths = src_paths
+    self.output_path = output_path
+
+  def execute(self):
+    with io.open(self.output_path, 'wt') as out_file:
+      for src_path in self.src_paths:
+        with io.open(src_path, 'rt') as in_file:
+          out_file.write(in_file.read())
+    return True
 
 
 @build_rule('template_files')
@@ -204,22 +206,6 @@ class TemplateFilesRule(Rule):
     self.new_extension = new_extension
     self.params = params
 
-  class _Task(Task):
-    def __init__(self, build_env, file_pairs, params, *args, **kwargs):
-      super(TemplateFilesRule._Task, self).__init__(build_env, *args, **kwargs)
-      self.file_pairs = file_pairs
-      self.params = params
-
-    def execute(self):
-      for file_pair in self.file_pairs:
-        with io.open(file_pair[0], 'rt') as f:
-          template_str = f.read()
-        template = string.Template(template_str)
-        result_str = template.substitute(self.params)
-        with io.open(file_pair[1], 'wt') as f:
-          f.write(result_str)
-      return True
-
   class _Context(RuleContext):
     def begin(self):
       super(TemplateFilesRule._Context, self).begin()
@@ -235,6 +221,23 @@ class TemplateFilesRule(Rule):
         file_pairs.append((src_path, out_path))
 
       # Async issue templating task
-      d = self._run_task_async(TemplateFilesRule._Task(
+      d = self._run_task_async(_TemplateFilesTask(
           self.build_env, file_pairs, self.rule.params))
       self._chain(d)
+
+
+class _TemplateFilesTask(Task):
+  def __init__(self, build_env, file_pairs, params, *args, **kwargs):
+    super(_TemplateFilesTask, self).__init__(build_env, *args, **kwargs)
+    self.file_pairs = file_pairs
+    self.params = params
+
+  def execute(self):
+    for file_pair in self.file_pairs:
+      with io.open(file_pair[0], 'rt') as f:
+        template_str = f.read()
+      template = string.Template(template_str)
+      result_str = template.substitute(self.params)
+      with io.open(file_pair[1], 'wt') as f:
+        f.write(result_str)
+    return True
