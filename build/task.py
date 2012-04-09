@@ -10,6 +10,7 @@ import multiprocessing
 import os
 import re
 import subprocess
+import sys
 
 from async import Deferred
 
@@ -259,8 +260,17 @@ class MultiProcessTaskExecutor(TaskExecutor):
     """
     super(MultiProcessTaskExecutor, self).__init__(*args, **kwargs)
     self.worker_count = worker_count
-    self._pool = multiprocessing.Pool(processes=self.worker_count,
-                                      initializer=_task_initializer)
+    try:
+      self._pool = multiprocessing.Pool(processes=self.worker_count,
+                                        initializer=_task_initializer)
+    except OSError as e: # pragma: no cover
+      print e
+      print 'Unable to initialize multiprocessing!'
+      if sys.platform == 'cygwin':
+        print ('Cygwin has known issues with multiprocessing and there\'s no '
+               'workaround. Boo!')
+      print 'Try running with -j 1 to disable multiprocessing'
+      raise
     self._waiting_deferreds = {}
 
   def run_task_async(self, task):
