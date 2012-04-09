@@ -27,7 +27,7 @@ def _get_options_parser():
   return parser
 
 
-@manage_command('deploy')
+@manage_command('deploy', 'Builds and copies output to a target path.')
 def deploy(args, cwd):
   parser = _get_options_parser()
   parsed_args = parser.parse_args(args)

@@ -16,7 +16,7 @@ import sys
 import util
 
 
-def manage_command(command_name):
+def manage_command(command_name, command_help=None):
   """A decorator for management command functions.
   Use this to register management command functions. A function decorated with
   this will be discovered and callable via manage.py.
@@ -26,9 +26,11 @@ def manage_command(command_name):
 
   Args:
     command_name: The name of the command exposed to the management script.
+    command_help: Help text printed alongside the command when queried.
   """
   def _exec_command(fn):
     fn.command_name = command_name
+    fn.command_help = command_help
     return fn
   return _exec_command
 
@@ -77,7 +79,15 @@ def usage(commands):
   Returns:
     A string containing usage info and a command listing.
   """
-  return 'TODO: usage info/command list/etc'
+  s = 'manage.py command [-h]\n'
+  s += '\n'
+  s += 'Commands:\n'
+  for command_name in commands:
+    s += '  %s\n' % (command_name)
+    command_help = commands[command_name].command_help
+    if command_help:
+      s += '    %s\n' % (command_help)
+  return s
 
 
 def main(args=None, cwd=None, commands=None):
@@ -114,8 +124,13 @@ if __name__ == '__main__':
   sys.path.insert(1, os.path.normpath(os.path.join(os.path.dirname(__file__),
                                                    '..')))
 
+  commands = discover_commands()
+
   try:
-    return_code = main(args=sys.argv[1:], cwd=os.getcwd())
+    return_code = main(args=sys.argv[1:], cwd=os.getcwd(), commands=commands)
+  except ValueError:
+    print usage(commands)
+    return_code = 1
   except Exception as e:
     #print e
     raise

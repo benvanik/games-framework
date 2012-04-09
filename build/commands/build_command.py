@@ -27,7 +27,7 @@ def _get_options_parser():
   return parser
 
 
-@manage_command('build')
+@manage_command('build', 'Builds target rules.')
 def build(args, cwd):
   parser = _get_options_parser()
   parsed_args = parser.parse_args(args)

@@ -27,7 +27,7 @@ def _get_options_parser():
   return parser
 
 
-@manage_command('serve')
+@manage_command('serve', 'Continuously builds and serves targets.')
 def serve(args, cwd):
   parser = _get_options_parser()
   parsed_args = parser.parse_args(args)

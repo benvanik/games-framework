@@ -27,7 +27,7 @@ def _get_options_parser():
   return parser
 
 
-@manage_command('clean')
+@manage_command('clean', 'Cleans outputs and caches.')
 def clean(args, cwd):
   parser = _get_options_parser()
   parsed_args = parser.parse_args(args)

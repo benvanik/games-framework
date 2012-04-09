@@ -27,7 +27,7 @@ def _get_options_parser():
   return parser
 
 
-@manage_command('test')
+@manage_command('test', 'Builds and runs test rules.')
 def test(args, cwd):
   parser = _get_options_parser()
   parsed_args = parser.parse_args(args)
