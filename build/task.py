@@ -11,6 +11,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 from async import Deferred
 
@@ -300,11 +301,19 @@ class MultiProcessTaskExecutor(TaskExecutor):
       iter(deferreds)
     except:
       deferreds = [deferreds]
+    spin_deferreds = []
     for deferred in deferreds:
       if deferred.is_done():
         continue
-      async_result = self._waiting_deferreds[deferred]
-      async_result.wait()
+      if not self._waiting_deferreds.has_key(deferred):
+        # Not a deferred created by this - queue for a spin wait
+        spin_deferreds.append(deferred)
+      else:
+        async_result = self._waiting_deferreds[deferred]
+        async_result.wait()
+    for deferred in spin_deferreds:
+      while not deferred.is_done():
+        time.sleep(0.01)
 
   def close(self, graceful=True):
     if self.closed:
