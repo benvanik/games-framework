@@ -8,6 +8,7 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 import argparse
 import os
+import shutil
 import sys
 
 import build.commands.util as commandutil
@@ -34,6 +35,18 @@ def clean(args, cwd):
 
   build_env = BuildEnvironment(root_path=cwd)
 
-  # TODO(benvanik): delete paths/cache/etc
+  def attempt_delete(path):
+    if os.path.isdir(path):
+      print 'Deleting %s...' % (path)
+      shutil.rmtree(path)
+
+  nuke_paths = [
+      '.build-cache',
+      'build-out',
+      'build-gen',
+      'build-bin',
+      ]
+  for path in nuke_paths:
+    attempt_delete(path)
 
   return True

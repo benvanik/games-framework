@@ -57,7 +57,7 @@ node_modules/.bin/
 # coverage/etc
 scratch/
 
-.gfcache/
+.build-cache/
 build-out/
 build-gen/
 build-bin/
