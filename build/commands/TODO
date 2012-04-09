@@ -1,0 +1,65 @@
+# ==============================================================================
+# build
+# ==============================================================================
+
+manage.py build [--force] :rule_a ...
+
+Builds the given rules.
+
+If --force is provided then a clean is run beforehand.
+
+
+# ==============================================================================
+# clean
+# ==============================================================================
+
+manage.py clean
+
+Cleans all build-* paths and caches.
+
+
+# ==============================================================================
+# serve
+# ==============================================================================
+
+# Simple HTTP server
+manage.py serve
+manage.py serve [--http_port=8080]
+# HTTP server + build daemon
+manage.py serve [--http_port=8080] [--daemon_port=8081 :daemon]
+where:
+file_set('daemon', srcs=['src/', 'assets/'], deps=[':debug_all'])
+to watch src/ & assets/ for changes and build :debug_all each change
+
+Launch an HTTP server and optionally run a continuous build.
+
+If --http_port is specified then host all files from the current path.
+
+If --daemon_port is specified then run continuous builds of the given targets
+when any of the specified watch paths change.
+
+Provide a WebSocket endpoint via Autobahn that will get posted to it all
+modified output paths after each build completes.
+
+
+# ==============================================================================
+# deploy
+# ==============================================================================
+
+manage.py deploy --output=/some/bin/ :release_all ...
+where:
+file_set('release_all', srcs=[':content', ':compiled_js'], deps=[':etc'])
+to copy :content & :compiled_js to /some/bin/
+
+Runs the build and copies all output results of the specified rule to a target
+path.
+
+
+# ==============================================================================
+# test
+# ==============================================================================
+
+manage.py test :test_rule ...
+
+TODO: need some custom rules (test_js or something?) that provide parameters
+      to some test framework (BusterJS?)
