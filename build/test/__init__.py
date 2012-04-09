@@ -13,6 +13,8 @@ import shutil
 import sys
 import unittest2
 
+import build.util as util
+
 
 class AsyncTestCase(unittest2.TestCase):
   """Test case adding additional asserts for async results."""
@@ -86,20 +88,6 @@ class FixtureTestCase(AsyncTestCase):
   Set self.fixture to a folder name from the test/fixtures/ path.
   """
 
-  def _find_build_path(self):
-    """Scans up the current path for the build/ folder.
-
-    Returns:
-      The 'build/' folder.
-    """
-    path = sys.path[0]
-    while True:
-      if os.path.exists(os.path.join(path, 'build')):
-        return os.path.join(path, 'build')
-      path = os.path.dirname(path)
-      if not len(path):
-        return None
-
   def setUp(self):
     super(FixtureTestCase, self).setUp()
 
@@ -111,7 +99,7 @@ class FixtureTestCase(AsyncTestCase):
     # Copy fixture files
     if self.fixture:
       self.root_path = os.path.join(self.root_path, self.fixture)
-      build_path = self._find_build_path()
+      build_path = util.find_build_path()
       if not build_path:
         raise Error('Unable to find build path')
       fixture_path = os.path.join(build_path, 'test', 'fixtures', self.fixture)

@@ -443,5 +443,6 @@ class RuleContextTest(FixtureTestCase):
                                                     'dir/a.txt')),
         'build-gen/dir/a.txt')
 
+
 if __name__ == '__main__':
   unittest2.main()

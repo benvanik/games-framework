@@ -17,6 +17,21 @@ else:
   timer = time.time # pragma: no cover
 
 
+def find_build_path(): # pragma: no cover
+  """Scans up the current path for the build/ folder.
+
+  Returns:
+    The 'build/' folder.
+  """
+  path = sys.path[0]
+  while True:
+    if os.path.exists(os.path.join(path, 'build')):
+      return os.path.join(path, 'build')
+    path = os.path.dirname(path)
+    if not len(path):
+      return None
+
+
 def is_rule_path(value):
   """Detects whether the given value is a rule name.
 
