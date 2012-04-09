@@ -1,6 +1,11 @@
 # Copyright 2012 Google Inc. All Rights Reserved.
 
-"""Management shell 'test' command.
+"""Builds and executes a set of test rules.
+TODO: need some custom rules (test_js or something?) that provide parameters
+      to some test framework (BusterJS?)
+
+Example:
+manage.py test :test_rule ...
 """
 
 __author__ = 'benvanik@google.com (Ben Vanik)'

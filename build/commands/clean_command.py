@@ -1,6 +1,7 @@
 # Copyright 2012 Google Inc. All Rights Reserved.
 
-"""Management shell 'clean' command.
+"""Cleans all build-* paths and caches.
+Attempts to delete all paths the build system creates.
 """
 
 __author__ = 'benvanik@google.com (Ben Vanik)'
@@ -12,7 +13,6 @@ import shutil
 import sys
 
 import build.commands.util as commandutil
-from build.context import BuildEnvironment
 from build.manage import manage_command
 
 
@@ -33,20 +33,4 @@ def clean(args, cwd):
   parser = _get_options_parser()
   parsed_args = parser.parse_args(args)
 
-  build_env = BuildEnvironment(root_path=cwd)
-
-  def attempt_delete(path):
-    if os.path.isdir(path):
-      print 'Deleting %s...' % (path)
-      shutil.rmtree(path)
-
-  nuke_paths = [
-      '.build-cache',
-      'build-out',
-      'build-gen',
-      'build-bin',
-      ]
-  for path in nuke_paths:
-    attempt_delete(path)
-
-  return True
+  return commandutil.clean_output(cwd)

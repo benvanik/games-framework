@@ -7,6 +7,8 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 
 import argparse
+import os
+import shutil
 
 from build.context import BuildEnvironment, BuildContext
 from build.project import FileModuleResolver, Project
@@ -44,8 +46,7 @@ def add_common_build_args(parser, targets=False):
                       dest='force',
                       action='store_true',
                       default=False,
-                      help=('Force a full rebuild by cleaning all output '
-                            'and clearing the cache before building.'))
+                      help=('Force all rules to run as if there was no cache.'))
   parser.add_argument('--stop_on_error',
                       dest='stop_on_error',
                       action='store_true',
@@ -60,7 +61,42 @@ def add_common_build_args(parser, targets=False):
                         help='Target build rule (such as :a or foo/bar:a)')
 
 
+def clean_output(cwd):
+  """Cleans all build-related output and caches.
+
+  Args:
+    cwd: Current working directory.
+
+  Returns:
+    True if the clean succeeded.
+  """
+  nuke_paths = [
+      '.build-cache',
+      'build-out',
+      'build-gen',
+      'build-bin',
+      ]
+  any_failed = False
+  for path in nuke_paths:
+    full_path = os.path.join(cwd, path)
+    if os.path.isdir(full_path):
+      try:
+        shutil.rmtree(full_path)
+      except Exception as e:
+        print 'Unable to remove %s: %s' % (full_path, e)
+        any_failed = True
+  return not any_failed
+
+
 def run_build(cwd, parsed_args):
+  """Runs a build with the given arguments.
+  Assumes that add_common_args and add_common_build_args was called on the
+  ArgumentParser.
+
+  Args:
+    cwd: Current working directory.
+    parsed_args: Argument namespace from an ArgumentParser.
+  """
   build_env = BuildEnvironment(root_path=cwd)
 
   module_resolver = FileModuleResolver(cwd)

@@ -1,6 +1,27 @@
 # Copyright 2012 Google Inc. All Rights Reserved.
 
-"""Management shell 'serve' command.
+"""Launches an HTTP server and optionally a continuous build daemon.
+This serves the current working directory over HTTP, similar to Python's
+SimpleHTTPServer.
+
+If a daemon port and any rules are defined then changes to the
+specified paths will automatically trigger builds. A WebSocket port is specified
+that clients can connect to and get lists of file change sets.
+
+Daemon rules should be of the form:
+file_set('some_daemon',
+         srcs=['watch_path_1/', 'watch_path_2/'],
+         deps=[':root_build_target'])
+Where the given srcs will be recursively watched for changes to trigger the
+rules specified in deps.
+
+Examples:
+# Simple HTTP server
+manage.py serve
+manage.py serve --http_port=8080
+# HTTP server + build daemon
+manage.py serve :some_daemon
+manage.py serve --http_port=8080 --daemon_port=8081 :some_daemon
 """
 
 __author__ = 'benvanik@google.com (Ben Vanik)'

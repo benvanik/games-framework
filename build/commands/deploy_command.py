@@ -1,6 +1,20 @@
 # Copyright 2012 Google Inc. All Rights Reserved.
 
-"""Management shell 'deploy' command.
+"""Runs a build and copies all output results of the specified rules to a path.
+All of the output files of the specified rules will be copied to the target
+output path. The directory structure will be exactly that of under the
+various build-*/ folders but collapsed into one.
+
+A typical deploy rule will bring together many result srcs, for example
+converted audio files or compiled code, for a specific configuration.
+One could have many such rules to target different configurations, such as
+unoptimized/uncompiled vs. optimized/packed.
+
+Examples:
+# Copy all output files of :release_all to /some/bin/, merging the output
+manage.py deploy --output=/some/bin/ :release_all
+# Clean (aka delete) /some/bin/ before doing the copy
+manage.py deploy --clean --output=/some/bin/ :release_all
 """
 
 __author__ = 'benvanik@google.com (Ben Vanik)'
