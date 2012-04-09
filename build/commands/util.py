@@ -15,7 +15,30 @@ from build.project import FileModuleResolver, Project
 from build.task import InProcessTaskExecutor, MultiProcessTaskExecutor
 
 
-def add_common_args(parser):
+# Hack to get formatting in usage() correct
+class _ComboHelpFormatter(argparse.RawDescriptionHelpFormatter,
+                          argparse.ArgumentDefaultsHelpFormatter):
+  pass
+
+
+def create_argument_parser(program_usage, description=''):
+  """Creates an ArgumentParser with the proper formatting.
+
+  Args:
+    program_usage: Program usage string, such as 'foo'.
+    description: Help string, usually from __doc__.
+
+  Returns:
+    An ArgumentParser that can be used to parse arguments.
+  """
+  parser = argparse.ArgumentParser(prog='manage.py serve',
+                                   description=description,
+                                   formatter_class=_ComboHelpFormatter)
+  _add_common_args(parser)
+  return parser
+
+
+def _add_common_args(parser):
   """Adds common system arguments to an argument parser.
 
   Args:

@@ -37,10 +37,9 @@ from build.manage import manage_command
 
 def _get_options_parser():
   """Gets an options parser for the given args."""
-  parser = argparse.ArgumentParser(prog='manage.py serve')
+  parser = commandutil.create_argument_parser('manage.py serve', __doc__)
 
   # Add all common args
-  commandutil.add_common_args(parser)
   commandutil.add_common_build_args(parser, targets=True)
 
   # 'serve' specific

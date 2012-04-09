@@ -18,10 +18,7 @@ from build.manage import manage_command
 
 def _get_options_parser():
   """Gets an options parser for the given args."""
-  parser = argparse.ArgumentParser(prog='manage.py clean')
-
-  # Add all common args
-  commandutil.add_common_args(parser)
+  parser = commandutil.create_argument_parser('manage.py clean', __doc__)
 
   # 'clean' specific
 
