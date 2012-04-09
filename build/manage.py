@@ -111,7 +111,7 @@ def main(args=None, cwd=None, commands=None):
 
 if __name__ == '__main__':
   # Always add build/.. to the path
-  sys.path.insert(1, os.path.normpath(os.path.join(util.find_build_path(),
+  sys.path.insert(1, os.path.normpath(os.path.join(os.path.dirname(__file__),
                                                    '..')))
 
   try:
