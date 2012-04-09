@@ -12,7 +12,6 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 import networkx as nx
 
-import build
 import project
 import util
 

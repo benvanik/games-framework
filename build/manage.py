@@ -110,9 +110,14 @@ def main(args=None, cwd=None, commands=None):
 
 
 if __name__ == '__main__':
+  # Always add build/.. to the path
+  sys.path.insert(1, os.path.normpath(os.path.join(util.find_build_path(),
+                                                   '..')))
+
   try:
     return_code = main(args=sys.argv[1:], cwd=os.getcwd())
   except Exception as e:
-    print e
+    #print e
+    raise
     return_code = 1
   sys.exit(return_code)

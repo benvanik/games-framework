@@ -17,7 +17,6 @@ import stat
 
 import async
 from async import Deferred
-import build
 import graph
 import project
 import task

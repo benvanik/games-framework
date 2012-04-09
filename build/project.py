@@ -16,7 +16,6 @@ import re
 import stat
 import string
 
-import build
 from module import ModuleLoader
 from rule import RuleNamespace
 import util
