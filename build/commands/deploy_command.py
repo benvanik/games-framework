@@ -8,6 +8,7 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 
 import argparse
 import os
+import shutil
 import sys
 
 import build.commands.util as commandutil
@@ -23,6 +24,16 @@ def _get_options_parser():
   commandutil.add_common_build_args(parser, targets=True)
 
   # 'deploy' specific
+  parser.add_argument('-o', '--output',
+                      dest='output',
+                      required=True,
+                      help=('Output path to place all results. Will be created '
+                            ' if it does not exist.'))
+  parser.add_argument('-c', '--clean',
+                      dest='clean',
+                      action='store_true',
+                      help=('Whether to remove all output files before '
+                            'deploying.'))
 
   return parser
 
@@ -32,8 +43,40 @@ def deploy(args, cwd):
   parser = _get_options_parser()
   parsed_args = parser.parse_args(args)
 
+  # Build everything first
   (result, all_target_outputs) = commandutil.run_build(cwd, parsed_args)
+  if not result:
+    # Failed - don't copy anything
+    return False
 
-  print all_target_outputs
+  # Delete output, if desired
+  if parsed_args.clean:
+    shutil.rmtree(parsed_args.output)
+
+  # Ensure output exists
+  if not os.path.isdir(parsed_args.output):
+    os.makedirs(parsed_args.output)
+
+  # Copy results
+  for target_output in all_target_outputs:
+    # Get path relative to root
+    # This will contain the build-out/ etc
+    rel_path = os.path.relpath(target_output, cwd)
+
+    # Strip the build-*/
+    rel_path = os.path.join(*(rel_path.split(os.sep)[1:]))
+
+    # Make output path
+    deploy_path = os.path.normpath(os.path.join(parsed_args.output, rel_path))
+
+    # Ensure directory exists
+    # TODO(benvanik): cache whether we have checked yet to reduce OS cost
+    deploy_dir = os.path.dirname(deploy_path)
+    if not os.path.isdir(deploy_dir):
+      os.makedirs(deploy_dir)
+
+    # Copy!
+    print '%s -> %s' % (target_output, deploy_path)
+    shutil.copy2(target_output, deploy_path)
 
   return result

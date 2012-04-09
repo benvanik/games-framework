@@ -19,6 +19,7 @@ def add_common_args(parser):
   Args:
     parser: ArgumentParser to modify.
   """
+  # TODO(benvanik): logging control/etc
   pass
 
 
@@ -51,6 +52,7 @@ def add_common_build_args(parser, targets=False):
                       default=False,
                       help=('Stop building when an error is encountered.'))
 
+  # Target specification
   if targets:
     parser.add_argument('targets',
                         nargs='+',
