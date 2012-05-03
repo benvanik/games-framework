@@ -4,3 +4,6 @@
 [submodule "third_party/glsl-unit"]
 	path = third_party/glsl-unit
 	url = https://code.google.com/p/glsl-unit/
+[submodule "third_party/ws"]
+	path = third_party/ws
+	url = https://github.com/einaros/ws.git
