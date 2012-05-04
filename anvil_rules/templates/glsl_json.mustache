@@ -1,0 +1,34 @@
+{
+  "compiled": {
+    "vertexShader": "{{getVertexSource}}",
+    "fragmentShader": "{{getFragmentSource}}",
+    "uniformMap": {
+      {{#getUniforms}}
+"{{originalName}}": "{{shortName}}"{{^last}},
+      {{/last}}
+{{/getUniforms}}
+    },
+    "attributeMap": {
+      {{#getAttributes}}
+"{{originalName}}": "{{shortName}}"{{^last}},
+      {{/last}}
+{{/getAttributes}}
+    }
+  },
+  "uncompiled": {
+    "vertexShader": "{{getOriginalVertexSource}}",
+    "fragmentShader": "{{getOriginalFragmentSource}}",
+    "uniformMap": {
+      {{#getUniforms}}
+"{{originalName}}": "{{originalName}}"{{^last}},
+      {{/last}}
+{{/getUniforms}}
+    },
+    "attributeMap": {
+      {{#getAttributes}}
+"{{originalName}}": "{{originalName}}"{{^last}},
+      {{/last}}
+{{/getAttributes}}
+    }
+  }
+}
