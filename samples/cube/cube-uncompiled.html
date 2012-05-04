@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>GF Cube Example (uncompiled)</title>
+    <link rel="stylesheet" href="cube_css_debug_compiled.css"/>
+    <script>
+      window.CLOSURE_NO_DEPS = true;
+    </script>
+    <script src="../../third_party/closure-library/closure/goog/base.js"></script>
+    <script src="cube_js_uncompiled-deps.js"></script>
+    <script src="cube_css_debug_compiled.js"></script>
+    <script src="src/cube/start.js"></script>
+  </head>
+  <body>
+    <script>
+      var uri = window.location.toString();
+      cube.start(uri, document);
+    </script>
+  </body>
+</html>
