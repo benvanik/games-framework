@@ -15,6 +15,7 @@
  */
 
 goog.provide('gf.net');
+goog.provide('gf.net.Endpoint');
 
 goog.require('gf.net.Browser');
 goog.require('gf.net.ClientSession');
@@ -27,6 +28,14 @@ goog.require('gf.net.sockets.WorkerListenSocket');
 goog.require('gf.util');
 goog.require('goog.asserts');
 goog.require('goog.async.Deferred');
+
+
+/**
+ * Endpoint type.
+ * @typedef {string|MessagePort|Worker|SharedWorker|DedicatedWorkerGlobalScope|
+ *     SharedWorkerGlobalScope}
+ */
+gf.net.Endpoint;
 
 
 /**

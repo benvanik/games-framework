@@ -19,6 +19,7 @@
  */
 
 goog.provide('gf.assets.BuildClient');
+goog.provide('gf.assets.Observer');
 
 goog.require('gf');
 goog.require('gf.log');
@@ -26,6 +27,24 @@ goog.require('goog.Disposable');
 goog.require('goog.asserts');
 goog.require('goog.json');
 goog.require('goog.object');
+
+
+
+/**
+ * An interface for observers of asset change notifications.
+ *
+ * @interface
+ */
+gf.assets.Observer = function() {};
+
+
+/**
+ * Notifies an observer that a list of assets changed.
+ * Each asset is listed by the tracking tag defined by the build task that
+ * generates it.
+ * @param {!Array.<string>} tags Asset tags.
+ */
+gf.assets.Observer.prototype.notifyAssetsChanged = goog.nullFunction;
 
 
 
