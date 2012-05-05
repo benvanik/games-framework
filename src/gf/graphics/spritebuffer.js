@@ -61,10 +61,6 @@ gf.graphics.SpriteBuffer = function(graphicsContext) {
    * @type {!Uint32Array}
    */
   this.uint32Data_ = new Uint32Array(this.slotData);
-
-  // Initial setup
-  // TODO(benvanik): defer to first use?
-  this.restore();
 };
 goog.inherits(gf.graphics.SpriteBuffer, gf.graphics.GeometryPool);
 

@@ -51,8 +51,6 @@ gf.graphics.SpriteProgram = function(graphicsContext) {
   this.u_texSampler = null;
   /** @type {WebGLUniformLocation} */
   this.u_color = null;
-
-  this.restore();
 };
 goog.inherits(gf.graphics.SpriteProgram, gf.graphics.Program);
 
