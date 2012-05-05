@@ -46,15 +46,6 @@ gf.net.sockets.WsSocket = function(endpoint, handle) {
   this.handle_ = handle;
 
   /**
-   * Whether the WebSocket will allow 'arraybuffer'.
-   * This value is set based on whether or not we see strings or arraybuffers
-   * coming from the client.
-   * @private
-   * @type {boolean}
-   */
-  this.canUseArrayBuffers_ = true;
-
-  /**
    * @private
    * @type {Function}
    */
@@ -71,6 +62,16 @@ gf.net.sockets.WsSocket = function(endpoint, handle) {
    * @type {Function}
    */
   this.boundHandleMessage_ = goog.bind(this.handleMessage_, this);
+
+  /**
+   * Options used when writting messages to WS.
+   * @private
+   * @type {!Object}
+   */
+  this.writeOptions_ = {
+    'binary': true,
+    'mask': false
+  };
 
   // Listen for messages
   this.handle_.addListener('error', this.boundHandleError_);
@@ -105,23 +106,11 @@ gf.net.sockets.WsSocket.prototype.handleClose_ = function(e) {
 /**
  * Handles messages from the web socket.
  * @private
- * @param {!Event} e Event.
+ * @param {!Buffer} data Data buffer.
  */
-gf.net.sockets.WsSocket.prototype.handleMessage_ = function(e) {
-  var data = /** @type {Object} */ (e.data);
-
-  var packet = null;
-  if (data instanceof Buffer) {
-    packet = new gf.net.Packet(gf.util.node.bufferToArrayBuffer(data));
-  } else if (goog.isString(data)) {
-    this.canUseArrayBuffers_ = false;
-    packet = new gf.net.Packet(gf.util.stringToArrayBuffer(
-        /** @type {string} */ (data)));
-  }
-
-  if (packet) {
-    this.queueRead(packet);
-  }
+gf.net.sockets.WsSocket.prototype.handleMessage_ = function(data) {
+  var packet = new gf.net.Packet(gf.util.node.bufferToArrayBuffer(data));
+  this.queueRead(packet);
 };
 
 
@@ -129,14 +118,7 @@ gf.net.sockets.WsSocket.prototype.handleMessage_ = function(e) {
  * @override
  */
 gf.net.sockets.WsSocket.prototype.writeInternal = function(data) {
-  if (this.canUseArrayBuffers_) {
-    this.handle_.send(gf.util.node.arrayBufferToBuffer(data), {
-      binary: true,
-      mask: true
-    });
-  } else {
-    this.handle_.send(gf.util.arrayBufferToString(data));
-  }
+  this.handle_.send(gf.util.node.arrayBufferToBuffer(data), this.writeOptions_);
 };
 
 

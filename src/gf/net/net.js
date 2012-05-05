@@ -21,10 +21,10 @@ goog.require('gf.net.Browser');
 goog.require('gf.net.ClientSession');
 goog.require('gf.net.ServerSession');
 goog.require('gf.net.SessionState');
-goog.require('gf.net.sockets.FayeListenSocket');
 goog.require('gf.net.sockets.HtmlWebSocket');
 goog.require('gf.net.sockets.PortSocket');
 goog.require('gf.net.sockets.WorkerListenSocket');
+goog.require('gf.net.sockets.WsListenSocket');
 goog.require('gf.util');
 goog.require('goog.asserts');
 goog.require('goog.async.Deferred');
@@ -77,7 +77,7 @@ gf.net.listen = function(endpoint, protocolVersion, authToken, serverInfo) {
     socket = new gf.net.sockets.WorkerListenSocket(endpoint,
         /** @type {!Object} */ (endpoint));
   } else if (goog.isString(endpoint)) {
-    socket = new gf.net.sockets.FayeListenSocket(endpoint);
+    socket = new gf.net.sockets.WsListenSocket(endpoint);
     //socket = new gf.net.sockets.WsListenSocket(endpoint);
   } else {
     // Unsupported endpoint
