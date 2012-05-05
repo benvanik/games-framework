@@ -30,6 +30,11 @@ file_set(
         glob('third_party/closure-library/closure/goog/**/*.js') +
         glob('third_party/closure-library/third_party/closure/goog/**/*.js'))
 
+# Closure externs files
+file_set(
+    name='closure_externs',
+    srcs=glob('externs/**/*.js'))
+
 # Closure Compiler JAR
 file_set(
     name='closure_compiler_jar',
