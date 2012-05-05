@@ -58,10 +58,16 @@ compile_msg(
     name='gf_msg',
     srcs=glob('src/**/*.msg'))
 
+file_set(
+    name='gf_js',
+    srcs=[
+        ':gf_msg',
+        ] + glob('src/**/*.js'))
+
 # All GF JS files, including Closure Library
 file_set(
     name='all_gf_js',
     srcs=[
         ':all_closure_js',
-        ':gf_msg',
-        ] + glob('src/**/*.js'))
+        ':gf_js',
+        ])

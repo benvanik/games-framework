@@ -20,7 +20,7 @@
 
 goog.provide('gf.graphics.TextureAtlas');
 
-goog.require('gf.graphics.Texture');
+goog.require('gf.graphics.LoadableTexture');
 goog.require('goog.asserts');
 goog.require('goog.vec.Vec4');
 
@@ -30,7 +30,7 @@ goog.require('goog.vec.Vec4');
  * A texture atlas that supports deferred loading.
  *
  * @constructor
- * @extends {gf.graphics.Texture}
+ * @extends {gf.graphics.LoadableTexture}
  * @param {!gf.assets.AssetManager} assetManager Asset manager.
  * @param {!gf.graphics.GraphicsContext} graphicsContext Graphics context.
  * @param {string} path Asset path.
@@ -48,7 +48,7 @@ gf.graphics.TextureAtlas = function(assetManager, graphicsContext, path, name,
    */
   this.slots_ = [];
 };
-goog.inherits(gf.graphics.TextureAtlas, gf.graphics.Texture);
+goog.inherits(gf.graphics.TextureAtlas, gf.graphics.LoadableTexture);
 
 
 /**

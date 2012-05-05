@@ -63,8 +63,8 @@ gf.audio.formats.cachePlayableTypes_ = function() {
       goog.dom.createElement(goog.dom.TagName.AUDIO));
   if (audioEl && audioEl.canPlayType) {
     // Test each known type
-    for (var n = 0; n < gf.audio.MIME_TYPES_.length; n++) {
-      var mimeType = gf.audio.MIME_TYPES_[n];
+    for (var n = 0; n < gf.audio.formats.MIME_TYPES_.length; n++) {
+      var mimeType = gf.audio.formats.MIME_TYPES_[n];
       playableTypes[mimeType] = !!audioEl.canPlayType(mimeType);
     }
   }
