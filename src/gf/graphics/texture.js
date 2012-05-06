@@ -108,6 +108,14 @@ gf.graphics.Texture = function(graphicsContext, width, height, format) {
   this.maxAnisotropy_ = 1;
 
   /**
+   * Slot texture coordinates, indexed by slot index.
+   * Only initialized if slots have been setup.
+   * @private
+   * @type {Array.<!goog.vec.Vec4.Type>}
+   */
+  this.slots_ = null;
+
+  /**
    * WebGL texture resource.
    * May be null if not yet loaded or discarded.
    * @type {WebGLTexture}
@@ -296,4 +304,45 @@ gf.graphics.Texture.getChannelsPerPixel = function(format) {
       goog.asserts.fail('Unsupported texture format: ' + format);
       return 0;
   }
+};
+
+
+/**
+ * Sets up rectangular uniform slot entries.
+ * Resets any previous slot data.
+ * @param {number} slotWidth Width, in px, of each slot.
+ * @param {number} slotHeight Height, in px, of each slot.
+ */
+gf.graphics.Texture.prototype.setupUniformSlots =
+    function(slotWidth, slotHeight) {
+  this.slots_ = [];
+
+  var slotsWide = this.width / slotWidth;
+  var slotsHigh = this.height / slotHeight;
+  for (var y = 0, n = 0; y < slotsHigh; y++) {
+    var ty = y / slotsHigh;
+    for (var x = 0; x < slotsWide; x++, n++) {
+      var tx = x / slotsWide;
+      this.slots_[n] = goog.vec.Vec4.createFloat32FromValues(
+          tx, ty, tx + 1 / slotsWide, ty + 1 / slotsHigh);
+    }
+  }
+};
+
+
+/**
+ * Gets the texture coordinates of a given slot.
+ * @param {number} index Slot index.
+ * @param {!goog.vec.Vec4.Type} texCoords 4-element array receiving the
+ *     texture coordinates as [tu0, tv0, tu1, tv1].
+ * @return {!goog.vec.Vec4.Type} texCoords to enable chaining.
+ */
+gf.graphics.Texture.prototype.getSlotCoords = function(index, texCoords) {
+  if (this.slots_) {
+    var coords = this.slots_[index];
+    if (coords) {
+      goog.vec.Vec4.setFromArray(texCoords, coords);
+    }
+  }
+  return texCoords;
 };

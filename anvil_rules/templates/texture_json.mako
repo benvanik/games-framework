@@ -2,6 +2,9 @@
   "width": ${image.width},
   "height": ${image.height},
   "channels": ${image.channels},
+  % if image.slot_size:
+  "slotSize": [${image.slot_size[0]}, ${image.slot_size[1]}],
+  % endif
   "levelsOfDetail": [
   % for i, lod in enumerate(image.lod_list):
     [

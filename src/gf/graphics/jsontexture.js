@@ -136,6 +136,13 @@ gf.graphics.JsonTexture.prototype.handleJsonLoad_ = function(content) {
   var imageInfo = gf.graphics.ImageInfo.loadFromJson(content);
   this.setImageInfo(imageInfo);
 
+  var slotSize = /** @type {Array} */ (content['slotSize']);
+  if (slotSize && slotSize.length == 2) {
+    var slotWidth = Number(slotSize[0]);
+    var slotHeight = Number(slotSize[1]);
+    this.setupUniformSlots(slotWidth, slotHeight);
+  }
+
   this.beginLoadingData();
 };
 

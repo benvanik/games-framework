@@ -31,7 +31,7 @@ goog.require('goog.vec.Vec4');
  * @constructor
  * @extends {gf.graphics.Resource}
  * @param {!gf.graphics.GraphicsContext} graphicsContext Graphics context.
- * @param {!gf.graphics.TextureAtlas} atlas Texture atlas.
+ * @param {!gf.graphics.Texture} atlas Texture atlas.
  * @param {number} lineHeight Line height, in px.
  * @param {!Array.<number|string>} glyphData Glyph data, in the form of
  *     [character, a, b, c, character, a, b, c, ...].
@@ -42,7 +42,7 @@ gf.graphics.BitmapFont = function(graphicsContext, atlas, lineHeight,
 
   /**
    * Texture atlas.
-   * @type {!gf.graphics.TextureAtlas}
+   * @type {!gf.graphics.Texture}
    */
   this.atlas = atlas;
 

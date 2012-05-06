@@ -44,20 +44,25 @@ class TextureSetRule(Rule):
   Inputs:
     namespace: Namespace to place code in, such as 'my.textures'.
     srcs: All source image files.
+    slot_size: WxH size of each slot (if uniform). Used for making texture
+        atlases from pre-existing sprite sheets. Ex: '8x8'.
 
   Outputs:
     A .js, .json, and any number of images for each input image.
   """
 
-  def __init__(self, name, namespace, *args, **kwargs):
+  def __init__(self, name, namespace, slot_size=None, *args, **kwargs):
     """Initializes a texture optimization rule.
 
     Args:
       namespace: Namespace to place code in, such as 'my.textures'.
       srcs: All source image files.
+      slot_size: WxH size of each slot (if uniform). Used for making texture
+          atlases from pre-existing sprite sheets. Ex: '8x8'.
     """
     super(TextureSetRule, self).__init__(name, *args, **kwargs)
     self.namespace = namespace
+    self.slot_size = slot_size
 
     (json_template, js_template) = _get_template_paths()
     self._append_dependent_paths([
@@ -131,6 +136,8 @@ class TextureSetRule(Rule):
       image.width = width
       image.height = height
       image.channels = channels
+      image.slot_size = \
+          self.rule.slot_size.split('x') if self.rule.slot_size else None
 
       # TODO(benvanik) proper mime type
       mime_type = {

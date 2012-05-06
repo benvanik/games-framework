@@ -38,6 +38,9 @@ ${image.class_name} = function(assetManager, context) {
         % endif
       % endfor
       ]));
+  % if image.slot_size:
+  this.setupUniformSlots(${image.slot_size[0]}, ${image.slot_size[1]});
+  % endif
 };
 goog.inherits(${image.class_name}, gf.graphics.LoadableTexture);
 
