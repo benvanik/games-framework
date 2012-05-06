@@ -215,6 +215,9 @@ gf.audio.Track.prototype.stop = function(opt_fadeOut) {
   }
 
   // TODO(benvanik): fade out
-  this.audioEl_.currentTime = 0;
-  this.audioEl_.pause();
+  try {
+    this.audioEl_.currentTime = 0;
+    this.audioEl_.pause();
+  } finally {
+  }
 };
