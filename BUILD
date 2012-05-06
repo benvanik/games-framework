@@ -29,6 +29,13 @@ file_set(
     srcs=
         glob('third_party/closure-library/closure/goog/**/*.js') +
         glob('third_party/closure-library/third_party/closure/goog/**/*.js'))
+# Files required when deploying uncompiled builds
+file_set(
+    name='all_uncompiled_js',
+    srcs=[
+        'third_party/closure-library/closure/goog/deps.js',
+        'third_party/closure-library/closure/goog/bootstrap/webworkers.js',
+        ])
 
 # Closure externs files
 file_set(

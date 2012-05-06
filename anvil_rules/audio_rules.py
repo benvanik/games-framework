@@ -69,22 +69,30 @@ class AudioSoundbankRule(Rule):
   Inputs:
     class_name: Fully-qualified class name, such as 'my.audio.SoundBank1'.
     srcs: All source audio files.
+    formats: An optional list of target format MIME types to convert to.
+        If none are provided than the output will be audio/wav only.
 
   Outputs:
     A .js, .json, and a bank audio file converted to many formats.
   """
 
-  def __init__(self, name, class_name, *args, **kwargs):
+  def __init__(self, name, class_name, formats=None, *args, **kwargs):
     """Initializes an audio sound bank rule.
 
     Args:
       name: Rule name.
       class_name: Fully-qualified class name, such as 'my.audio.SoundBank1'.
       srcs: All source audio files.
+      formats: An optional list of target format MIME types to convert to.
+          If none are provided than the output will be audio/wav only.
     """
     super(AudioSoundbankRule, self).__init__(name, *args, **kwargs)
     self.src_filter = '*.wav'
     self.class_name = class_name
+
+    self.formats = []
+    if formats:
+      self.formats.extend(formats)
 
     (json_template, js_template) = _get_soundbank_template_paths()
     self._append_dependent_paths([
@@ -138,7 +146,7 @@ class AudioSoundbankRule(Rule):
         source.size = os.path.getsize(wav_path)
         sound_bank.data_sources.append(source)
 
-        # TODO(benvanik): convert wav to other formats
+        # TODO(benvanik): convert wav to self.formats
 
         # Template the results
         ds = []
@@ -282,21 +290,29 @@ class AudioTrackListRule(Rule):
   Inputs:
     class_name: Fully-qualified class name, such as 'my.audio.TrackList1'.
     srcs: All source audio files.
+    formats: An optional list of target format MIME types to convert to.
+        If none are provided than the source will be used.
 
   Outputs:
     A .js, .json, and any number of audio files for each input file.
   """
 
-  def __init__(self, name, class_name, *args, **kwargs):
+  def __init__(self, name, class_name, formats=None, *args, **kwargs):
     """Initializes an audio track list rule.
 
     Args:
       name: Rule name.
       class_name: Fully-qualified class name, such as 'my.audio.TrackList1'.
       srcs: All source audio files.
+      formats: An optional list of target format MIME types to convert to.
+          If none are provided than the source will be used.
     """
     super(AudioTrackListRule, self).__init__(name, *args, **kwargs)
     self.class_name = class_name
+
+    self.formats = []
+    if formats:
+      self.formats.extend(formats)
 
     (json_template, js_template) = _get_tracklist_template_paths()
     self._append_dependent_paths([
@@ -333,7 +349,7 @@ class AudioTrackListRule(Rule):
       track_list.json_path = rel_json_path
       track_list.tracks = []
 
-      # TODO(benvanik): convert/etc
+      # TODO(benvanik): convert/etc to self.formats
       for src_path in self.src_paths:
         self._append_output_paths([src_path])
         track = Track()
