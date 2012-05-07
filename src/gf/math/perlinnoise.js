@@ -47,10 +47,10 @@ gf.math.PerlinNoise = function(random, opt_gridSpacing) {
    */
   this.permutations_ = new Uint8Array(256);
   for (var n = 0; n < 256; n++) {
-    var angle = 2 * Math.PI * random.next();
+    var angle = 2 * Math.PI * random.random();
     this.gradients_[n] = Math.cos(angle);
     this.gradients_[256 + n] = Math.sin(angle);
-    this.permutations_[n] = ~~(random.next() * 255);
+    this.permutations_[n] = ~~(random.random() * 255);
   }
 };
 

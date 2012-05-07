@@ -50,10 +50,10 @@ gf.math.SimplexNoise = function(random) {
    * @private
    * @type {!Uint8Array}
    */
-  this.permutations_ = new Uint8Array(256);
+  this.permutations_ = new Uint8Array(512);
   for (var n = 0; n < 256; n++) {
     this.permutations_[n] = this.permutations_[256 + n] =
-        ~~(random.next() * 255);
+        ~~(random.random() * 255);
   }
 };
 
