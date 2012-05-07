@@ -28,7 +28,9 @@ file_set(
     name='all_closure_js',
     srcs=
         glob('third_party/closure-library/closure/goog/**/*.js') +
-        glob('third_party/closure-library/third_party/closure/goog/**/*.js'))
+        glob('third_party/closure-library/third_party/closure/goog/**/*.js') +
+        ['third_party/closure-templates/soyutils_usegoog.js'])
+
 # Files required when deploying uncompiled builds
 file_set(
     name='all_uncompiled_js',
@@ -51,6 +53,11 @@ file_set(
 file_set(
     name='closure_stylesheets_jar',
     srcs=['third_party/closure-stylesheets/closure-stylesheets.jar'])
+
+# Closure Templates JAR
+file_set(
+    name='closure_templates_jar',
+    srcs=['third_party/closure-templates/SoyToJsSrcCompiler.jar'])
 
 # GLSL compiler app js
 file_set(
