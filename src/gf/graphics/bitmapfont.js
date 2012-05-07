@@ -232,7 +232,7 @@ gf.graphics.BitmapFont.prototype.prepareString = function(spriteBuffer, value,
  * @param {number} a Kerning pre-character.
  * @param {number} b Kerning character width.
  * @param {number} c Kerning post-character.
- * @param {!goog.vec.Vec4.Type} texCoords Atlas texture coordaintes.
+ * @param {!goog.vec.Vec4.Float32} texCoords Atlas texture coordaintes.
  */
 gf.graphics.BitmapFont.Glyph = function(character, a, b, c, texCoords) {
   /**
@@ -261,7 +261,7 @@ gf.graphics.BitmapFont.Glyph = function(character, a, b, c, texCoords) {
 
   /**
    * Texture source texture coordinates.
-   * @type {!goog.vec.Vec4.Type}
+   * @type {!goog.vec.Vec4.Float32}
    */
   this.texCoords = texCoords;
 };

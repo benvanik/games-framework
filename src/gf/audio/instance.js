@@ -209,7 +209,7 @@ gf.audio.PointInstance.prototype.disposeInternal = function() {
 
 /**
  * Sets the position of the point instance in space.
- * @param {!goog.vec.Vec3.Type} value Position value.
+ * @param {!goog.vec.Vec3.Float32} value Position value.
  */
 gf.audio.PointInstance.prototype.setPosition = function(value) {
   var node = this.pannerNode;

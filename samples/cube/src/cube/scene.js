@@ -104,7 +104,7 @@ cube.Scene = function(runtime, assetManager, graphicsContext) {
   /**
    * Rotation quaternion.
    * @private
-   * @type {!goog.vec.Quaternion.AnyType}
+   * @type {!goog.vec.Quaternion.Float32}
    */
   this.rotation_ = goog.vec.Quaternion.createFloat32FromValues(0, 0, 0, 1);
 
@@ -318,6 +318,6 @@ cube.Scene.tmpMat4_ = goog.vec.Mat4.createFloat32();
 /**
  * Scratch quaternion.
  * @private
- * @type {!goog.vec.Quaternion.AnyType}
+ * @type {!goog.vec.Quaternion.Float32}
  */
 cube.Scene.tmpQuat_ = goog.vec.Quaternion.createFloat32();

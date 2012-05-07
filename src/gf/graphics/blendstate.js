@@ -86,7 +86,7 @@ gf.graphics.BlendState = function() {
   /**
    * Color value used when the blend functions are one of the constant types.
    * Maps to gl.blendColor.
-   * @type {!goog.vec.Vec4.Type}
+   * @type {!goog.vec.Vec4.Float32}
    */
   this.blendColor = goog.vec.Vec4.createFloat32();
 

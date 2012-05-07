@@ -267,7 +267,7 @@ gf.graphics.SpriteBuffer.prototype.remove = function(slot) {
  * Draws the sprite buffer.
  * @param {!goog.vec.Mat4.Type} viewProjMatrix View-projection matrix.
  * @param {goog.vec.Mat4.Type=} opt_worldMatrix World matrix.
- * @param {goog.vec.Vec4.Type=} opt_color RGBA color modulator.
+ * @param {goog.vec.Vec4.Float32=} opt_color RGBA color modulator.
  */
 gf.graphics.SpriteBuffer.prototype.draw = function(viewProjMatrix,
     opt_worldMatrix, opt_color) {

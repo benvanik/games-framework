@@ -233,7 +233,7 @@ gf.net.PacketWriter.prototype.writeFloat64 = function(value) {
 
 /**
  * Writes a value to the buffer.
- * @param {!goog.vec.Vec3.Type} value Value to write.
+ * @param {!goog.vec.Vec3.Float32} value Value to write.
  */
 gf.net.PacketWriter.prototype.writeVec3 = function(value) {
   this.ensureCapacity(3 * 4);
@@ -248,7 +248,7 @@ gf.net.PacketWriter.prototype.writeVec3 = function(value) {
 
 /**
  * Writes a value to the buffer.
- * @param {!goog.vec.Vec4.Type} value Value to write.
+ * @param {!goog.vec.Vec4.Float32} value Value to write.
  */
 gf.net.PacketWriter.prototype.writeVec4 = function(value) {
   this.ensureCapacity(4 * 4);

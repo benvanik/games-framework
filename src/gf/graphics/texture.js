@@ -112,7 +112,7 @@ gf.graphics.Texture = function(graphicsContext, width, height, format) {
    * Slot texture coordinates, indexed by slot index.
    * Only initialized if slots have been setup.
    * @private
-   * @type {Array.<!goog.vec.Vec4.Type>}
+   * @type {Array.<!goog.vec.Vec4.Float32>}
    */
   this.slots_ = null;
 
@@ -334,9 +334,9 @@ gf.graphics.Texture.prototype.setupUniformSlots =
 /**
  * Gets the texture coordinates of a given slot.
  * @param {number} index Slot index.
- * @param {!goog.vec.Vec4.Type} texCoords 4-element array receiving the
+ * @param {!goog.vec.Vec4.Float32} texCoords 4-element array receiving the
  *     texture coordinates as [tu0, tv0, tu1, tv1].
- * @return {!goog.vec.Vec4.Type} texCoords to enable chaining.
+ * @return {!goog.vec.Vec4.Float32} texCoords to enable chaining.
  */
 gf.graphics.Texture.prototype.getSlotCoords = function(index, texCoords) {
   if (this.slots_) {

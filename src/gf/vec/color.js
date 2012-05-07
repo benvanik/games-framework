@@ -25,7 +25,7 @@ goog.provide('gf.vec.Color');
 
 /**
  * Converts a floating point color to a packed 32-bit number in ABGR format.
- * @param {!goog.vec.Vec4.Type} value Source color in [0-1] RGBA.
+ * @param {!goog.vec.Vec4.Float32} value Source color in [0-1] RGBA.
  * @return {number} The color in ABGR format.
  */
 gf.vec.Color.toUint32 = function(value) {

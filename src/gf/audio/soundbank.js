@@ -295,7 +295,7 @@ gf.audio.SoundBank.prototype.playAmbient = function(cue) {
 /**
  * Begins playback of the given cue as a point source.
  * @param {!gf.audio.Cue|string} cue Cue to play.
- * @param {!goog.vec.Vec3.Type} position Position in the scene.
+ * @param {!goog.vec.Vec3.Float32} position Position in the scene.
  * @return {gf.audio.PointInstance} The cue playback instance, if playing.
  */
 gf.audio.SoundBank.prototype.playPoint = function(cue, position) {

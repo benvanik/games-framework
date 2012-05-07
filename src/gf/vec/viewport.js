@@ -92,20 +92,20 @@ gf.vec.Viewport = function() {
 
   /**
    * Calculated world position.
-   * @type {!goog.vec.Vec3.Type}
+   * @type {!goog.vec.Vec3.Float32}
    */
   this.position = goog.vec.Vec3.createFloat32();
 
   /**
    * View normal.
-   * @type {!goog.vec.Vec3.Type}
+   * @type {!goog.vec.Vec3.Float32}
    */
   this.direction = goog.vec.Vec3.createFloat32();
 
   /**
    * 6 planes representing the view frustum.
    * @private
-   * @type {!Array.<!goog.vec.Vec4.Type>}
+   * @type {!Array.<!goog.vec.Vec4.Float32>}
    */
   this.frustumPlanes_ = [
     goog.vec.Vec4.createFloat32(), // L
@@ -224,7 +224,7 @@ gf.vec.Viewport.prototype.calculate = function() {
 
 /**
  * Determines whether the given point is contained within the viewport frustum.
- * @param {!goog.vec.Vec3.Type} point Point to test.
+ * @param {!goog.vec.Vec3.Float32} point Point to test.
  * @return {boolean} True if the point is within the frustum.
  */
 gf.vec.Viewport.prototype.containsPoint = function(point) {
@@ -246,7 +246,7 @@ gf.vec.Viewport.prototype.containsPoint = function(point) {
 /**
  * Determines whether the given bounding sphere is contained within the viewport
  * frustum.
- * @param {!goog.vec.Vec4.Type} sphere Sphere, as XYZR.
+ * @param {!goog.vec.Vec4.Float32} sphere Sphere, as XYZR.
  * @return {gf.vec.Containment} Containment of the given bounding box.
  */
 gf.vec.Viewport.prototype.containsBoundingSphere = function(sphere) {
@@ -366,7 +366,7 @@ gf.vec.Viewport.prototype.makeBillboard = function(mat) {
 /**
  * Temporary Vec3's.
  * @private
- * @type {!Array.<!goog.vec.Vec3.Type>}
+ * @type {!Array.<!goog.vec.Vec3.Float32>}
  */
 gf.vec.Viewport.tmpVec3_ = [
   goog.vec.Vec3.createFloat32(),

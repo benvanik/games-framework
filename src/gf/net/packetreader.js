@@ -252,7 +252,7 @@ gf.net.PacketReader.prototype.readFloat64 = function() {
 
 /**
  * Reads a value from the buffer.
- * @param {!goog.vec.Vec3.Type} value Value to receive the contents.
+ * @param {!goog.vec.Vec3.Float32} value Value to receive the contents.
  */
 gf.net.PacketReader.prototype.readVec3 = function(value) {
   goog.asserts.assert(this.offset + 3 * 4 <= this.buffer.length);
@@ -265,7 +265,7 @@ gf.net.PacketReader.prototype.readVec3 = function(value) {
 
 /**
  * Reads a value from the buffer.
- * @param {!goog.vec.Vec4.Type} value Value to receive the contents.
+ * @param {!goog.vec.Vec4.Float32} value Value to receive the contents.
  */
 gf.net.PacketReader.prototype.readVec4 = function(value) {
   goog.asserts.assert(this.offset + 4 * 4 <= this.buffer.length);

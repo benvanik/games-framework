@@ -234,7 +234,7 @@ gf.vec.Ray.intersectsSphere = function(ray, sphere) {
 
 
 /**
- * @type {!Array.<!goog.vec.Vec3.Type>}
+ * @type {!Array.<!goog.vec.Vec3.Float32>}
  * @private
  */
 gf.vec.Ray.tmpVec3_ = [

@@ -164,7 +164,7 @@ gf.vec.Octree.prototype.removeAll = function() {
 
 /**
  * Finds the value containing the given coordinate.
- * @param {!goog.vec.Vec3.Type} coord Coordinate to search.
+ * @param {!goog.vec.Vec3.Float32} coord Coordinate to search.
  * @return {gf.vec.Octree.Value} Containing value, if found.
  */
 gf.vec.Octree.prototype.find = function(coord) {
@@ -282,7 +282,7 @@ gf.vec.Octree.prototype.intersect = function(ray, opt_maxDistance) {
 /**
  * Temporary vec3s for math.
  * @private
- * @type {!Array.<!goog.vec.Vec3.Type>}
+ * @type {!Array.<!goog.vec.Vec3.Float32>}
  */
 gf.vec.Octree.tmpVec3_ = [
   goog.vec.Vec3.createFloat32(),
@@ -376,7 +376,7 @@ gf.vec.Octree.Node = function(parent, x, y, z, size) {
 /**
  * Finds the smallest node that contains the given coordinate.
  * Note that the result node may be a leaf.
- * @param {!goog.vec.Vec3.Type} coord Coordinate.
+ * @param {!goog.vec.Vec3.Float32} coord Coordinate.
  * @param {boolean} search True if the find is a search (vs. a mutate).
  * @return {!gf.vec.Octree.Node} The smallest node that contains the given
  *     coordinate.
@@ -858,7 +858,7 @@ gf.vec.Octree.Value.prototype.node;
 
 /**
  * Coordinate used for positioning the value in the octree space.
- * @type {!goog.vec.Vec3.Type}
+ * @type {!goog.vec.Vec3.Float32}
  */
 gf.vec.Octree.Value.prototype.coord;
 

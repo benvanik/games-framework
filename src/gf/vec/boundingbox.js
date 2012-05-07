@@ -29,17 +29,17 @@ goog.require('goog.vec.Vec3');
  * the two extra allocations.
  *
  * @constructor
- * @param {!goog.vec.Vec3.Type} min Minimum point.
- * @param {!goog.vec.Vec3.Type} max Maximum point.
+ * @param {!goog.vec.Vec3.Float32} min Minimum point.
+ * @param {!goog.vec.Vec3.Float32} max Maximum point.
  */
 gf.vec.BoundingBox = function(min, max) {
   /**
-   * @type {!goog.vec.Vec3.Type}
+   * @type {!goog.vec.Vec3.Float32}
    */
   this.min = min;
 
   /**
-   * @type {!goog.vec.Vec3.Type}
+   * @type {!goog.vec.Vec3.Float32}
    */
   this.max = max;
 };
@@ -234,7 +234,7 @@ gf.vec.BoundingBox.getCenter = function(aabb, resultVec) {
 /**
  * Determines whether the given point is contained within the bounding box.
  * @param {!gf.vec.BoundingBox} aabb AABB.
- * @param {!goog.vec.Vec3.Type} vec Point to test.
+ * @param {!goog.vec.Vec3.Float32} vec Point to test.
  * @return {boolean} True if the point is within the AABB.
  */
 gf.vec.BoundingBox.contains = function(aabb, vec) {
@@ -403,7 +403,7 @@ gf.vec.BoundingBox.intersectsRay = function(aabb, ray, opt_enter, opt_exit) {
 /**
  * Temporary vec3s for math.
  * @private
- * @type {!Array.<!goog.vec.Vec3.Type>}
+ * @type {!Array.<!goog.vec.Vec3.Float32>}
  */
 gf.vec.BoundingBox.tmpVec3_ = [
   goog.vec.Vec3.createFloat32(),

@@ -89,7 +89,7 @@ gf.audio.Listener.prototype.update = function(opt_inverseViewMatrix) {
 /**
  * Temporary Vec3's.
  * @private
- * @type {!Array.<!goog.vec.Vec3.Type>}
+ * @type {!Array.<!goog.vec.Vec3.Float32>}
  */
 gf.audio.Listener.tmpVec3_ = [
   goog.vec.Vec3.createFloat32(),
