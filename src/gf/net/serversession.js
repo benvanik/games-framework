@@ -68,6 +68,12 @@ gf.net.ServerSession = function(socket, protocolVersion, authToken,
   this.socket = socket;
 
   /**
+   * Server information.
+   * @type {!gf.net.ServerInfo}
+   */
+  this.serverInfo = serverInfo;
+
+  /**
    * Whether the server is currently listening for new connections.
    * @private
    * @type {boolean}
@@ -152,8 +158,20 @@ gf.net.ServerSession.prototype.unready = function() {
  * @param {!gf.net.Socket} socket Newly connected socket.
  */
 gf.net.ServerSession.prototype.handleConnect_ = function(socket) {
-  // new socket connected, setup user/etc
-  gf.log.activePort = socket.endpoint;
+  if (!gf.NODE) {
+    gf.log.activePort = socket.endpoint;
+  }
+
+  // Prevent new connections when full (or potentially full)
+  var totalUsers = this.joiningSockets_.length + this.users.length;
+  if (totalUsers + 1 > this.serverInfo.maximumUsers) {
+    var disconnectData = gf.net.packets.Disconnect.createData(
+        gf.net.DisconnectReason.SERVER_FULL);
+    if (disconnectData) {
+      socket.write(disconnectData);
+    }
+    return;
+  }
 
   // Place socket in joining pool
   // The socket will be polled in the normal flow

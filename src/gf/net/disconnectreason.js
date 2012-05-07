@@ -56,7 +56,12 @@ gf.net.DisconnectReason = {
   /**
    * Banned by an admin.
    */
-  BANNED: 6
+  BANNED: 6,
+
+  /**
+   * Server over capacity.
+   */
+  SERVER_FULL: 7
 };
 
 
@@ -81,6 +86,8 @@ gf.net.DisconnectReason.toString = function(value) {
       return 'kicked by console';
     case gf.net.DisconnectReason.BANNED:
       return 'banned';
+    case gf.net.DisconnectReason.SERVER_FULL:
+      return 'server full';
     default:
       return 'unknown';
   }

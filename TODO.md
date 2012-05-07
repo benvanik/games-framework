@@ -3,8 +3,6 @@ Before Code
 
 * split readmes/setup/etc
 
-* updated mouse lock API
-
 * root
     * merge render/update frame
         * add 'hasFocus' to renderframe
@@ -50,6 +48,7 @@ Graphics
 Input
 ================================================================================
 
+* updated mouse lock API
 * mouse wheel on mac -- rate limit
     * goog.events.MouseWheelHandler
 * mouse lock sensitivity/etc
