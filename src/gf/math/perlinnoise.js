@@ -25,7 +25,7 @@ goog.provide('gf.math.PerlinNoise');
 /**
  * Simple perlin noise generator.
  * @constructor
- * @param {!gf.math.Random} random PRNG.
+ * @param {!gf.math.RandomSource} random PRNG.
  * @param {number=} opt_gridSpacing Grid spacing. Higher values give coarser
  *     textures.
  */
@@ -46,7 +46,6 @@ gf.math.PerlinNoise = function(random, opt_gridSpacing) {
    * @type {!Uint8Array}
    */
   this.permutations_ = new Uint8Array(256);
-
   for (var n = 0; n < 256; n++) {
     var angle = 2 * Math.PI * random.next();
     this.gradients_[n] = Math.cos(angle);

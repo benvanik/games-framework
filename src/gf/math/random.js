@@ -25,6 +25,22 @@
  */
 
 goog.provide('gf.math.Random');
+goog.provide('gf.math.RandomSource');
+
+
+
+/**
+ * A source of random numbers.
+ * @interface
+ */
+gf.math.RandomSource = function() {};
+
+
+/**
+ * Generates a new 32-bit floating point random number.
+ * @return {number} A random number in [0-1].
+ */
+gf.math.RandomSource.prototype.random = goog.abstractMethod;
 
 
 
@@ -35,6 +51,7 @@ goog.provide('gf.math.Random');
  * http://code.google.com/p/chinesechessjam/source/browse/trunk/CCJ/src/de/polygonal/math/PM_PRNG.as
  *
  * @constructor
+ * @implements {gf.math.RandomSource}
  * @param {number=} opt_seed Optional seed value.
  */
 gf.math.Random = function(opt_seed) {
@@ -116,6 +133,14 @@ gf.math.Random.prototype.next = function() {
   this.s1_ = this.s2_;
   return this.s2_ = t - (this.c_ = t | 0);
 };
+
+
+/**
+ * Generates a new 32-bit floating point random number.
+ * Alias to {@see #next} for compatibility with the system Math type.
+ * @return {number} A random number in [0-1].
+ */
+gf.math.Random.prototype.random = gf.math.Random.prototype.next;
 
 
 /**

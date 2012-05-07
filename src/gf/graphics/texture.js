@@ -23,6 +23,7 @@ goog.provide('gf.graphics.Texture');
 goog.require('gf.graphics.ExtensionName');
 goog.require('gf.graphics.Resource');
 goog.require('goog.asserts');
+goog.require('goog.vec.Vec4');
 goog.require('goog.webgl');
 
 

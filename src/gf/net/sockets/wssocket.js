@@ -19,7 +19,6 @@ goog.provide('gf.net.sockets.WsSocket');
 goog.require('gf.log');
 goog.require('gf.net.Packet');
 goog.require('gf.net.Socket');
-goog.require('gf.util');
 goog.require('gf.util.node');
 
 
@@ -66,7 +65,7 @@ gf.net.sockets.WsSocket = function(endpoint, handle) {
   /**
    * Options used when writting messages to WS.
    * @private
-   * @type {!Object}
+   * @type {!gf.net.sockets.WsSocket.Options_}
    */
   this.writeOptions_ = {
     'binary': true,
@@ -79,6 +78,16 @@ gf.net.sockets.WsSocket = function(endpoint, handle) {
   this.handle_.addListener('message', this.boundHandleMessage_);
 };
 goog.inherits(gf.net.sockets.WsSocket, gf.net.Socket);
+
+
+/**
+ * @private
+ * @typedef {{
+ *     binary: (boolean|undefined),
+ *     mask: (boolean|undefined)
+ * }}
+ */
+gf.net.sockets.WsSocket.Options_;
 
 
 /**

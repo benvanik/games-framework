@@ -30,14 +30,14 @@ goog.provide('gf.vec.Quaternion');
  * Sets the given quaternion to a value representing the Euler angles using
  * the ZYX convention (commonly referred to as yaw-pitch-roll).
  *
- * @param {goog.vec.Quaternion.QuaternionLike} quat The quaternion.
+ * @param {!goog.vec.Quaternion.AnyType} quat The quaternion.
  * @param {number} theta1 The angle of rotation around the Z axis in radians
  *     (also known as yaw).
  * @param {number} theta2 The angle of rotation around the Y axis in radians
  *     (also known as pitch).
  * @param {number} theta3 The angle of rotation around the Z axis in radians
  *     (also known as roll).
- * @return {!goog.vec.Quaternion.QuaternionLike} Return quat so that operations
+ * @return {!goog.vec.Quaternion.AnyType} Return quat so that operations
  *    can be chained.
  */
 gf.vec.Quaternion.makeEulerZYX = function(quat, theta1, theta2, theta3) {
@@ -51,7 +51,7 @@ gf.vec.Quaternion.makeEulerZYX = function(quat, theta1, theta2, theta3) {
   quat[1] = (s1 * c2) * c3 - (c1 * s2) * s3;
   quat[2] = (c1 * c2) * s3 - (s1 * s2) * c3;
   quat[3] = (c1 * c2) * c3 + (s1 * s2) * s3;
-  return /** @type {!goog.vec.Quaternion.QuaternionLike} */ (quat);
+  return /** @type {!goog.vec.Quaternion.AnyType} */ (quat);
 };
 
 
@@ -59,9 +59,9 @@ gf.vec.Quaternion.makeEulerZYX = function(quat, theta1, theta2, theta3) {
  * Transforms the given vector with the given quaternion storing the resulting
  * transformed vector into resultVec.
  *
- * @param {goog.vec.ArrayType} quat The source quaternion.
- * @param {goog.vec.Vec3.Vec3Like} vec The 3 element vector to transform.
- * @param {goog.vec.Vec3.Vec3Like} resultVec The 3 element vector to
+ * @param {!goog.vec.ArrayType} quat The source quaternion.
+ * @param {!goog.vec.Vec3.Vec3Like} vec The 3 element vector to transform.
+ * @param {!goog.vec.Vec3.Vec3Like} resultVec The 3 element vector to
  *     receive the results (may be vec).
  * @return {!goog.vec.Vec3.Vec3Like} Return resultVec so that operations can be
  *     chained together.
