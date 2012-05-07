@@ -23,6 +23,9 @@
  *
  * Many modifications have been made for performance.
  *
+ * TODO(benvanik): on nodejs, build a custom native module that does the
+ *     noise, as it should be much faster
+ *
  * @author benvanik@google.com (Ben Vanik)
  */
 
