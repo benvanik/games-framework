@@ -20,6 +20,18 @@
  * @externs
  */
 
+// TODO(benvanik): swap for the new API when Chrome gets it
+// /** @return {Element} */
+// Document.prototype.pointerLockElement = function() {};
+// /** @return {Element} */
+// Document.prototype.mozPointerLockElement = function() {};
+// /** @return {Element} */
+// Document.prototype.webkitPointerLockElement = function() {};
+// Document.prototype.exitPointerLock = function() {};
+// Element.prototype.requestPointerLock = function() {};
+// Element.prototype.mozRequestPointerLock = function() {};
+// Element.prototype.webkitRequestPointerLock = function() {};
+
 /** @constructor */
 function PointerLock() {}
 /** @type {boolean} */
