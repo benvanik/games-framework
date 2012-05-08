@@ -17,7 +17,7 @@ import re
 import anvil.async
 from anvil.context import RuleContext
 from anvil.rule import Rule, build_rule
-from anvil.task import Task, MakoTemplateTask
+from anvil.task import Task, ExecutableTask, MakoTemplateTask
 import anvil.util
 
 
@@ -33,6 +33,14 @@ def _get_tracklist_template_paths():
   json_template = os.path.join(template_path, 'tracklist_json.mako')
   js_template = os.path.join(template_path, 'tracklist_js.mako')
   return (json_template, js_template)
+
+
+_MIME_EXTS = {
+    'audio/wav': '.wav',
+    'audio/mpeg': '.mp3',
+    'audio/mp4': '.m4a',
+    'audio/ogg': '.ogg',
+    }
 
 
 class DataSource(object):
@@ -54,6 +62,47 @@ class Track(object):
   pass
 class TrackList(object):
   pass
+
+
+class AudioRuleContext(RuleContext):
+  """Base type for audio-related rule contexts.
+  Provides methods for common audio utilities.
+  """
+  pass
+
+  def _encode_audio_file(self, src_path, out_path, target_type):
+    """Begins a task to encode an audio file to the specified format.
+
+    Args:
+      src_path: Source audio file path. Generally .wav.
+      out_path: Output audio file path.
+      target_type: Target MIME type.
+
+    Returns:
+      A deferred for the task or None if the given conversion cannot be
+      completed.
+    """
+    if target_type == 'audio/mpeg':
+      executable_name = 'lame'
+      args = [
+        '--quiet',
+        src_path,
+        out_path]
+    elif target_type == 'audio/ogg':
+      executable_name = 'oggenc'
+      args = [
+        '-Q',
+        '-o', out_path,
+        src_path]
+    elif target_type == 'audio/mp4':
+      # TODO(benvanik): support MP4 conversion somehow
+      return None
+    else:
+      # Copy
+      return None
+
+    return self._run_task_async(ExecutableTask(
+            self.build_env, executable_name, call_args=args))
 
 
 @build_rule('audio_soundbank')
@@ -99,7 +148,7 @@ class AudioSoundbankRule(Rule):
         json_template,
         js_template])
 
-  class _Context(RuleContext):
+  class _Context(AudioRuleContext):
     def begin(self):
       super(AudioSoundbankRule._Context, self).begin()
 
@@ -137,16 +186,21 @@ class AudioSoundbankRule(Rule):
 
       # TODO(benvanik): run over sources and convert to wav where required
 
-      def _callback(cues):
-        sound_bank.cues.extend(cues)
+      # Prepare conversion map
+      # This will hold information about the conversions that will take place
+      conversions = []
 
-        source = DataSource()
-        source.type = 'audio/wav'
-        source.path = os.path.basename(wav_path)
-        source.size = os.path.getsize(wav_path)
-        sound_bank.data_sources.append(source)
-
-        # TODO(benvanik): convert wav to self.formats
+      def _callback_post_convert(results):
+        # Add sources for all converted files
+        for i, conversion in enumerate(conversions):
+          if results[i][0]:
+            (format, fmt_path) = conversion
+            source = DataSource()
+            source.type = format
+            source.path = os.path.basename(fmt_path)
+            source.size = os.path.getsize(fmt_path)
+            sound_bank.data_sources.append(source)
+            self._append_output_paths([fmt_path])
 
         # Template the results
         ds = []
@@ -163,12 +217,37 @@ class AudioSoundbankRule(Rule):
                 })))
         self._chain(ds)
 
+      def _callback_post_merge(cues):
+        sound_bank.cues.extend(cues)
+
+        # Setup default source (the wav)
+        source = DataSource()
+        source.type = 'audio/wav'
+        source.path = os.path.basename(wav_path)
+        source.size = os.path.getsize(wav_path)
+        sound_bank.data_sources.append(source)
+
+        # Convert wav to self.formats
+        dc = []
+        for i, format in enumerate(self.rule.formats):
+          fmt_path = os.path.splitext(wav_path)[0] + _MIME_EXTS[format]
+          d = self._encode_audio_file(wav_path, fmt_path, format)
+          if d:
+            conversions.append((format, fmt_path))
+            dc.append(d)
+        if len(dc):
+          d = anvil.async.gather_deferreds(dc)
+          d.add_callback_fn(_callback_post_convert)
+          self._chain_errback(d)
+        else:
+          _callback_post_convert([])
+
       # Merge all wav files into one, return the list of cues for further
       # processing in the callback
       if len(self.src_paths):
         d = self._run_task_async(_MergeWavesTask(
             self.build_env, self.src_paths, wav_path))
-        d.add_callback_fn(_callback)
+        d.add_callback_fn(_callback_post_merge)
         self._chain_errback(d)
       else:
         _callback([])
@@ -319,7 +398,7 @@ class AudioTrackListRule(Rule):
         json_template,
         js_template])
 
-  class _Context(RuleContext):
+  class _Context(AudioRuleContext):
     def begin(self):
       super(AudioTrackListRule._Context, self).begin()
 
