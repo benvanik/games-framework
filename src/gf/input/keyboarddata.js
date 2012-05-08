@@ -85,11 +85,19 @@ gf.input.KeyboardData = function() {
   this.keysUp_ = {};
 
   /**
-   * If there is anything that could need clearing.
+   * If there is anything in {@see #keys_} that could need clearing.
    * @private
    * @type {number}
    */
   this.keyCount_ = 0;
+
+  /**
+   * If there is anything in {@see #keysUp_} or {@see #keysDown_} that could
+   * need clearing.
+   * @private
+   * @type {number}
+   */
+  this.keyDeltaCount_ = 0;
 };
 
 
@@ -191,6 +199,7 @@ gf.input.KeyboardData.prototype.clone = function() {
   clone.keysUp_ = /** @type {!Object.<boolean>} */ (
       goog.object.clone(this.keysUp_));
   clone.keyCount_ = this.keyCount_;
+  clone.keyDeltaCount_ = this.keyDeltaCount_;
   return clone;
 };
 
@@ -205,10 +214,13 @@ gf.input.KeyboardData.prototype.reset = function() {
   this.metaKey = false;
   if (this.keyCount_) {
     goog.object.clear(this.keys_);
+    this.keyCount_ = 0;
+  }
+  if (this.keyDeltaCount_) {
     goog.object.clear(this.keysDown_);
     goog.object.clear(this.keysUp_);
+    this.keyDeltaCount_ = 0;
   }
-  this.keyCount_ = 0;
 };
 
 
@@ -216,11 +228,11 @@ gf.input.KeyboardData.prototype.reset = function() {
  * Resets deltas after the data has been polled.
  */
 gf.input.KeyboardData.prototype.resetDeltas = function() {
-  if (this.keyCount_) {
+  if (this.keyDeltaCount_) {
     goog.object.clear(this.keysDown_);
     goog.object.clear(this.keysUp_);
   }
-  this.keyCount_ = 0;
+  this.keyDeltaCount_ = 0;
 };
 
 
@@ -259,10 +271,12 @@ gf.input.KeyboardData.prototype.update = function(e, isDown) {
     this.keys_[keyCode] = true;
     this.keysDown_[keyCode] = true;
     this.keyCount_++;
+    this.keyDeltaCount_++;
   } else {
     delete this.keys_[keyCode];
     this.keysUp_[keyCode] = true;
     this.keyCount_--;
+    this.keyDeltaCount_++;
   }
 
   switch (keyCode) {
