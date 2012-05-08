@@ -162,17 +162,6 @@ gf.net.ServerSession.prototype.handleConnect_ = function(socket) {
     gf.log.activePort = socket.endpoint;
   }
 
-  // Prevent new connections when full (or potentially full)
-  var totalUsers = this.joiningSockets_.length + this.users.length;
-  if (totalUsers + 1 > this.serverInfo.maximumUsers) {
-    var disconnectData = gf.net.packets.Disconnect.createData(
-        gf.net.DisconnectReason.SERVER_FULL);
-    if (disconnectData) {
-      socket.write(disconnectData);
-    }
-    return;
-  }
-
   // Place socket in joining pool
   // The socket will be polled in the normal flow
   this.joiningSockets_.push(socket);
@@ -327,6 +316,14 @@ gf.net.ServerSession.prototype.pollJoiningSockets_ = function() {
         if (packetType == gf.net.packets.Connect.ID) {
           // Connecting! Verify they're good and add them!
           var connect = gf.net.packets.Connect.read(reader);
+
+          // Prevent new connections when full (or potentially full)
+          // Note that we do this check here instead of in socket connect so
+          // that we can send a good message back to the user
+          if (this.users.length + 1 > this.serverInfo.maximumUsers) {
+            deny = true;
+            reason = gf.net.DisconnectReason.SERVER_FULL;
+          }
 
           // Verify protocols
           if (!deny) {

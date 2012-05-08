@@ -138,7 +138,7 @@ gf.net.sockets.WsSocket.prototype.close = function() {
   this.handle_.removeListener('error', this.boundHandleError_);
   this.handle_.removeListener('close', this.boundHandleClose_);
   this.handle_.removeListener('message', this.boundHandleMessage_);
-  this.handle_.close(0, '');
+  this.handle_.close(1000, '');
 
   goog.base(this, 'close');
 };

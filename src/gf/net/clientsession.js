@@ -65,6 +65,12 @@ gf.net.ClientSession = function(socket, protocolVersion, authToken, userInfo) {
   this.registerDisposable(this.socket);
 
   /**
+   * The reason the session was disconnected.
+   * @type {gf.net.DisconnectReason}
+   */
+  this.disconnectReason = gf.net.DisconnectReason.USER;
+
+  /**
    * A deferred fulfilled when the connect ack is received.
    * @private
    * @type {!goog.async.Deferred}
@@ -117,7 +123,8 @@ gf.net.ClientSession.prototype.getLocalUser = function() {
  * Begins waiting for a connect handshake.
  * @return {!goog.async.Deferred} A deferred fulfilled when a connection has
  *     been established. Successful callbacks will receive the client session
- *     as the only argument.
+ *     as the only argument. Errbacks receive a {@see gf.net.DisconnectReason}
+ *     describing why the connection failed.
  */
 gf.net.ClientSession.prototype.waitForConnect = function() {
   return this.connectDeferred_;
@@ -198,7 +205,7 @@ gf.net.ClientSession.prototype.poll = function() {
 
   // Check for disconnection
   if (this.socket.state == gf.net.Socket.State.CLOSED) {
-    this.setDisconnected_();
+    this.setDisconnected_(gf.net.DisconnectReason.TIMEOUT);
   }
 };
 
@@ -377,7 +384,7 @@ gf.net.ClientSession.prototype.handleDisconnect_ = function(packet, packetType,
   }
 
   gf.log.write('disconnected by server', disconnect.reason);
-  this.setDisconnected_();
+  this.setDisconnected_(disconnect.reason);
 
   return true;
 };
@@ -386,15 +393,22 @@ gf.net.ClientSession.prototype.handleDisconnect_ = function(packet, packetType,
 /**
  * Sets the disconnected state.
  * @private
+ * @param {gf.net.DisconnectReason} reason Reason for disconnection.
  */
-gf.net.ClientSession.prototype.setDisconnected_ = function() {
+gf.net.ClientSession.prototype.setDisconnected_ = function(reason) {
   this.state = gf.net.SessionState.DISCONNECTED;
+  this.disconnectReason = reason;
 
   goog.dispose(this.socket);
 
   // Notify services
   for (var n = 0; n < this.services.length; n++) {
     this.services[n].disconnected();
+  }
+
+  // Error out connect waiters
+  if (!this.connectDeferred_.hasFired()) {
+    this.connectDeferred_.errback(this.disconnectReason);
   }
 };
 
@@ -406,7 +420,7 @@ gf.net.ClientSession.prototype.disconnect = function() {
   this.send(gf.net.packets.Disconnect.createData(
       gf.net.DisconnectReason.USER));
   this.socket.flushWriteQueue(true);
-  this.setDisconnected_();
+  this.setDisconnected_(gf.net.DisconnectReason.USER);
 };
 
 
@@ -421,7 +435,7 @@ gf.net.ClientSession.prototype.send = function(data) {
 
   // Check for disconnection
   if (this.socket.state == gf.net.Socket.State.CLOSED) {
-    this.setDisconnected_();
+    this.setDisconnected_(gf.net.DisconnectReason.TIMEOUT);
     return;
   }
 
