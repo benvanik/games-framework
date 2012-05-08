@@ -62,7 +62,7 @@ gf.graphics.BitmapFont = function(graphicsContext, atlas, lineHeight,
    * Horizontal spacing between characters.
    * @type {number}
    */
-  this.charSpacing = 2;
+  this.charSpacing = 0;
 
   /**
    * All glyphs, indexed by character code.
