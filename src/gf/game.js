@@ -119,8 +119,6 @@ gf.Game = function(launchOptions, opt_clock) {
    * @type {boolean}
    */
   this.ticking_ = false;
-
-  this.startTicking();
 };
 goog.inherits(gf.Game, gf.Runtime);
 

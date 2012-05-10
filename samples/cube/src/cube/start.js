@@ -39,6 +39,7 @@ cube.start = function(uri, doc) {
   var dom = new goog.dom.DomHelper(doc);
   var launchOptions = new gf.LaunchOptions(uri);
   var game = new cube.CubeDemo(launchOptions, dom);
+  game.startTicking();
 
   // HACK: debug root - useful for inspecting the game state
   if (goog.DEBUG) {
