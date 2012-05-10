@@ -68,6 +68,13 @@ gf.input.MouseSource = function(inputElement) {
   this.isLocked = false;
 
   /**
+   * Whether the mouse was locked before being disabled.
+   * @private
+   * @type {boolean}
+   */
+  this.wasLocked_ = false;
+
+  /**
    * Whether simulating drag.
    * This is needed to switch event mode from inputElement to document so that
    * we still get mouse move/up events even once the cursor leaves the window.
@@ -317,4 +324,26 @@ gf.input.MouseSource.prototype.poll = function() {
  */
 gf.input.MouseSource.prototype.resetDeltas = function() {
   this.data_.resetDeltas();
+};
+
+
+/**
+ * @override
+ */
+gf.input.MouseSource.prototype.setEnabled = function(value) {
+  if (value == this.enabled) {
+    return;
+  }
+  goog.base(this, 'setEnabled', value);
+  if (!value) {
+    if (this.isLocked) {
+      this.wasLocked_ = true;
+      this.unlock();
+    }
+  } else {
+    if (this.wasLocked_) {
+      this.wasLocked_ = false;
+      this.lock();
+    }
+  }
 };
