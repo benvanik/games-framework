@@ -62,6 +62,7 @@ gf.audio.AudioManager = function(runtime, dom) {
    * @type {!gf.audio.Listener}
    */
   this.listener = new gf.audio.Listener(this.context);
+  this.registerDisposable(this.listener);
 
   /**
    * All loaded sound banks.
@@ -146,4 +147,14 @@ gf.audio.AudioManager.prototype.unloadTrackList = function(trackList) {
 gf.audio.AudioManager.prototype.unloadAllTrackLists = function() {
   goog.array.forEach(this.trackLists_, goog.dispose);
   this.trackLists_.length = 0;
+};
+
+
+/**
+ * Sets the muted state of the audio manager.
+ * @param {boolean} value True to mute audio playback.
+ */
+gf.audio.AudioManager.prototype.setMuted = function(value) {
+  // TODO(benvanik): support muting - either by stopping all audio on all
+  //     banks and tracklists or by muting with an AudioGainNode
 };

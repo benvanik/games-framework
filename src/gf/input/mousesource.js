@@ -28,6 +28,7 @@ goog.require('goog.asserts');
 goog.require('goog.dom');
 goog.require('goog.events.BrowserEvent');
 goog.require('goog.events.EventType');
+goog.require('goog.math');
 goog.require('goog.userAgent');
 
 
@@ -60,6 +61,13 @@ gf.input.MouseSource = function(inputElement) {
       window.navigator.pointer ||
       window.navigator.mozPointer ||
       window.navigator.webkitPointer);
+
+  /**
+   * Mouse sensitivity scalar.
+   * @private
+   * @type {boolean}
+   */
+  this.sensitivity_ = 1;
 
   /**
    * Whether the mouse is currently locked.
@@ -180,7 +188,7 @@ gf.input.MouseSource.prototype.unlock = function() {
 gf.input.MouseSource.prototype.handleMouseDown_ = function(e) {
   e.preventDefault();
 
-  this.data_.update(e);
+  this.data_.update(e, this.sensitivity_);
 
   var button = /** @type {goog.events.BrowserEvent.MouseButton} */ (e.button);
   switch (button) {
@@ -221,7 +229,7 @@ gf.input.MouseSource.prototype.handleMouseDown_ = function(e) {
 gf.input.MouseSource.prototype.handleMouseUp_ = function(e) {
   e.preventDefault();
 
-  this.data_.update(e);
+  this.data_.update(e, this.sensitivity_);
 
   var button = /** @type {goog.events.BrowserEvent.MouseButton} */ (e.button);
   switch (button) {
@@ -260,7 +268,7 @@ gf.input.MouseSource.prototype.handleMouseUp_ = function(e) {
 gf.input.MouseSource.prototype.handleMouseMove_ = function(e) {
   e.preventDefault();
 
-  this.data_.update(e);
+  this.data_.update(e, this.sensitivity_);
 };
 
 
@@ -346,4 +354,14 @@ gf.input.MouseSource.prototype.setEnabled = function(value) {
       this.lock();
     }
   }
+};
+
+
+/**
+ * Sets the sensitivity scalar of the mouse.
+ * @param {number} value Value, where 1 = default and 1+ = more sensitive.
+ */
+gf.input.MouseSource.prototype.setSensitivity = function(value) {
+  value = goog.math.clamp(value, 0.1, 10);
+  this.sensitivity_ = value;
 };

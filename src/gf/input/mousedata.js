@@ -148,8 +148,9 @@ gf.input.MouseData.prototype.resetDeltas = function() {
 /**
  * Updates mouse data with the latest from the given event.
  * @param {!goog.events.BrowserEvent} e Event.
+ * @param {number} sensitivity Sensitivity scalar.
  */
-gf.input.MouseData.prototype.update = function(e) {
+gf.input.MouseData.prototype.update = function(e, sensitivity) {
   var browserEvent = e.getBrowserEvent();
 
   var screenX = e.screenX;
@@ -174,6 +175,6 @@ gf.input.MouseData.prototype.update = function(e) {
   this.screenY = screenY;
   this.clientX = e.clientX;
   this.clientY = e.clientY;
-  this.dx += dx;
-  this.dy += dy;
+  this.dx += dx * sensitivity;
+  this.dy += dy * sensitivity;
 };
