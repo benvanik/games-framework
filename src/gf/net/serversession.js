@@ -31,6 +31,7 @@ goog.require('gf.net.packets.Disconnect');
 goog.require('gf.net.packets.Ping');
 goog.require('gf.net.packets.Pong');
 goog.require('gf.net.packets.ServerState');
+goog.require('gf.net.packets.UpdateUserInfo');
 goog.require('gf.net.packets.UserConnect');
 goog.require('gf.net.packets.UserDisconnect');
 goog.require('gf.net.packets.UserStatistics');
@@ -398,6 +399,9 @@ gf.net.ServerSession.prototype.setupNetworking_ = function() {
       gf.net.packets.Ping.ID,
       this.handlePing_, this);
   this.packetSwitch.register(
+      gf.net.packets.UpdateUserInfo.ID,
+      this.handleUpdateUserInfo_, this);
+  this.packetSwitch.register(
       gf.net.packets.Disconnect.ID,
       this.handleDisconnect_, this);
 };
@@ -440,6 +444,43 @@ gf.net.ServerSession.prototype.handlePing_ = function(packet, packetType,
       (serverTime * 1000) | 0,
       ping.clientTime,
       userStatistics), user);
+
+  return true;
+};
+
+
+/**
+ * Handles user update request packets.
+ * @private
+ * @param {!gf.net.Packet} packet Packet.
+ * @param {number} packetType Packet type ID.
+ * @param {!gf.net.PacketReader} reader Packet reader.
+ * @return {boolean} True if the packet was handled successfully.
+ */
+gf.net.ServerSession.prototype.handleUpdateUserInfo_ = function(packet,
+    packetType, reader) {
+  var updateUserInfo = gf.net.packets.UpdateUserInfo.read(reader);
+  if (!updateUserInfo) {
+    return false;
+  }
+
+  var user = this.getUserBySessionId(updateUserInfo.sessionId);
+  if (!user) {
+    return true;
+  }
+  if (user != packet.user) {
+    // Can only change self
+    // TODO(benvanik): allow admins to force changes
+    return false;
+  }
+
+  // Update
+  this.updateUser(user, updateUserInfo.info);
+
+  // Broadcast update - always send the sanitized version
+  this.send(gf.net.packets.UpdateUserInfo.createData(
+      user.sessionId,
+      user.info));
 
   return true;
 };

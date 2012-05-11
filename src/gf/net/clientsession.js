@@ -30,6 +30,7 @@ goog.require('gf.net.packets.Disconnect');
 goog.require('gf.net.packets.Ping');
 goog.require('gf.net.packets.Pong');
 goog.require('gf.net.packets.ServerState');
+goog.require('gf.net.packets.UpdateUserInfo');
 goog.require('gf.net.packets.UserConnect');
 goog.require('gf.net.packets.UserDisconnect');
 goog.require('goog.asserts');
@@ -116,6 +117,18 @@ gf.net.ClientSession.prototype.getLocalUser = function() {
     goog.asserts.assert(this.localUser_);
   }
   return this.localUser_;
+};
+
+
+/**
+ * Updates the user information and synchronizes with the server.
+ * @param {!gf.net.UserInfo} userInfo New user information.
+ */
+gf.net.ClientSession.prototype.updateUserInfo = function(userInfo) {
+  // Server will sanitize better than we can
+  this.send(gf.net.packets.UpdateUserInfo.createData(
+      this.id,
+      userInfo));
 };
 
 
@@ -227,6 +240,9 @@ gf.net.ClientSession.prototype.setupNetworking_ = function() {
   this.packetSwitch.register(
       gf.net.packets.UserDisconnect.ID,
       this.handleUserDisconnect_, this);
+  this.packetSwitch.register(
+      gf.net.packets.UpdateUserInfo.ID,
+      this.handleUpdateUserInfo_, this);
   this.packetSwitch.register(
       gf.net.packets.Connect.ID,
       this.handleConnect_, this);
@@ -340,6 +356,33 @@ gf.net.ClientSession.prototype.handleUserDisconnect_ = function(packet,
   // Remove from listing
   user.disconnectReason = userDisconnect.reason;
   this.removeUser(user);
+
+  return true;
+};
+
+
+/**
+ * Handles user update notification packets.
+ * @private
+ * @param {!gf.net.Packet} packet Packet.
+ * @param {number} packetType Packet type ID.
+ * @param {!gf.net.PacketReader} reader Packet reader.
+ * @return {boolean} True if the packet was handled successfully.
+ */
+gf.net.ClientSession.prototype.handleUpdateUserInfo_ = function(packet,
+    packetType, reader) {
+  var updateUserInfo = gf.net.packets.UpdateUserInfo.read(reader);
+  if (!updateUserInfo) {
+    return false;
+  }
+
+  var user = this.getUserBySessionId(updateUserInfo.sessionId);
+  if (!user) {
+    return true;
+  }
+
+  // Update
+  this.updateUser(user, updateUserInfo.info);
 
   return true;
 };

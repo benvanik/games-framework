@@ -73,3 +73,10 @@ gf.net.NetworkService.prototype.userConnected = goog.nullFunction;
  * @param {!gf.net.User} user User.
  */
 gf.net.NetworkService.prototype.userDisconnected = goog.nullFunction;
+
+
+/**
+ * Handles users that have updated their information.
+ * @param {!gf.net.User} user User.
+ */
+gf.net.NetworkService.prototype.userUpdated = goog.nullFunction;

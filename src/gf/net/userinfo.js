@@ -17,6 +17,7 @@
 goog.provide('gf.net.UserInfo');
 
 goog.require('gf.net.AuthType');
+goog.require('goog.string');
 
 
 
@@ -67,4 +68,19 @@ gf.net.UserInfo.prototype.clone = function() {
  */
 gf.net.UserInfo.prototype.toString = function() {
   return '[user]';
+};
+
+
+/**
+ * Sanitizes an input user name.
+ * @param {string} value User name.
+ * @return {string} Sanitized user name.
+ */
+gf.net.UserInfo.sanitizeDisplayName = function(value) {
+  value = goog.string.normalizeSpaces(goog.string.normalizeWhitespace(
+      goog.string.trim(value)));
+  if (!value.length) {
+    return 'User';
+  }
+  return value;
 };

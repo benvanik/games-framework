@@ -20,6 +20,7 @@ goog.require('gf.net.AuthProvider');
 goog.require('gf.net.PacketSwitch');
 goog.require('gf.net.ServerInfo');
 goog.require('gf.net.SessionState');
+goog.require('gf.net.UserInfo');
 goog.require('gf.util.Clock');
 goog.require('goog.Disposable');
 goog.require('goog.array');
@@ -174,6 +175,25 @@ gf.net.Session.prototype.removeUser = function(user) {
   // Notify services
   for (var n = 0; n < this.services.length; n++) {
     this.services[n].userDisconnected(user);
+  }
+};
+
+
+/**
+ * Updates a user's information.
+ * @protected
+ * @param {!gf.net.User} user User to update.
+ * @param {!gf.net.UserInfo} userInfo New user information.
+ */
+gf.net.Session.prototype.updateUser = function(user, userInfo) {
+  // Other fields don't make sense (already authed, etc)
+  var displayName = userInfo.displayName;
+  displayName = gf.net.UserInfo.sanitizeDisplayName(displayName);
+  user.info.displayName = displayName;
+
+  // Notify services
+  for (var n = 0; n < this.services.length; n++) {
+    this.services[n].userUpdated(user);
   }
 };
 

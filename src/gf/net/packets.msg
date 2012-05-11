@@ -159,6 +159,16 @@ message UserDisconnect = 7 {
 };
 
 
+/**
+ * Sent from client to server to change their own user info, and server to
+ * client to indicate a change in a user.
+ */
+message UpdateUserInfo = 8 {
+  string(...16) sessionId;
+  UserInfo info;
+};
+
+
 message ChatJoin = 20 {
   string(...16) sessionId;
   string(...64) channelId;

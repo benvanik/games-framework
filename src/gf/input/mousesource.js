@@ -65,7 +65,7 @@ gf.input.MouseSource = function(inputElement) {
   /**
    * Mouse sensitivity scalar.
    * @private
-   * @type {boolean}
+   * @type {number}
    */
   this.sensitivity_ = 1;
 
