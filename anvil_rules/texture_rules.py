@@ -16,6 +16,7 @@ from anvil.context import RuleContext
 from anvil.rule import Rule, build_rule
 from anvil.task import Task, MakoTemplateTask
 import anvil.util
+from anvil.util import ensure_forwardslashes
 
 
 # TODO(benvanik): clean up/move/etc channels
@@ -131,8 +132,8 @@ class TextureSetRule(Rule):
       image.class_name = '%s.%s' % (self.rule.namespace, class_name)
       image.friendly_name = class_name
       image.src_path = rel_src_path
-      image.base_path = os.path.dirname(rel_src_path)
-      image.json_path = rel_json_path
+      image.base_path = ensure_forwardslashes(os.path.dirname(rel_src_path))
+      image.json_path = ensure_forwardslashes(rel_json_path)
       image.width = width
       image.height = height
       image.channels = channels
@@ -150,7 +151,7 @@ class TextureSetRule(Rule):
         pass
       lod0 = ImageLod()
       lod0.type = mime_type
-      lod0.path = os.path.basename(src_path)
+      lod0.path = ensure_forwardslashes(os.path.basename(src_path))
       lod0.size = os.path.getsize(src_path)
       image.lod_list = [
           [lod0,],

@@ -20,6 +20,7 @@ from anvil.context import RuleContext
 from anvil.rule import Rule, build_rule
 from anvil.task import Task, ExecutableTask, MakoTemplateTask
 import anvil.util
+from anvil.util import ensure_forwardslashes
 
 
 def _get_soundbank_template_paths():
@@ -182,8 +183,8 @@ class AudioSoundbankRule(Rule):
       sound_bank.class_name = self.rule.class_name
       sound_bank.friendly_name = \
           self.rule.class_name[self.rule.class_name.rfind('.') + 1:]
-      sound_bank.base_path = base_path
-      sound_bank.json_path = rel_json_path
+      sound_bank.base_path = ensure_forwardslashes(base_path)
+      sound_bank.json_path = ensure_forwardslashes(rel_json_path)
       sound_bank.data_sources = []
       sound_bank.cues = []
 
@@ -200,7 +201,7 @@ class AudioSoundbankRule(Rule):
             (format, fmt_path) = conversion
             source = DataSource()
             source.type = format
-            source.path = os.path.basename(fmt_path)
+            source.path = ensure_forwardslashes(os.path.basename(fmt_path))
             source.size = os.path.getsize(fmt_path)
             sound_bank.data_sources.append(source)
             self._append_output_paths([fmt_path])
@@ -226,7 +227,7 @@ class AudioSoundbankRule(Rule):
         # Setup default source (the wav)
         source = DataSource()
         source.type = 'audio/wav'
-        source.path = os.path.basename(wav_path)
+        source.path = ensure_forwardslashes(os.path.basename(wav_path))
         source.size = os.path.getsize(wav_path)
         sound_bank.data_sources.append(source)
 
@@ -427,8 +428,8 @@ class AudioTrackListRule(Rule):
       track_list.class_name = self.rule.class_name
       track_list.friendly_name = \
           self.rule.class_name[self.rule.class_name.rfind('.') + 1:]
-      track_list.base_path = base_path
-      track_list.json_path = rel_json_path
+      track_list.base_path = ensure_forwardslashes(base_path)
+      track_list.json_path = ensure_forwardslashes(rel_json_path)
       track_list.tracks = []
 
       # TODO(benvanik): convert/etc to self.formats
@@ -448,7 +449,8 @@ class AudioTrackListRule(Rule):
             }[os.path.splitext(src_path)[1]]
         source = DataSource()
         source.type = mime_type
-        source.path = os.path.relpath(src_path, base_path)
+        source.path = ensure_forwardslashes(os.path.relpath(src_path,
+                                                            base_path))
         source.size = os.path.getsize(src_path)
         track.data_sources.append(source)
         track_list.tracks.append(track)

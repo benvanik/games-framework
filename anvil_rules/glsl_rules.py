@@ -103,8 +103,10 @@ class CompileGlslRule(Rule):
 
         # JS file
         rel_json_path = os.path.relpath(json_path, self.build_env.root_path)
-        ds.append(self._compile_file(args, src_path, js_path, js_template,
-                                    {'json_path': rel_json_path}))
+        ds.append(self._compile_file(
+            args, src_path, js_path, js_template, {
+                'json_path': anvil.util.ensure_forwardslashes(rel_json_path)
+                }))
 
       # Kick off compilations
       dg = anvil.async.gather_deferreds(ds, errback_if_any_fail=True)
