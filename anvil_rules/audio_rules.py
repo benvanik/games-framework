@@ -13,6 +13,7 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 import math
 import os
 import re
+import sys
 
 import anvil.async
 from anvil.context import RuleContext
@@ -82,6 +83,8 @@ class AudioRuleContext(RuleContext):
       A deferred for the task or None if the given conversion cannot be
       completed.
     """
+    if sys.platform.startswith('win'):
+      return None
     if target_type == 'audio/mpeg':
       executable_name = 'lame'
       args = [
