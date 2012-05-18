@@ -144,11 +144,7 @@ gf.assets.BuildClient.prototype.open = function() {
   var address = this.runtime.launchOptions.buildServer;
   goog.asserts.assert(address);
 
-  if (goog.global['MozWebSocket']) {
-    this.handle_ = new goog.global['MozWebSocket'](address);
-  } else {
-    this.handle_ = new WebSocket(address);
-  }
+  this.handle_ = new WebSocket(address);
   if (!this.handle_) {
     gf.log.write('Unable to create socket to server - failing permanently');
     return;

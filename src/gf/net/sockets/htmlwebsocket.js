@@ -20,7 +20,6 @@ goog.require('gf.log');
 goog.require('gf.net.Packet');
 goog.require('gf.net.Socket');
 goog.require('gf.util');
-goog.require('goog.userAgent.product');
 
 
 
@@ -39,22 +38,8 @@ gf.net.sockets.HtmlWebSocket = function(endpoint) {
    * @private
    * @type {!WebSocket}
    */
-  this.handle_;
-  if (goog.global['MozWebSocket']) {
-    this.handle_ = new goog.global['MozWebSocket'](
-        /** @type {string} */ (endpoint));
-  } else {
-    this.handle_ = new WebSocket(/** @type {string} */ (endpoint));
-  }
+  this.handle_ = new WebSocket(/** @type {string} */ (endpoint));
   this.handle_['binaryType'] = 'arraybuffer';
-
-  /**
-   * Whether the WebSocket will allow 'arraybuffer'. I don't know of a good way
-   * to detect this, so for now I'm just hardcoding it.
-   * @private
-   * @type {boolean}
-   */
-  this.canUseArrayBuffers_ = goog.userAgent.product.CHROME;
 
   /**
    * @private
@@ -154,11 +139,7 @@ gf.net.sockets.HtmlWebSocket.prototype.writeInternal = function(data) {
     return;
   }
 
-  if (this.canUseArrayBuffers_) {
-    this.handle_.send(/** @type {string} */ (data));
-  } else {
-    this.handle_.send(gf.util.arrayBufferToString(data));
-  }
+  this.handle_.send(/** @type {string} */ (data));
 };
 
 

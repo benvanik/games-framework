@@ -18,8 +18,3 @@
  * @fileoverview Misc externs.
  * @externs
  */
-
-/**
- * @type {function(new:WebSocket, string):void}
- */
-window.MozWebSocket;
