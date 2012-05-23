@@ -81,13 +81,6 @@ gf.graphics.GraphicsContext = function(dom, canvas) {
   this.livingResourceCount_ = 0;
 
   /**
-   * Shared graphics programs.
-   * @private
-   * @type {!Object.<!gf.graphics.Program>}
-   */
-  this.programs_ = {};
-
-  /**
    * Current rasterizer state setting block, if any.
    * @private
    * @type {gf.graphics.RasterizerState}
@@ -455,25 +448,6 @@ gf.graphics.GraphicsContext.prototype.getRendererInfo = function() {
     renderer: /** @type {string} */ (
         gl.getParameter(goog.webgl.UNMASKED_RENDERER_WEBGL))
   };
-};
-
-
-/**
- * Gets a shared program or loads it if required.
- * @deprecated create your own programs.
- * @param {function(new:gf.graphics.Program, !gf.graphics.GraphicsContext)}
- *     type Type of program to get.
- * @return {gf.graphics.Program} Shared program, if it could be loaded.
- */
-gf.graphics.GraphicsContext.prototype.getSharedProgram = function(type) {
-  var id = goog.getUid(type);
-  var program = this.programs_[id];
-  if (!program) {
-    program = new type(this);
-    this.registerDisposable(program);
-    this.programs_[id] = program;
-  }
-  return program;
 };
 
 

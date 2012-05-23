@@ -19,12 +19,44 @@
  */
 
 goog.provide('gf.graphics.SpriteBuffer');
+goog.provide('gf.graphics.SpriteProgram');
 
 goog.require('gf.graphics.GeometryPool');
-goog.require('gf.graphics.SpriteProgram');
 goog.require('goog.asserts');
 goog.require('goog.vec.Mat4');
 goog.require('goog.webgl');
+
+
+
+/**
+ * A program that implements a 2D quad drawer.
+ * @interface
+ */
+gf.graphics.SpriteProgram = function() {};
+
+
+/** @type {number} */
+gf.graphics.SpriteProgram.prototype.a_position;
+
+
+/** @type {number} */
+gf.graphics.SpriteProgram.prototype.a_texCoord;
+
+
+/** @type {number} */
+gf.graphics.SpriteProgram.prototype.a_color;
+
+
+/** @type {WebGLUniformLocation} */
+gf.graphics.SpriteProgram.prototype.u_worldViewProjMatrix;
+
+
+/** @type {WebGLUniformLocation} */
+gf.graphics.SpriteProgram.prototype.u_texSampler;
+
+
+/** @type {WebGLUniformLocation} */
+gf.graphics.SpriteProgram.prototype.u_color;
 
 
 
@@ -34,8 +66,10 @@ goog.require('goog.webgl');
  * @constructor
  * @extends {gf.graphics.GeometryPool}
  * @param {!gf.graphics.GraphicsContext} graphicsContext Graphics context.
+ * @param {!gf.graphics.SpriteProgram} spriteProgram Program implementing the
+ *     {@see gf.graphics.SpriteProgram} interface for drawing quads.
  */
-gf.graphics.SpriteBuffer = function(graphicsContext) {
+gf.graphics.SpriteBuffer = function(graphicsContext, spriteProgram) {
   goog.base(this, graphicsContext,
       gf.graphics.SpriteBuffer.BYTES_PER_SPRITE_);
 
@@ -44,9 +78,7 @@ gf.graphics.SpriteBuffer = function(graphicsContext) {
    * @private
    * @type {gf.graphics.SpriteProgram}
    */
-  this.spriteProgram_ = /** @type {gf.graphics.SpriteProgram} */ (
-      graphicsContext.getSharedProgram(gf.graphics.SpriteProgram));
-  goog.asserts.assert(this.spriteProgram_);
+  this.spriteProgram_ = spriteProgram;
 
   /**
    * Float32 accessor into data.
