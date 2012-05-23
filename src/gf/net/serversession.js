@@ -160,7 +160,7 @@ gf.net.ServerSession.prototype.unready = function() {
  */
 gf.net.ServerSession.prototype.handleConnect_ = function(socket) {
   if (!gf.NODE) {
-    gf.log.activePort = socket.endpoint;
+    gf.log.activePort = /** @type {!MessagePort} */ (socket.endpoint);
   }
 
   // Place socket in joining pool

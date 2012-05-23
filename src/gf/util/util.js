@@ -21,11 +21,14 @@ goog.provide('gf.util');
  * Tries to see if the given object is really one of the given types.
  * The list of types should be either constructors and/or string names on the
  * global context.
- * @param {Object} obj Some object to compare.
+ * @param {*} obj Some object to compare.
  * @param {!Array.<string|Object>} types Types to check against.
  * @return {boolean} True if the object is any of the given types.
  */
 gf.util.isAnyType = function(obj, types) {
+  if (!obj) {
+    return false;
+  }
   var ctor = obj.constructor;
   for (var n = 0; n < types.length; n++) {
     var type = types[n];
