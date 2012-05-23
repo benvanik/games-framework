@@ -452,6 +452,17 @@ gf.graphics.GraphicsContext.prototype.getRendererInfo = function() {
 
 
 /**
+ * Gets the underlying WebGL instance.
+ * Asserts if GL is not available.
+ * @return {!WebGLRenderingContext} WebGL rendering context.
+ */
+gf.graphics.GraphicsContext.prototype.getGL = function() {
+  goog.asserts.assert(this.gl);
+  return this.gl;
+};
+
+
+/**
  * Flushes all pending operations to the device.
  */
 gf.graphics.GraphicsContext.prototype.flush = function() {
