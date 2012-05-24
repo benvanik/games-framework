@@ -133,17 +133,6 @@ gf.Game.DEFAULT_FRAME_TIMESTEP_ = 10 / 1000;
 
 
 /**
- * Minimum frame time, in seconds.
- * If the time delta between frames is less than this value, the frame will be
- * skipped.
- * @private
- * @const
- * @type {number}
- */
-gf.Game.MIN_FRAME_TIME_ = 16 / 1000;
-
-
-/**
  * Maximum frame time, in seconds.
  * Frames longer than this will get capped to prevent weird math.
  * @private
@@ -195,10 +184,6 @@ gf.Game.prototype.renderTick_ = function(timestamp) {
   var time = this.clock.getClientTime();
 
   var timeDelta = time - this.lastTime_;
-  if (timeDelta < gf.Game.MIN_FRAME_TIME_) {
-    // Frame skipping (when running too fast)
-    return;
-  }
   this.lastTime_ = time;
   if (timeDelta > gf.Game.MAX_FRAME_TIME_) {
     // Max frame time - if we go longer than this then we are likely hosed
