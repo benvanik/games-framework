@@ -24,6 +24,15 @@ goog.provide('gf');
 
 
 /**
+ * GF version identifier.
+ * Used on the network to identify this GF library.
+ * @const
+ * @type {number}
+ */
+gf.VERSION = 1;
+
+
+/**
  * @define {boolean} True if the runtime is being compiled in server mode.
  * This will exclude all types and features that are not supported on servers
  * (or workers), such as audio/input/etc.
