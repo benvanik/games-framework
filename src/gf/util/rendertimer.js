@@ -16,6 +16,7 @@
 
 goog.provide('gf.util.RenderTimer');
 
+goog.require('gf');
 goog.require('goog.Disposable');
 goog.require('goog.asserts');
 goog.require('goog.events.EventHandler');
@@ -296,7 +297,7 @@ gf.util.RenderTimer.prototype.callback_ = function(opt_timestamp) {
   }
 
   // Fix time if not present (like from setTimeout)
-  var timestamp = opt_timestamp || goog.now();
+  var timestamp = opt_timestamp || gf.now();
 
   // Callback!
   this.lastTick_ = timestamp;
@@ -308,10 +309,10 @@ gf.util.RenderTimer.prototype.callback_ = function(opt_timestamp) {
  * Issues a user callback as if the timer has ticked.
  */
 gf.util.RenderTimer.prototype.simulateTick = function() {
-  var delta = goog.now() - this.lastTick_;
+  var delta = gf.now() - this.lastTick_;
   if (delta >= this.forcedTickInterval_) {
     if (this.runningCount_) {
-      var timestamp = goog.now();
+      var timestamp = gf.now();
       this.lastTick_ = timestamp;
       this.userCallback_(timestamp);
     }

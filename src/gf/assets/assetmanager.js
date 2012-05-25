@@ -19,9 +19,43 @@
  */
 
 goog.provide('gf.assets.AssetManager');
+goog.provide('gf.assets.LoadPriority');
 
 goog.require('gf.Component');
 goog.require('goog.async.Deferred');
+
+
+
+/**
+ * Loading priority classes.
+ * @enum {number}
+ */
+gf.assets.LoadPriority = {
+  /**
+   * Load the asset immediately (bypass the queue).
+   */
+  IMMEDIATE: 0,
+
+  /**
+   * Loads the asset at a high priority.
+   */
+  HIGH: 10,
+
+  /**
+   * Loads the asset at a normal priority.
+   */
+  NORMAL: 50,
+
+  /**
+   * Loads the asset at a low priority.
+   */
+  LOW: 100,
+
+  /**
+   * Loads the asset at a very low priority.
+   */
+  IDLE: 1000
+};
 
 
 
