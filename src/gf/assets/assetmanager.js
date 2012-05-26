@@ -25,7 +25,6 @@ goog.require('gf.Component');
 goog.require('goog.async.Deferred');
 
 
-
 /**
  * Loading priority classes.
  * @enum {number}
