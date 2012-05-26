@@ -129,6 +129,19 @@ gf.audio.TrackList.prototype.beginPlayback = function() {
 
 
 /**
+ * Gets a list of all audio tracks.
+ * @return {!Array.<!gf.audio.Track>} All audio tracks.
+ */
+gf.audio.TrackList.prototype.getAllTracks = function() {
+  var tracks = [];
+  for (var name in this.tracks_) {
+    tracks.push(this.tracks_[name]);
+  }
+  return tracks;
+};
+
+
+/**
  * Gets a named track from the sound track list.
  * @param {string} name Track name.
  * @return {gf.audio.Track} Track with the given name, if found.
