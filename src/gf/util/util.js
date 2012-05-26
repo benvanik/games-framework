@@ -94,7 +94,7 @@ gf.util.arrayBufferToString = function(data) {
  * Queues a function to be called on the next tick.
  * @param {!Function} fn Function to call.
  * @param {Object=} opt_scope Scope to call the function in.
- * @return {?number|undefined} An ID that can be used for cancellation.
+ * @return {number|null|undefined} An ID that can be used for cancellation.
  */
 gf.util.setImmediate = function(fn, opt_scope) {
   var callback = function() {
@@ -115,8 +115,8 @@ gf.util.setImmediate = function(fn, opt_scope) {
  * Cancels a previously requested immediate invocation, maybe.
  * This method may not be able to cancel an immediate before it has executed.
  * Always write code defensively such that the immediate can still fire.
- * @param {?number=} id ID returned from {@see gf.util.setImmediate}.
+ * @param {?number=} opt_id ID returned from {@see gf.util.setImmediate}.
  */
-gf.util.clearImmediate = function(id) {
-  goog.global.clearTimeout(id);
+gf.util.clearImmediate = function(opt_id) {
+  goog.global.clearTimeout(opt_id);
 };
