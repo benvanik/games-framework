@@ -19,11 +19,11 @@
  */
 
 goog.provide('gf.graphics.VertexArrayObject');
+goog.provide('gf.graphics.VertexAttrib');
 
 goog.require('goog.Disposable');
 goog.require('goog.asserts');
 goog.require('goog.webgl');
-goog.provide('gf.graphics.VertexAttrib');
 
 
 

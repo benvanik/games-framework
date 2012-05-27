@@ -62,6 +62,18 @@ gf.graphics.Program = function(graphicsContext, name,
   this.fragmentShaderSource = opt_fragmentShader || null;
 
   /**
+   * @private
+   * @type {WebGLShader}
+   */
+  this.vertexShader_ = null;
+
+  /**
+   * @private
+   * @type {WebGLShader}
+   */
+  this.fragmentShader_ = null;
+
+  /**
    * WebGL program.
    * May be null if not yet loaded or discarded.
    * @type {WebGLProgram}
@@ -91,8 +103,19 @@ gf.graphics.Program.prototype.load = function() {
  */
 gf.graphics.Program.prototype.discard = function() {
   var gl = this.graphicsContext.gl;
-  gl.deleteProgram(this.handle);
-  this.handle = null;
+
+  if (this.vertexShader_) {
+    gl.deleteShader(this.vertexShader_);
+    this.vertexShader_ = null;
+  }
+  if (this.fragmentShader_) {
+    gl.deleteShader(this.fragmentShader_);
+    this.fragmentShader_ = null;
+  }
+  if (this.handle) {
+    gl.deleteProgram(this.handle);
+    this.handle = null;
+  }
 
   goog.base(this, 'discard');
 };
@@ -102,52 +125,66 @@ gf.graphics.Program.prototype.discard = function() {
  * @override
  */
 gf.graphics.Program.prototype.restore = function() {
-  var gl = this.graphicsContext.gl;
+  // This method should only be used by the automated restore mechanism
+  // Consumers should instead use beginRestoring and endRestoring.
+  this.beginRestoring();
+  this.endRestoring();
+};
 
-  goog.base(this, 'restore');
+
+/**
+ * Begins restoring the program content.
+ * This should not block under Chrome (but will on other browsers), and many
+ * different programs can be restoring simultaneously.
+ */
+gf.graphics.Program.prototype.beginRestoring = function() {
+  var gl = this.graphicsContext.gl;
 
   // Can't restore without shaders
   if (!this.vertexShaderSource || !this.fragmentShaderSource) {
     return;
   }
 
-  // It's ok if we have a handle - it'll be reused - just reset state
+  // Reset error logs
   this.infoLogs = null;
-
-  if (this.handle) {
-    gl.deleteProgram(this.handle);
-    this.handle = null;
-  }
 
   // Create both shaders - do this regardless of failure so that we get both
   // info logs
-  var vertexShader = this.createShader(
+  this.vertexShader_ = this.createShader(
       goog.webgl.VERTEX_SHADER,
       this.vertexShaderSource);
-  var fragmentShader = this.createShader(
+  this.fragmentShader_ = this.createShader(
       goog.webgl.FRAGMENT_SHADER,
       this.fragmentShaderSource);
-  if (!vertexShader || !fragmentShader) {
-    // One or more shaders failed to compile - abort
-    gl.deleteShader(vertexShader);
-    gl.deleteShader(fragmentShader);
-    return;
+  if (this.vertexShader_ && this.fragmentShader_) {
+    // Create program
+    this.handle = this.createProgram(this.vertexShader_, this.fragmentShader_);
   }
+};
 
-  // Create program
-  var program = this.createProgram(vertexShader, fragmentShader);
 
-  // Always delete shaders - they will be attached to the program (or not, if it
-  // failed and was deleted)
-  gl.deleteShader(vertexShader);
-  gl.deleteShader(fragmentShader);
-
-  this.handle = program;
+/**
+ * Ends restoring the program content.
+ * If the program or its shaders failed to compile or link then this will fail.
+ * On all platforms this will be a blocking call.
+ * @return {boolean} True if the restore was successful.
+ */
+gf.graphics.Program.prototype.endRestoring = function() {
+  if (!this.verifyShader(goog.webgl.VERTEX_SHADER, this.vertexShader_) ||
+      !this.verifyShader(goog.webgl.FRAGMENT_SHADER, this.fragmentShader_) ||
+      !this.verifyProgram(this.handle)) {
+    this.discard();
+    return false;
+  }
+  return true;
 };
 
 
 /**
  * Creates a shader and compiles it.
+ * This performs no error checking on the shader - use {@see #verifyShader}.
+ * In order to get asynchronous compilation, try calling that in the future
+ * instead of immediately after this function.
  * @protected
  * @param {number} type Shader type enum value.
  * @param {string} source Shader source code.
@@ -161,22 +198,39 @@ gf.graphics.Program.prototype.createShader = function(type, source) {
   if (!shader) {
     return null;
   }
-  var shaderName = this.name;
-  switch (type) {
-    case goog.webgl.VERTEX_SHADER:
-      shaderName += ' (VS)';
-      break;
-    case goog.webgl.FRAGMENT_SHADER:
-      shaderName += ' (FS)';
-      break;
+
+  if (goog.DEBUG) {
+    var shaderName = this.name;
+    switch (type) {
+      case goog.webgl.VERTEX_SHADER:
+        shaderName += ' (VS)';
+        break;
+      case goog.webgl.FRAGMENT_SHADER:
+        shaderName += ' (FS)';
+        break;
+    }
+    shader['displayName'] = shaderName;
   }
-  shader.displayName = shaderName;
 
   // Set source
   gl.shaderSource(shader, source);
 
   // Attempt compile
   gl.compileShader(shader);
+
+  return shader;
+};
+
+
+/**
+ * Verifies a shader was compiled successfully.
+ * @protected
+ * @param {number} type Shader type enum value.
+ * @param {WebGLShader} shader Previously-compiled WebGL shader.
+ * @return {boolean} True if the shader is valid and compiled successfully.
+ */
+gf.graphics.Program.prototype.verifyShader = function(type, shader) {
+  var gl = this.graphicsContext.gl;
 
   // Always get logs - may have warnings
   var log = gl.getShaderInfoLog(shader);
@@ -191,22 +245,19 @@ gf.graphics.Program.prototype.createShader = function(type, source) {
     }
 
     // TODO(benvanik): better logging
-    gf.log.write('shader ' + this.name + '/' + type + ':', log);
+    gf.log.write('shader ' + this.name + '/' + type + ':' + log);
   }
 
   // Check for compile failure
-  if (!gl.getShaderParameter(shader, goog.webgl.COMPILE_STATUS)) {
-    // Failed!
-    gl.deleteShader(shader);
-    return null;
-  }
-
-  return shader;
+  return !!gl.getShaderParameter(shader, goog.webgl.COMPILE_STATUS);
 };
 
 
 /**
  * Creates and links a program with the given shaders.
+ * This performs no error checking on the program - use {@see #verifyProgram}.
+ * In order to get asynchronous linking, try calling that in the future
+ * instead of immediately after this function.
  * @protected
  * @param {!WebGLShader} vertexShader Vertex shader.
  * @param {!WebGLShader} fragmentShader Fragment shader.
@@ -217,18 +268,37 @@ gf.graphics.Program.prototype.createProgram = function(
   var gl = this.graphicsContext.gl;
 
   // Create
-  var program = gl.createProgram();
-  if (!program) {
+  var handle = gl.createProgram();
+  if (!handle) {
     return null;
   }
-  program.displayName = this.name;
+
+  if (goog.DEBUG) {
+    handle['displayName'] = this.name;
+  }
 
   // Attach shaders
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
+  gl.attachShader(handle, vertexShader);
+  gl.attachShader(handle, fragmentShader);
+
+  // Bind attributes now (before linking)
+  this.bindAttributes(handle);
 
   // Attempt linking
-  gl.linkProgram(program);
+  gl.linkProgram(handle);
+
+  return handle;
+};
+
+
+/**
+ * Verifies a program was linked successfully.
+ * @protected
+ * @param {WebGLProgram} program Previously-linked WebGL program.
+ * @return {boolean} True if the program is valid and linked successfully.
+ */
+gf.graphics.Program.prototype.verifyProgram = function(program) {
+  var gl = this.graphicsContext.gl;
 
   // Always get logs - may have warnings
   var log = gl.getProgramInfoLog(program);
@@ -243,18 +313,22 @@ gf.graphics.Program.prototype.createProgram = function(
     }
 
     // TODO(benvanik): better logging
-    gf.log.write('program ' + this.name + ':', log);
+    gf.log.write('program ' + this.name + ':' + log);
   }
 
   // Check for link failure
-  if (!gl.getProgramParameter(program, goog.webgl.LINK_STATUS)) {
-    // Failed!
-    gl.deleteProgram(program);
-    return null;
-  }
-
-  return program;
+  return !!gl.getProgramParameter(program, goog.webgl.LINK_STATUS);
 };
+
+
+/**
+ * Binds attribute locations, if desired.
+ * This is called after a program has had its shaders added to it but before
+ * it has been linked.
+ * @protected
+ * @param {WebGLProgram} handle Unlinked WebGL program.
+ */
+gf.graphics.Program.prototype.bindAttributes = goog.nullFunction;
 
 
 /**

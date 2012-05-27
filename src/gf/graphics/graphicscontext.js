@@ -693,6 +693,13 @@ gf.graphics.GraphicsContext.prototype.pushRenderTarget =
 
   // Rebind framebuffer, if needed
   if (this.renderTarget_ != renderTexture) {
+    // Reset all texture bindings that reference this texture
+    for (var n = 0; n < this.textureBindings_.length; n++) {
+      if (this.textureBindings_[n] == renderTexture) {
+        this.setTexture(n, null);
+      }
+    }
+
     this.renderTarget_ = renderTexture;
     renderTexture.bindRenderTarget();
   }

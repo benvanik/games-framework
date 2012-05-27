@@ -164,12 +164,11 @@ goog.inherits({{namespace}}.Compiled{{className}}_, {{namespace}}.{{className}})
 /**
  * @override
  */
-{{namespace}}.Compiled{{className}}_.prototype.restore = function() {
+{{namespace}}.Compiled{{className}}_.prototype.endRestoring = function() {
   var gl = this.graphicsContext.gl;
 
-  goog.base(this, 'restore');
-  if (!this.handle) {
-    return;
+  if (!goog.base(this, 'endRestoring') || !this.handle) {
+    return false;
   }
 
 {{#getAttributes}}
@@ -332,15 +331,14 @@ goog.inherits({{namespace}}.Json{{className}}_, {{namespace}}.{{className}});
 /**
  * @override
  */
-{{namespace}}.Json{{className}}_.prototype.restore = function() {
+{{namespace}}.Json{{className}}_.prototype.endRestoring = function() {
   var gl = this.graphicsContext.gl;
 
-  goog.base(this, 'restore');
-  if (!this.handle) {
-    return;
+  if (!goog.base(this, 'endRestoring') || !this.handle) {
+    return false;
   }
   if (!this.uniformMap_ || !this.attributeMap_) {
-    return;
+    return false;
   }
 
 {{#getAttributes}}
@@ -354,4 +352,6 @@ goog.inherits({{namespace}}.Json{{className}}_, {{namespace}}.{{className}});
       this.handle,
       this.uniformMap_['{{originalName}}']);
 {{/getUniforms}}
+
+  return true;
 };
