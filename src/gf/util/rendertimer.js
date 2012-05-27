@@ -222,7 +222,7 @@ gf.util.RenderTimer.prototype.start = function(opt_force) {
   }
 
   // Always immediately call, to reduce latency
-  this.callback_();
+  this.userCallback_(gf.now());
 
   // Simulate ticks if it has been too long without one
   if (this.forcedTickInterval_) {
@@ -296,10 +296,8 @@ gf.util.RenderTimer.prototype.callback_ = function(opt_timestamp) {
     }
   }
 
-  // Fix time if not present (like from setTimeout)
-  var timestamp = opt_timestamp || gf.now();
-
   // Callback!
+  var timestamp = gf.now();
   this.lastTick_ = timestamp;
   this.userCallback_(timestamp);
 };
