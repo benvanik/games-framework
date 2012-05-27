@@ -437,8 +437,7 @@ class AudioTrackListRule(Rule):
         self._append_output_paths([src_path])
         track = Track()
         track.name = os.path.splitext(os.path.basename(src_path))[0]
-        # TODO(benvanik): get duration
-        track.duration = 0
+        track.duration = self._get_duration(src_path)
         track.data_sources = []
         # TODO(benvanik) proper mime type
         mime_type = {
@@ -469,3 +468,37 @@ class AudioTrackListRule(Rule):
               'list': track_list,
               })))
       self._chain(ds)
+
+    def _get_duration(self, path):
+      """Gets the duration, in ms, of the track at the given path.
+
+      Args:
+        path: Audio track path.
+
+      Returns:
+        Duration of the track, in ms. If the track cannot be parsed 0 is
+        returned.
+      """
+      ext = os.path.splitext(path)[1]
+      info = None
+      if ext == '.mp3':
+        import mutagen.mp3
+        info = mutagen.mp3.Open(path).info
+      elif ext == '.ogg':
+        import mutagen.oggvorbis
+        info = mutagen.oggvorbis.Open(path).info
+      elif ext == '.m4a':
+        import mutagen.m4a
+        info = mutagen.m4a.Open(path).info
+      elif ext == '.wav':
+        import wave
+        wav_file = wave.open(path, 'rb')
+        duration = long(math.ceil(
+            (wav_file.getnframes() * 1000) / wav_file.getframerate()))
+        wav_file.close()
+        return duration
+
+      if info:
+        return long(math.ceil(info.length * 1000))
+      else:
+        return 0

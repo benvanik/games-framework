@@ -216,6 +216,20 @@ gf.vec.BoundingBox.setFromArray = function(aabb, points) {
 
 
 /**
+ * Gets the distance from the center of an AABB to a point.
+ * @param {!gf.vec.BoundingBox} aabb AABB.
+ * @param {!goog.vec.Vec3.Vec3Like} point Point to compute distance to.
+ * @return {number} Distance.
+ */
+gf.vec.BoundingBox.distanceToPoint = function(aabb, point) {
+  var x = (aabb.max[0] - aabb.min[0]) / 2 + aabb.min[0] - point[0];
+  var y = (aabb.max[1] - aabb.min[1]) / 2 + aabb.min[1] - point[1];
+  var z = (aabb.max[2] - aabb.min[2]) / 2 + aabb.min[2] - point[2];
+  return Math.sqrt(x * x + y * y + z * z);
+};
+
+
+/**
  * Gets a point at the center of the AABB.
  * @param {!gf.vec.BoundingBox} aabb AABB.
  * @param {goog.vec.Vec3.Vec3Like} resultVec The vector to receive the result.

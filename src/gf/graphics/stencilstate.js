@@ -129,14 +129,14 @@ gf.graphics.StencilState = function() {
    * Maps to gl.stencilMaskSeparate.
    * @type {number}
    */
-  this.stencilMaskValueFront = 0xFFFFFFFF;
+  this.stencilMaskFront = 0xFFFFFFFF;
 
   /**
    * Back face stencil mask.
    * Maps to gl.stencilMaskSeparate.
    * @type {number}
    */
-  this.stencilMaskValueBack = 0xFFFFFFFF;
+  this.stencilMaskBack = 0xFFFFFFFF;
 };
 
 
@@ -181,11 +181,11 @@ gf.graphics.StencilState.prototype.makeActiveFull_ = function(gl) {
   gl.stencilOpSeparate(goog.webgl.BACK,
       this.stencilOpSFailBack,
       this.stencilOpDPFailBack, this.stencilOpDPPassBack);
-  if (this.stencilMaskValueFront == this.stencilMaskValueBack) {
-    gl.stencilMask(this.stencilMaskValueFront);
+  if (this.stencilMaskFront == this.stencilMaskBack) {
+    gl.stencilMask(this.stencilMaskFront);
   } else {
-    gl.stencilMaskSeparate(goog.webgl.FRONT, this.stencilMaskValueFront);
-    gl.stencilMaskSeparate(goog.webgl.BACK, this.stencilMaskValueBack);
+    gl.stencilMaskSeparate(goog.webgl.FRONT, this.stencilMaskFront);
+    gl.stencilMaskSeparate(goog.webgl.BACK, this.stencilMaskBack);
   }
 };
 
@@ -232,10 +232,10 @@ gf.graphics.StencilState.prototype.makeActiveDelta_ =
         this.stencilOpSFailBack,
         this.stencilOpDPFailBack, this.stencilOpDPPassBack);
   }
-  if (this.stencilMaskValueFront != previousState.stencilMaskValueFront) {
-    gl.stencilMaskSeparate(goog.webgl.FRONT, this.stencilMaskValueFront);
+  if (this.stencilMaskFront != previousState.stencilMaskFront) {
+    gl.stencilMaskSeparate(goog.webgl.FRONT, this.stencilMaskFront);
   }
-  if (this.stencilMaskValueBack != previousState.stencilMaskValueBack) {
-    gl.stencilMaskSeparate(goog.webgl.BACK, this.stencilMaskValueBack);
+  if (this.stencilMaskBack != previousState.stencilMaskBack) {
+    gl.stencilMaskSeparate(goog.webgl.BACK, this.stencilMaskBack);
   }
 };

@@ -66,6 +66,10 @@ Input
 Audio
 ================================================================================
 
+* prime sound system on start
+    * may not matter anymore?
+    * generated empty buffer/playback node?
+
 * abstract backend
     * Web Audio API backend
     * Null backend
@@ -145,6 +149,9 @@ Debugging
 * shared worker error reporting
 * goog.debug.catchErrors to catch all errors for logging/reporting
     * goog.debug.enhanceError to pretty exceptions
+
+* debug panel similar to impactjs
+    * http://impactjs.com/documentation/debug
 
 Misc
 ================================================================================

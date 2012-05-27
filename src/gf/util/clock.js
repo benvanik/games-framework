@@ -16,6 +16,8 @@
 
 goog.provide('gf.util.Clock');
 
+goog.require('gf');
+
 
 
 /**
@@ -34,7 +36,7 @@ gf.util.Clock = function() {
    * @private
    * @type {number}
    */
-  this.timeBase_ = goog.now();
+  this.timeBase_ = gf.now();
 
   /**
    * Game simulation time, in seconds.
@@ -74,7 +76,7 @@ gf.util.Clock.MAX_TIME_DIFF_ = 0.300;
  * @return {number} Run time, in seconds.
  */
 gf.util.Clock.prototype.getClientTime = function() {
-  return (goog.now() - this.timeBase_) / 1000;
+  return (gf.now() - this.timeBase_) / 1000;
 };
 
 

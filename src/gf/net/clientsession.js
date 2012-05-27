@@ -16,6 +16,7 @@
 
 goog.provide('gf.net.ClientSession');
 
+goog.require('gf');
 goog.require('gf.log');
 goog.require('gf.net.DisconnectReason');
 goog.require('gf.net.Session');
@@ -186,7 +187,7 @@ gf.net.ClientSession.prototype.makeReady_ = function() {
 /**
  * @override
  */
-gf.net.ClientSession.prototype.poll = function() {
+gf.net.ClientSession.prototype.poll = function(opt_timeLimit) {
   // Wait for the initial connect packet
   if (this.state == gf.net.SessionState.CONNECTING) {
     while (this.socket.canRead) {
@@ -203,6 +204,7 @@ gf.net.ClientSession.prototype.poll = function() {
     // Read all packets
     // NOTE: we do this BEFORE disconnection logic so that we can get the last
     //     of the packets the server sent
+    var start = gf.now();
     while (this.socket.canRead) {
       var packet = this.socket.read();
       if (!packet) {
@@ -213,6 +215,10 @@ gf.net.ClientSession.prototype.poll = function() {
       user.statistics.bytesReceived += packet.data.byteLength;
 
       this.dispatchPacket(packet);
+
+      if (opt_timeLimit && gf.now() - start >= opt_timeLimit) {
+        break;
+      }
     }
   }
 

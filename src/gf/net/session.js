@@ -230,5 +230,8 @@ gf.net.Session.prototype.getUserByWireId = function(wireId) {
 
 /**
  * Polls the network and dispatches events to network services.
+ * @param {number=} opt_timeLimit Maximum time a poll can take, in ms.
+ *     If a poll starts to take over this amount it will exit and handle the
+ *     remaining work on the next action.
  */
 gf.net.Session.prototype.poll = goog.abstractMethod;

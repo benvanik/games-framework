@@ -64,6 +64,19 @@ gf.BIN_PATH = '../';
 gf.BUILD_CLIENT = true;
 
 
+// Define a global 'gfdefines' object with any of the above defines to
+// override their values in debug mode
+if (!COMPILED && goog.global['gfdefines']) {
+  var gfd = goog.global['gfdefines'];
+  var gfr = goog.global['gf'];
+  gfr['SERVER'] = goog.isDef(gfd['SERVER']) ? gfd['SERVER'] : gf.SERVER;
+  gfr['NODE'] = goog.isDef(gfd['NODE']) ? gfd['NODE'] : gf.NODE;
+  gfr['BIN_PATH'] = goog.isDef(gfd['BIN_PATH']) ? gfd['BIN_PATH'] : gf.BIN_PATH;
+  gfr['BUILD_CLIENT'] = goog.isDef(gfd['BUILD_CLIENT']) ?
+      gfd['BUILD_CLIENT'] : gf.BUILD_CLIENT;
+}
+
+
 /**
  * Returns a non-wall time timestamp in milliseconds.
  * If available this will use a high performance timer. Otherwise it will fall
