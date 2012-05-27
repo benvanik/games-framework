@@ -32,8 +32,7 @@ goog.require('goog.async.Deferred');
 
 /**
  * Endpoint type.
- * @typedef {string|MessagePort|Worker|SharedWorker|DedicatedWorkerGlobalScope|
- *     SharedWorkerGlobalScope}
+ * @typedef {string|MessagePort|Worker|SharedWorker}
  */
 gf.net.Endpoint;
 
@@ -70,9 +69,7 @@ gf.net.listen = function(endpoint, protocolVersion, authToken, serverInfo) {
   var socket = null;
   if (gf.util.isAnyType(endpoint, [
     'DedicatedWorkerContext',
-    'DedicatedWorkerGlobalScope',
-    'SharedWorkerContext',
-    'SharedWorkerGlobalScope'
+    'SharedWorkerContext'
   ])) {
     socket = new gf.net.sockets.WorkerListenSocket(endpoint,
         /** @type {!Object} */ (endpoint));

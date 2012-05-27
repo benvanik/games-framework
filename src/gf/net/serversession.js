@@ -160,7 +160,7 @@ gf.net.ServerSession.prototype.unready = function() {
  */
 gf.net.ServerSession.prototype.handleConnect_ = function(socket) {
   if (!gf.NODE) {
-    gf.log.activePort = socket.endpoint;
+    gf.log.activePort = /** @type {!MessagePort} */ (socket.endpoint);
   }
 
   // Place socket in joining pool
@@ -257,13 +257,14 @@ gf.net.ServerSession.prototype.disconnectUser = function(user, reason) {
 /**
  * @override
  */
-gf.net.ServerSession.prototype.poll = function() {
+gf.net.ServerSession.prototype.poll = function(opt_timeLimit) {
   // Handle any joining sockets
   if (this.joiningSockets_.length) {
     this.pollJoiningSockets_();
   }
 
   // Poll users
+  var start = gf.now();
   for (var n = 0; n < this.users.length; n++) {
     var user = this.users[n];
 
@@ -287,6 +288,14 @@ gf.net.ServerSession.prototype.poll = function() {
       user.disconnectReason = gf.net.DisconnectReason.TIMEOUT;
       this.removeUser_(user);
       continue;
+    }
+
+    // TODO(benvanik): prevent the risk of DOS by randomizing the walking of
+    // the user list -- with this behavior, it's possible for one user to
+    // flood the server with expensive calls and deny network processing to
+    // all other users
+    if (opt_timeLimit && gf.now() - start >= opt_timeLimit) {
+      break;
     }
   }
 };

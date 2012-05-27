@@ -13,12 +13,14 @@ __author__ = 'benvanik@google.com (Ben Vanik)'
 import math
 import os
 import re
+import sys
 
 import anvil.async
 from anvil.context import RuleContext
 from anvil.rule import Rule, build_rule
 from anvil.task import Task, ExecutableTask, MakoTemplateTask
 import anvil.util
+from anvil.util import ensure_forwardslashes
 
 
 def _get_soundbank_template_paths():
@@ -82,6 +84,8 @@ class AudioRuleContext(RuleContext):
       A deferred for the task or None if the given conversion cannot be
       completed.
     """
+    if sys.platform.startswith('win'):
+      return None
     if target_type == 'audio/mpeg':
       executable_name = 'lame'
       args = [
@@ -179,8 +183,8 @@ class AudioSoundbankRule(Rule):
       sound_bank.class_name = self.rule.class_name
       sound_bank.friendly_name = \
           self.rule.class_name[self.rule.class_name.rfind('.') + 1:]
-      sound_bank.base_path = base_path
-      sound_bank.json_path = rel_json_path
+      sound_bank.base_path = ensure_forwardslashes(base_path)
+      sound_bank.json_path = ensure_forwardslashes(rel_json_path)
       sound_bank.data_sources = []
       sound_bank.cues = []
 
@@ -197,7 +201,7 @@ class AudioSoundbankRule(Rule):
             (format, fmt_path) = conversion
             source = DataSource()
             source.type = format
-            source.path = os.path.basename(fmt_path)
+            source.path = ensure_forwardslashes(os.path.basename(fmt_path))
             source.size = os.path.getsize(fmt_path)
             sound_bank.data_sources.append(source)
             self._append_output_paths([fmt_path])
@@ -223,7 +227,7 @@ class AudioSoundbankRule(Rule):
         # Setup default source (the wav)
         source = DataSource()
         source.type = 'audio/wav'
-        source.path = os.path.basename(wav_path)
+        source.path = ensure_forwardslashes(os.path.basename(wav_path))
         source.size = os.path.getsize(wav_path)
         sound_bank.data_sources.append(source)
 
@@ -424,8 +428,8 @@ class AudioTrackListRule(Rule):
       track_list.class_name = self.rule.class_name
       track_list.friendly_name = \
           self.rule.class_name[self.rule.class_name.rfind('.') + 1:]
-      track_list.base_path = base_path
-      track_list.json_path = rel_json_path
+      track_list.base_path = ensure_forwardslashes(base_path)
+      track_list.json_path = ensure_forwardslashes(rel_json_path)
       track_list.tracks = []
 
       # TODO(benvanik): convert/etc to self.formats
@@ -433,8 +437,7 @@ class AudioTrackListRule(Rule):
         self._append_output_paths([src_path])
         track = Track()
         track.name = os.path.splitext(os.path.basename(src_path))[0]
-        # TODO(benvanik): get duration
-        track.duration = 0
+        track.duration = self._get_duration(src_path)
         track.data_sources = []
         # TODO(benvanik) proper mime type
         mime_type = {
@@ -445,7 +448,8 @@ class AudioTrackListRule(Rule):
             }[os.path.splitext(src_path)[1]]
         source = DataSource()
         source.type = mime_type
-        source.path = os.path.relpath(src_path, base_path)
+        source.path = ensure_forwardslashes(os.path.relpath(src_path,
+                                                            base_path))
         source.size = os.path.getsize(src_path)
         track.data_sources.append(source)
         track_list.tracks.append(track)
@@ -464,3 +468,37 @@ class AudioTrackListRule(Rule):
               'list': track_list,
               })))
       self._chain(ds)
+
+    def _get_duration(self, path):
+      """Gets the duration, in ms, of the track at the given path.
+
+      Args:
+        path: Audio track path.
+
+      Returns:
+        Duration of the track, in ms. If the track cannot be parsed 0 is
+        returned.
+      """
+      ext = os.path.splitext(path)[1]
+      info = None
+      if ext == '.mp3':
+        import mutagen.mp3
+        info = mutagen.mp3.Open(path).info
+      elif ext == '.ogg':
+        import mutagen.oggvorbis
+        info = mutagen.oggvorbis.Open(path).info
+      elif ext == '.m4a':
+        import mutagen.m4a
+        info = mutagen.m4a.Open(path).info
+      elif ext == '.wav':
+        import wave
+        wav_file = wave.open(path, 'rb')
+        duration = long(math.ceil(
+            (wav_file.getnframes() * 1000) / wav_file.getframerate()))
+        wav_file.close()
+        return duration
+
+      if info:
+        return long(math.ceil(info.length * 1000))
+      else:
+        return 0
