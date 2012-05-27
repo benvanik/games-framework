@@ -28,14 +28,15 @@ goog.require('goog.structs.Map');
 
 /**
  * Server browser client.
- * Can be used client-side to discover servers or by servers to register and
- * maintain their status in the database.
+ * Used by servers to register and maintain their status in the database.
  *
  * @constructor
  * @extends {goog.Disposable}
  * @param {string} baseUrl Base browser HTTP endpoint with a trailing slash.
+ * @param {string} serverId Server UUID.
+ * @param {string} serverKey Server key.
  */
-gf.net.Browser = function(serverId, serverKey, baseUrl) {
+gf.net.Browser = function(baseUrl, serverId, serverKey) {
   goog.base(this);
 
   /**
@@ -45,9 +46,18 @@ gf.net.Browser = function(serverId, serverKey, baseUrl) {
    */
   this.baseUrl_ = baseUrl;
 
+  /**
+   * A URL for the server this browser is registered to.
+   * @private
+   * @type {string}
+   */
+  this.serverUrl_ = baseUrl + 'api/server/' + serverId + '/';
+
   // Add some additional headers, for fun
   var headers = new goog.structs.Map();
   headers.set('X-GF-Version', String(gf.VERSION));
+  headers.set('X-GF-Server-ID', serverId);
+  headers.set('X-GF-Server-Key', serverKey);
 
   /**
    * XHR pool used for making all requests to the browser.
@@ -120,16 +130,14 @@ gf.net.Browser.prototype.issue_ = function(method, url, opt_content) {
  * Registers a server with the browser.
  * If the server has already been registered its information will be updated.
  *
- * @param {string} serverId Server UUID.
- * @param {string} serverKey Server key used for verification.
  * @param {!gf.net.ServerInfo} serverInfo Server information.
  * @return {!goog.async.Deferred} A deferred fulfilled when the server has been
  *     registered with the browser.
  */
-gf.net.Browser.prototype.registerServer = function(
-    serverId, serverKey, serverInfo) {
-  var url = this.baseUrl_ + 'server/' + serverId;
-
+gf.net.Browser.prototype.registerServer = function(serverInfo) {
+  var method = 'PUT';
+  var url = this.serverUrl_;
+  // TODO(benvanik): registerServer
 };
 
 
@@ -138,13 +146,12 @@ gf.net.Browser.prototype.registerServer = function(
  * All information about the server and its state will be removed. Only do this
  * when removing a server from active use.
  *
- * @param {string} serverId Server UUID.
- * @param {string} serverKey Server key used for verification.
  * @return {!goog.async.Deferred} A deferred fulfilled when the server has been
  *     unregistered from the browser.
  */
-gf.net.Browser.prototype.unregisterServer = function(
-    serverId, serverKey) {
+gf.net.Browser.prototype.unregisterServer = function() {
+  var method = 'DELETE';
+  var url = this.serverUrl_;
   // TODO(benvanik): unregisterServer
 };
 
@@ -155,22 +162,22 @@ gf.net.Browser.prototype.unregisterServer = function(
  * {@see gf.net.Browser.UPDATE_FREQUENCY}, or when significant state changes
  * (such as user join/leave).
  *
- * @param {string} serverId Server UUID.
- * @param {string} serverKey Server key used for verification.
  * @param {!Array.<!gf.net.UserInfo>} userInfos Currently active users.
  * @return {!goog.async.Deferred} A deferred fulfilled when the server has been
  *     updated with the browser.
  */
-gf.net.Browser.prototype.updateServer = function(
-    serverId, serverKey, userInfos) {
+gf.net.Browser.prototype.updateServer = function(userInfos) {
+  var method = 'POST';
+  var url = this.serverUrl_ + 'user/';
   // TODO(benvanik): updateServer
 };
 
 
 /**
  *
+ * @param {string} baseUrl Base browser HTTP endpoint with a trailing slash.
  */
-gf.net.Browser.prototype.query = function() {
+gf.net.Browser.query = function(baseUrl) {
   // TODO(benvanik): query
   // query args:
   // - game type

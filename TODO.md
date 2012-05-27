@@ -21,6 +21,35 @@ Before Code
 
 * binaryreader/writer (packetreader/writer)
 
+Browser
+================================================================================
+
+* server:
+    * registration
+    * update
+
+* schema:
+    * server_keys
+        * key
+        * note
+    * servers
+        * id
+        * key
+        * last_updated
+        * endpoint
+        * game_type
+        * game_version
+        * location
+        * max_users
+        * properties
+        * user_infos
+
+* api:
+    * POST /api/[id]/
+    * DELETE /api/[id]/
+    * POST /api/[id]/users/
+    * GET /api/[id]/
+
 Graphics
 ================================================================================
 
