@@ -77,7 +77,7 @@ gf.graphics.ProgramCache.prototype.register = function(program) {
 
 /**
  * Performs the initial setup of all programs in the cache.
- * @param {boolean} opt_forceSync Force synchronous loading.
+ * @param {boolean=} opt_forceSync Force synchronous loading.
  * @return {!goog.async.Deferred} A deferred fulfilled when all programs have
  *     compiled and linked.
  */
