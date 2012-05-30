@@ -23,7 +23,6 @@ goog.provide('gf.input.MouseSource');
 goog.require('gf.input.InputSource');
 goog.require('gf.input.MouseButton');
 goog.require('gf.input.MouseData');
-goog.require('gf.log');
 goog.require('goog.asserts');
 goog.require('goog.dom');
 goog.require('goog.events.BrowserEvent');
@@ -68,6 +67,13 @@ gf.input.MouseSource = function(inputElement) {
    * @type {number}
    */
   this.sensitivity_ = 1;
+
+  /**
+   * Whether to lock the cursor when the input element gets focus.
+   * @private
+   * @type {boolean}
+   */
+  this.lockOnFocus_ = false;
 
   /**
    * Whether the mouse is currently locked.
@@ -131,6 +137,15 @@ goog.inherits(gf.input.MouseSource, gf.input.InputSource);
 
 
 /**
+ * Sets whether the mouse cursor should be locked on focus (click/etc).
+ * @param {boolean} value True to lock on focus.
+ */
+gf.input.MouseSource.prototype.setLockOnFocus = function(value) {
+  this.lockOnFocus_ = value;
+};
+
+
+/**
  * Locks the mouse to the input element.
  * Only call this method if {@see gf.input.MouseSource#supportsLocking}
  * indicates that mouse locking is available.
@@ -151,7 +166,6 @@ gf.input.MouseSource.prototype.lock = function() {
        */
       goog.bind(function() {
         // TODO(benvanik): fire event?
-        gf.log.write('mouse lock succeeded');
         this.isLocked = true;
       }, this),
       /**
@@ -159,7 +173,6 @@ gf.input.MouseSource.prototype.lock = function() {
        */
       goog.bind(function() {
         // TODO(benvanik): fire event?
-        gf.log.write('mouse lock failed');
       }, this));
 };
 
@@ -168,6 +181,7 @@ gf.input.MouseSource.prototype.lock = function() {
  * Unlocks the mouse, if it is locked.
  */
 gf.input.MouseSource.prototype.unlock = function() {
+  this.wasLocked_ = false;
   if (!this.isLocked) {
     return;
   }
@@ -187,6 +201,12 @@ gf.input.MouseSource.prototype.unlock = function() {
  */
 gf.input.MouseSource.prototype.handleMouseDown_ = function(e) {
   e.preventDefault();
+
+  // Lock if just focusing - eat the event, too
+  if (this.lockOnFocus_ && this.supportsLocking && !this.isLocked) {
+    this.lock();
+    return;
+  }
 
   this.data_.update(e, this.sensitivity_);
 
@@ -345,13 +365,13 @@ gf.input.MouseSource.prototype.setEnabled = function(value) {
   goog.base(this, 'setEnabled', value);
   if (!value) {
     if (this.isLocked) {
-      this.wasLocked_ = true;
       this.unlock();
+      this.wasLocked_ = true;
     }
   } else {
     if (this.wasLocked_) {
-      this.wasLocked_ = false;
       this.lock();
+      this.wasLocked_ = false;
     }
   }
 };
