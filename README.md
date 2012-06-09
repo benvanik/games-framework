@@ -111,9 +111,8 @@ Feel free to fork/rip/etc and use as you wish!
 # Contributing
 
 Have a fix or feature? Submit a pull request - I love them!
-
-If you're writing new code note that I do try to keep to the
-[style_guide](https://github.com/benvanik/games-framework/blob/master/docs/style_guide.md)
+Note that I do keep to the [style_guide](https://github.com/benvanik/games-framework/blob/master/docs/style_guide.md),
+so please check it out first!
 
 As this is a Google project, you *must* first e-sign the
 [Google Contributor License Agreement](http://code.google.com/legal/individual-cla-v1.0.html) before I can accept any
