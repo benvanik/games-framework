@@ -29,7 +29,7 @@ REM Python dependencies
 REM ============================================================================
 ECHO Installing Python packages...
 
-FOR %%P IN (glob2 mako pil watchdog Autobahn sphinx unittest2 networkx coverage argparse mutagen) DO easy_install %%P
+FOR %%P IN (anvil-build glob2 mako pil watchdog Autobahn sphinx unittest2 networkx coverage argparse mutagen) DO easy_install %%P
 
 ECHO.
 REM ============================================================================

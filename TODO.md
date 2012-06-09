@@ -1,8 +1,6 @@
 Before Code
 ================================================================================
 
-* split readmes/setup/etc
-
 * graphics
     * glsllib usage
     * texture binding stack/etc
@@ -15,6 +13,7 @@ Before Code
         * see what compressed textures would need
 
 * binaryreader/writer (packetreader/writer)
+    * base off DataView
 
 Graphics
 ================================================================================

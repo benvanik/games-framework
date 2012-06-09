@@ -91,7 +91,7 @@ echo ""
 # ==============================================================================
 echo "Installing Python packages..."
 
-PYTHON_PACKAGES=( glob2 mako pil watchdog Autobahn sphinx unittest2 networkx coverage argparse mutagen )
+PYTHON_PACKAGES=( anvil-build glob2 mako pil watchdog Autobahn sphinx unittest2 networkx coverage argparse mutagen )
 
 for p in ${PYTHON_PACKAGES[@]}
 do
