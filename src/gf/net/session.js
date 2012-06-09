@@ -21,7 +21,7 @@ goog.require('gf.net.PacketSwitch');
 goog.require('gf.net.ServerInfo');
 goog.require('gf.net.SessionState');
 goog.require('gf.net.UserInfo');
-goog.require('gf.util.Clock');
+goog.require('gf.timing.Clock');
 goog.require('goog.Disposable');
 goog.require('goog.array');
 goog.require('goog.object');
@@ -52,9 +52,9 @@ gf.net.Session = function(sessionId, sessionType, protocolVersion, authToken) {
 
   /**
    * Clock used for timing.
-   * @type {!gf.util.Clock}
+   * @type {!gf.timing.Clock}
    */
-  this.clock = new gf.util.Clock();
+  this.clock = new gf.timing.Clock();
 
   /**
    * Unique session ID.

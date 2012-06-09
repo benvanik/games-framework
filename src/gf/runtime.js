@@ -18,7 +18,7 @@ goog.provide('gf.Runtime');
 
 goog.require('gf');
 goog.require('gf.assets.BuildClient');
-goog.require('gf.util.Clock');
+goog.require('gf.timing.Clock');
 goog.require('goog.Disposable');
 goog.require('goog.array');
 goog.require('goog.asserts');
@@ -31,7 +31,7 @@ goog.require('goog.asserts');
  * @constructor
  * @extends {goog.Disposable}
  * @param {!gf.LaunchOptions} launchOptions Game options.
- * @param {gf.util.Clock=} opt_clock Clock to use for time values.
+ * @param {gf.timing.Clock=} opt_clock Clock to use for time values.
  */
 gf.Runtime = function(launchOptions, opt_clock) {
   goog.base(this);
@@ -44,9 +44,9 @@ gf.Runtime = function(launchOptions, opt_clock) {
 
   /**
    * Synchronized clock.
-   * @type {!gf.util.Clock}
+   * @type {!gf.timing.Clock}
    */
-  this.clock = opt_clock || new gf.util.Clock();
+  this.clock = opt_clock || new gf.timing.Clock();
 
   /**
    * All registered components.

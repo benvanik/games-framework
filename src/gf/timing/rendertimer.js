@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-goog.provide('gf.util.RenderTimer');
+goog.provide('gf.timing.RenderTimer');
 
 goog.require('gf');
 goog.require('goog.Disposable');
@@ -43,7 +43,7 @@ goog.require('goog.events.EventType');
  * @param {number=} opt_forcedTickInterval If provided, a tick will be forced
  *     at the given time (in ms), even if the tab is not visible.
  */
-gf.util.RenderTimer = function(userCallback,
+gf.timing.RenderTimer = function(userCallback,
     opt_forceFallback, opt_pauseOnFocusLoss,
     opt_forcedTickInterval) {
   goog.base(this);
@@ -171,13 +171,13 @@ gf.util.RenderTimer = function(userCallback,
     });
   }
 };
-goog.inherits(gf.util.RenderTimer, goog.Disposable);
+goog.inherits(gf.timing.RenderTimer, goog.Disposable);
 
 
 /**
  * @override
  */
-gf.util.RenderTimer.prototype.disposeInternal = function() {
+gf.timing.RenderTimer.prototype.disposeInternal = function() {
   this.stop(true);
   this.displayElement = null;
 
@@ -189,7 +189,7 @@ gf.util.RenderTimer.prototype.disposeInternal = function() {
  * Gets a value indicating whether the timer is active and running.
  * @return {boolean} True if the timer is running.
  */
-gf.util.RenderTimer.prototype.isRunning = function() {
+gf.timing.RenderTimer.prototype.isRunning = function() {
   return this.runningCount_ > 0;
 };
 
@@ -198,7 +198,7 @@ gf.util.RenderTimer.prototype.isRunning = function() {
  * Starts the render timer, if it is not running.
  * @param {boolean=} opt_force Force a start, not incrementing the ref count.
  */
-gf.util.RenderTimer.prototype.start = function(opt_force) {
+gf.timing.RenderTimer.prototype.start = function(opt_force) {
   if (!opt_force) {
     this.runningCount_++;
     if (this.runningCount_ > 1) {
@@ -239,7 +239,7 @@ gf.util.RenderTimer.prototype.start = function(opt_force) {
  * Stops the render timer, if it is running.
  * @param {boolean=} opt_force Force a stop, not decrementing the ref count.
  */
-gf.util.RenderTimer.prototype.stop = function(opt_force) {
+gf.timing.RenderTimer.prototype.stop = function(opt_force) {
   if (!opt_force && !this.runningCount_) {
     return;
   }
@@ -270,7 +270,7 @@ gf.util.RenderTimer.prototype.stop = function(opt_force) {
  * @private
  * @param {number=} opt_timestamp Timestamp.
  */
-gf.util.RenderTimer.prototype.callback_ = function(opt_timestamp) {
+gf.timing.RenderTimer.prototype.callback_ = function(opt_timestamp) {
   // Handle cases where we were stopped but still got called
   // Such as in browsers that don't support cancelRequestAnimationFrame
   if (this.intervalId_ === null) {
@@ -306,7 +306,7 @@ gf.util.RenderTimer.prototype.callback_ = function(opt_timestamp) {
 /**
  * Issues a user callback as if the timer has ticked.
  */
-gf.util.RenderTimer.prototype.simulateTick = function() {
+gf.timing.RenderTimer.prototype.simulateTick = function() {
   var delta = gf.now() - this.lastTick_;
   if (delta >= this.forcedTickInterval_) {
     if (this.runningCount_) {

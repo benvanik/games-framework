@@ -23,7 +23,7 @@ goog.provide('gf.Game');
 goog.require('gf.RenderFrame');
 goog.require('gf.Runtime');
 goog.require('gf.UpdateFrame');
-goog.require('gf.util.RenderTimer');
+goog.require('gf.timing.RenderTimer');
 goog.require('goog.asserts');
 goog.require('goog.events.EventHandler');
 
@@ -38,7 +38,7 @@ goog.require('goog.events.EventHandler');
  * @constructor
  * @extends {gf.Runtime}
  * @param {!gf.LaunchOptions} launchOptions Game options.
- * @param {gf.util.Clock=} opt_clock Clock to use for time values.
+ * @param {gf.timing.Clock=} opt_clock Clock to use for time values.
  */
 gf.Game = function(launchOptions, opt_clock) {
   goog.base(this, launchOptions, opt_clock);
@@ -104,9 +104,9 @@ gf.Game = function(launchOptions, opt_clock) {
   var self = this;
   /**
    * Active render timer.
-   * @type {!gf.util.RenderTimer}
+   * @type {!gf.timing.RenderTimer}
    */
-  this.renderTimer = new gf.util.RenderTimer(
+  this.renderTimer = new gf.timing.RenderTimer(
       function(timestamp) {
         self.renderTick_(timestamp);
       },

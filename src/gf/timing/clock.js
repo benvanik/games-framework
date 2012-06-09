@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-goog.provide('gf.util.Clock');
+goog.provide('gf.timing.Clock');
 
 goog.require('gf');
 
@@ -30,7 +30,7 @@ goog.require('gf');
  *
  * @constructor
  */
-gf.util.Clock = function() {
+gf.timing.Clock = function() {
   /**
    * UNIX time used as the base for all time queries.
    * @private
@@ -68,14 +68,14 @@ gf.util.Clock = function() {
  * @const
  * @type {number}
  */
-gf.util.Clock.MAX_TIME_DIFF_ = 0.300;
+gf.timing.Clock.MAX_TIME_DIFF_ = 0.300;
 
 
 /**
  * Gets the total amount of time the application has been running, in seconds.
  * @return {number} Run time, in seconds.
  */
-gf.util.Clock.prototype.getClientTime = function() {
+gf.timing.Clock.prototype.getClientTime = function() {
   return (gf.now() - this.timeBase_) / 1000;
 };
 
@@ -86,7 +86,7 @@ gf.util.Clock.prototype.getClientTime = function() {
  * or interpolating times received from the network.
  * @return {number} Server time, in seconds.
  */
-gf.util.Clock.prototype.getServerTime = function() {
+gf.timing.Clock.prototype.getServerTime = function() {
   var clientTime = this.getClientTime();
   return clientTime + this.clockDelta_;
 };
@@ -99,7 +99,7 @@ gf.util.Clock.prototype.getServerTime = function() {
  * will only update when a simulation tick occurs.
  * @return {number} Game simulation time, in seconds.
  */
-gf.util.Clock.prototype.getGameTime = function() {
+gf.timing.Clock.prototype.getGameTime = function() {
   return this.gameTime_;
 };
 
@@ -108,7 +108,7 @@ gf.util.Clock.prototype.getGameTime = function() {
  * Steps the simulation time by the given amount.
  * @param {number} timeDelta Simulation time delta.
  */
-gf.util.Clock.prototype.stepGameTime = function(timeDelta) {
+gf.timing.Clock.prototype.stepGameTime = function(timeDelta) {
   this.gameTime_ += timeDelta;
 };
 
@@ -118,7 +118,7 @@ gf.util.Clock.prototype.stepGameTime = function(timeDelta) {
  * @param {number} serverTime Time received from the server, in seconds.
  * @param {number} latency Estimated latency (one direction), in seconds.
  */
-gf.util.Clock.prototype.updateServerTime = function(serverTime, latency) {
+gf.timing.Clock.prototype.updateServerTime = function(serverTime, latency) {
   this.latency = latency;
 
   // Prevent moving time backwards - this will wait until we have caught up
@@ -132,7 +132,7 @@ gf.util.Clock.prototype.updateServerTime = function(serverTime, latency) {
   var clientTime = this.getClientTime();
   var newDelta = this.gameTime_ - clientTime;
   var deltaDiff = newDelta - this.clockDelta_;
-  if (Math.abs(deltaDiff) > gf.util.Clock.MAX_TIME_DIFF_) {
+  if (Math.abs(deltaDiff) > gf.timing.Clock.MAX_TIME_DIFF_) {
     // Clock was way out of sync - reset
     this.clockDelta_ = newDelta;
   } else if (deltaDiff > 0) {
