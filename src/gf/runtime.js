@@ -17,6 +17,8 @@
 goog.provide('gf.Runtime');
 
 goog.require('gf');
+/** @suppress {extraRequire} */
+goog.require('gf.Component');
 goog.require('gf.assets.BuildClient');
 goog.require('gf.timing.Clock');
 goog.require('goog.Disposable');
