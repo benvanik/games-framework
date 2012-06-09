@@ -14,22 +14,11 @@ if [ ! -d ".git" ]; then
 fi
 
 # =============================================================================
-# Closure Compiler
+# node_modules
 # =============================================================================
-echo "Grabbing latest Closure Compiler..."
+echo "Updating node modules..."
 
-# The compiler guys put a new binary up every once in awhile - this simply
-# grabs the latest one they have and extracts it
-# In the future we may want to compile our own jar file from source (if we
-# want a newer version than the one that goes up every few months)
-# Note that git is smart and it's fine if this is a no-op
-cd third_party
-cd closure-compiler
-wget -nv http://closure-compiler.googlecode.com/files/compiler-latest.zip
-unzip -o -q compiler-latest.zip
-rm compiler-latest.zip
-cd ..
-cd ..
+# TODO(benvanik): update each module
 
 echo ""
 # =============================================================================
@@ -45,6 +34,35 @@ cd ..
 cd ..
 git add third_party/closure-library
 
+# =============================================================================
+# Closure Compiler
+# =============================================================================
+echo "Grabbing latest Closure Compiler..."
+
+# TODO(benvanik): compile from source
+cd third_party
+cd closure-compiler
+wget -nv http://closure-compiler.googlecode.com/files/compiler-latest.zip
+unzip -o -q compiler-latest.zip
+rm compiler-latest.zip
+cd ..
+cd ..
+
+echo ""
+# =============================================================================
+# Closure Templates
+# =============================================================================
+echo "Updating to the latest Closure Templates..."
+
+# TODO(benvanik): compile from source
+cd third_party
+cd closure-templates
+wget -nv http://closure-templates.googlecode.com/files/closure-templates-for-javascript-latest.zip
+unzip -o -q closure-templates-for-javascript-latest.zip
+rm closure-templates-for-javascript-latest.zip
+cd ..
+cd ..
+
 echo ""
 # =============================================================================
 # Closure Stylesheets
@@ -52,18 +70,8 @@ echo ""
 echo "Updating to the latest Closure Stylesheets..."
 
 # TODO(benvanik): closure-stylesheets (need -latest)
+# TODO(benvanik): compile from source
 echo "WARNING: closure-stylesheets doesn't have a -latest, manually check:"
 echo "http://code.google.com/p/closure-stylesheets/"
-
-echo ""
-# =============================================================================
-# node_modules
-# =============================================================================
-echo "Updating node modules..."
-
-# Note that we just assume npm exists and is valid
-# Calling like this should (since we are in our root) just update the npm
-# modules under the local node_modules folder
-npm update
 
 echo ""

@@ -18,7 +18,3 @@
  * @fileoverview Definitions for WebGL missing from the built-in one.
  * @externs
  */
-
-
-// NOTE: these have been submitted to Closure, and once included in the
-//       compiler they can be removed from here

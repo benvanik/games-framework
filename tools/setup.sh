@@ -79,16 +79,6 @@ echo "  version: $NODE_VERSION"
 
 echo ""
 # ==============================================================================
-# node_module builds
-# ==============================================================================
-echo "Building node_modules..."
-
-# Note that we just assume npm exists and is valid
-# This should rebuild all node_modules in the current path (or parent)
-npm rebuild
-
-echo ""
-# ==============================================================================
 # Closure linter
 # ==============================================================================
 echo "Installing Closure linter..."
@@ -101,7 +91,7 @@ echo ""
 # ==============================================================================
 echo "Installing Python packages..."
 
-PYTHON_PACKAGES=( glob2 mako pil watchdog Autobahn sphinx unittest2 networkx coverage argparse )
+PYTHON_PACKAGES=( glob2 mako pil watchdog Autobahn sphinx unittest2 networkx coverage argparse mutagen )
 
 for p in ${PYTHON_PACKAGES[@]}
 do
