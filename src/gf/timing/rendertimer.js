@@ -195,6 +195,15 @@ gf.timing.RenderTimer.prototype.isRunning = function() {
 
 
 /**
+ * Gets a value indicating whether the tab has focus and can render.
+ * @return {boolean} True if the tab has focus.
+ */
+gf.timing.RenderTimer.prototype.hasFocus = function() {
+  return this.tabFocused_;
+};
+
+
+/**
  * Starts the render timer, if it is not running.
  * @param {boolean=} opt_force Force a start, not incrementing the ref count.
  */

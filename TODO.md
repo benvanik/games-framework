@@ -3,11 +3,6 @@ Before Code
 
 * split readmes/setup/etc
 
-* root
-    * merge render/update frame
-        * add 'hasFocus' to renderframe
-    * idle detection (render)
-
 * graphics
     * glsllib usage
     * texture binding stack/etc
@@ -138,6 +133,9 @@ Performance
         * remove maxCoord
     * 3D DDA
 * gf.vec.Viewport.containsBoundingBox is SLOOWWWW
+
+* root
+    * idle detection (render)
 
 Debugging
 ================================================================================

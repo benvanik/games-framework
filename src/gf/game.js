@@ -210,8 +210,10 @@ gf.Game.prototype.renderTick_ = function(timestamp) {
     this.clock.stepGameTime(timeDelta);
   }
 
-  // Render
-  this.render_(this.clock.getServerTime(), timeDelta, timeAlpha);
+  // Render, only if the tab has focus
+  if (this.renderTimer.hasFocus()) {
+    this.render_(this.clock.getServerTime(), timeDelta, timeAlpha);
+  }
 };
 
 
@@ -224,7 +226,7 @@ gf.Game.prototype.renderTick_ = function(timestamp) {
 gf.Game.prototype.update_ = function(time, timeDelta) {
   goog.asserts.assert(timeDelta >= 0);
   var frame = this.updateFrame_;
-  frame.init(time, timeDelta);
+  frame.init(time, timeDelta, this.renderTimer.hasFocus());
   this.update(frame);
 };
 
