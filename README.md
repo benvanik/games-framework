@@ -11,42 +11,6 @@ code vs. platform abstractions and content pipelines.
 
 For detailed information about the framework and its classes, see `docs/`.
 
-# Raison d'etre
-
-The web is an awesome platform for games however there have been very few attempts at creating a good development flow
-for building them. It's trivial to build a simple mash-up prototype, but there is a lack of focus around good
-engineering. The goal of this project, as well as [anvil-build](https://github.com/benvanik/anvil-build), is to bring
-some of the good things about other development environments over to the web while also recognizing and respecting what
-makes web development so much fun.
-
-## Your own build system!?
-
-[anvil-build](https://github.com/benvanik/anvil-build) arose from the need to have a solid content pipeline and build
-system that was web-aware and not being able to find any that fit the bill. It's modelled after the build system used
-internally at Google and provides many things not possible with others. It's in its early stages and is the second
-revision of the build system I originally designed for this project - the benefits of it cannot be overstated and I
-hope to demonstrate them soon.
-
-## Why Closure?
-
-* Closure Compiler generates some of the smallest Javascript out there
-* Native Javascript - no plugins or extensions required to get the functionality
-* Compiler inlining can drastically help performance (and can only get better)
-* Closure Library contains a lot of useful functionality
-  * Localization/i18n
-  * Array, object, and string extensions
-  * Data structures
-  * DOM/CSS/etc templating and abstractions
-  * Rich and efficient vector math library (one of the fastest!)
-  * Well tested and maintained
-
-## What about three.js and other awesome libraries?
-
-The goal of GF is to build large, scalable, maintainable Javascript Games. It focuses on providing blocks upon which to
-build complex logic while imposing very little of its own. It's not a rapid prototying solution, and the minimum amount
-of work required to get something going is much higher than the elegantly simple three.js, but where it shines is on
-larger, longer-lived projects.
-
 # Game Library Features
 
 * Runtime
@@ -91,18 +55,66 @@ larger, longer-lived projects.
 # Setup
 
 Setup is largely automated via `setup.sh` or `setup.bat` (depending on platform).
-For instructions see [setup](docs/setup.md).
+For instructions see [setup](https://github.com/benvanik/games-framework/blob/master/docs/setup.md).
 
 # Project Tutorial
 
-For more information about getting started, check out [getting_started](docs/getting_started.md).
+For more information about getting started, check out
+[getting_started](https://github.com/benvanik/games-framework/blob/master/docs/getting_started.md).
 
 # Disclaimer
 
 This project should be considered alpha - it is likely to have significant changes and additions, and should not be
 considered stable yet. Use at your own risk.
 
+# Raison d'etre
+
+The web is an awesome platform for games however there have been very few attempts at creating a good development flow
+for building them. It's trivial to build a simple mash-up prototype, but there is a lack of focus around good
+engineering. The goal of this project, as well as [anvil-build](https://github.com/benvanik/anvil-build), is to bring
+some of the good things about other development environments over to the web while also recognizing and respecting what
+makes web development so much fun.
+
+## Your own build system!?
+
+[anvil-build](https://github.com/benvanik/anvil-build) arose from the need to have a solid content pipeline and build
+system that was web-aware and not being able to find any that fit the bill. It's modelled after the build system used
+internally at Google and provides many things not possible with others. It's in its early stages and is the second
+revision of the build system I originally designed for this project - the benefits of it cannot be overstated and I
+hope to demonstrate them soon.
+
+## Why Closure?
+
+* Closure Compiler generates some of the smallest Javascript out there
+* Native Javascript - no plugins or extensions required to get the functionality
+* Compiler inlining can drastically help performance (and can only get better)
+* Closure Library contains a lot of useful functionality
+  * Localization/i18n
+  * Array, object, and string extensions
+  * Data structures
+  * DOM/CSS/etc templating and abstractions
+  * Rich and efficient vector math library (one of the fastest!)
+  * Well tested and maintained
+
+## What about three.js and other awesome libraries?
+
+The goal of GF is to build large, scalable, maintainable Javascript Games. It focuses on providing blocks upon which to
+build complex logic while imposing very little of its own. It's not a rapid prototying solution, and the minimum amount
+of work required to get something going is much higher than the elegantly simple three.js, but where it shines is on
+larger, longer-lived projects.
+
 # License
 
 All code except dependencies under third_party/ is licensed under the permissive Apache 2.0 license.
 Feel free to fork/rip/etc and use as you wish!
+
+# Contributing
+
+Have a fix or feature? Submit a pull request - I love them!
+
+If you're writing new code note that I do try to keep to the
+[style_guide](https://github.com/benvanik/games-framework/blob/master/docs/style_guide.md)
+
+As this is a Google project, you *must* first e-sign the
+[Google Contributor License Agreement](http://code.google.com/legal/individual-cla-v1.0.html) before I can accept any
+code. It takes only a second and basically just says you won't sue us or claim copyright of your submitted code.
