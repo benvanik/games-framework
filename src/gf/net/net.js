@@ -17,7 +17,6 @@
 goog.provide('gf.net');
 goog.provide('gf.net.Endpoint');
 
-goog.require('gf.net.Browser');
 goog.require('gf.net.ClientSession');
 goog.require('gf.net.ServerSession');
 goog.require('gf.net.SessionState');
@@ -35,22 +34,6 @@ goog.require('goog.async.Deferred');
  * @typedef {string|MessagePort|Worker|SharedWorker}
  */
 gf.net.Endpoint;
-
-
-/**
- * Connects to a server browser at the given endpoint.
- *
- * @param {string} endpoint Browser service endpoint.
- * @param {!gf.net.AuthToken} authToken Authentication information.
- * @return {!goog.async.Deferred} A deferred called back when the browser is
- *     connected. If successful a {@see gf.net.Browser} will be passed as the
- *     only argument.
- */
-gf.net.createBrowser = function(endpoint, authToken) {
-  // TODO(benvanik): create browser
-  var browser = new gf.net.Browser();
-  return goog.async.Deferred.fail(null);
-};
 
 
 /**
