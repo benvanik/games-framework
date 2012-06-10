@@ -172,7 +172,7 @@ gf.net.ClientSession.prototype.makeReady_ = function() {
     }
   }, this);
   // Setup timer
-  var pingInterval = window.setInterval(sendPing,
+  var pingInterval = goog.global.setInterval(sendPing,
       gf.net.ClientSession.PING_INTERVAL_);
   // Call once right away to try to get an accurate RTT ASAP
   sendPing();
