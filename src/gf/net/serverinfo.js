@@ -29,6 +29,12 @@ goog.require('goog.object');
  */
 gf.net.ServerInfo = function() {
   /**
+   * Human-friendly server name.
+   * @type {string}
+   */
+  this.name = 'Server';
+
+  /**
    * Game type identifier.
    * @type {string}
    */
@@ -72,6 +78,7 @@ gf.net.ServerInfo.fromJson = function(json) {
 
   // TODO(benvanik): more validation
   var serverInfo = new gf.net.ServerInfo();
+  serverInfo.name = json['name'];
   serverInfo.gameType = json['gameType'];
   serverInfo.gameVersion = json['gameVersion'];
   serverInfo.location = json['location'];
@@ -87,6 +94,7 @@ gf.net.ServerInfo.fromJson = function(json) {
  */
 gf.net.ServerInfo.prototype.clone = function() {
   var clone = new gf.net.ServerInfo();
+  clone.name = this.name;
   clone.gameType = this.gameType;
   clone.gameVersion = this.gameVersion;
   clone.location = this.location;

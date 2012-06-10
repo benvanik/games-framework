@@ -78,6 +78,7 @@ message User(gf.net.User) {
  * gf.net.ServerInfo adapter.
  */
 message ServerInfo(gf.net.ServerInfo) {
+  string name;
   string gameType;
   string gameVersion;
   string location;

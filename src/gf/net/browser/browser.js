@@ -116,14 +116,7 @@ gf.net.browser.parseQueryResults_ = function(json) {
   [
     {
       'endpoint': 'ws://...',
-      'serverInfo': {
-        'gameType': 'foo',
-        'gameVersion': '1.2.3',
-        'location': 'us',
-        'maximumUsers': 32,
-        'properties': {
-          'key': 'value'
-        }
+      'serverInfo': {...}
       },
       ...
   ]
