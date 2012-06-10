@@ -21,9 +21,9 @@ goog.require('goog.object');
 
 
 /**
- * Session information.
- * Contains information about sessions that can be registered with the browser
- * service and quickly queried.
+ * Server information.
+ * Contains static metadata about a server that can be registered with the
+ * browser and used for discovery.
  *
  * @constructor
  */
@@ -32,7 +32,7 @@ gf.net.ServerInfo = function() {
    * Game type identifier.
    * @type {string}
    */
-  this.gameType = 'block';
+  this.gameType = 'unknown';
 
   /**
    * Game version string.
@@ -44,7 +44,7 @@ gf.net.ServerInfo = function() {
    * Location of the server (lower-case ISO 3166-1 alpha-2 country code).
    * @type {string}
    */
-  this.location = 'en';
+  this.location = 'us';
 
   /**
    * The maximum number of users allowed on the server.
@@ -57,6 +57,27 @@ gf.net.ServerInfo = function() {
    * @type {!Object.<string>}
    */
   this.properties = {};
+};
+
+
+/**
+ * Parses server information from a JSON blob.
+ * @param {Object|undefined} json JSON object.
+ * @return {gf.net.ServerInfo} Server information, if it could be parsed.
+ */
+gf.net.ServerInfo.fromJson = function(json) {
+  if (!json || !goog.isObject(json)) {
+    return null;
+  }
+
+  // TODO(benvanik): more validation
+  var serverInfo = new gf.net.ServerInfo();
+  serverInfo.gameType = json['gameType'];
+  serverInfo.gameVersion = json['gameVersion'];
+  serverInfo.location = json['location'];
+  serverInfo.maximumUsers = json['maximumUsers'];
+  serverInfo.properties = json['properties'];
+  return serverInfo;
 };
 
 

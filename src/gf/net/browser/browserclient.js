@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-goog.provide('gf.net.Browser');
+goog.provide('gf.net.browser.BrowserClient');
 
 goog.require('gf');
 goog.require('goog.Disposable');
@@ -36,7 +36,7 @@ goog.require('goog.structs.Map');
  * @param {string} serverId Server UUID.
  * @param {string} serverKey Server key.
  */
-gf.net.Browser = function(baseUrl, serverId, serverKey) {
+gf.net.browser.BrowserClient = function(baseUrl, serverId, serverKey) {
   goog.base(this);
 
   /**
@@ -67,7 +67,7 @@ gf.net.Browser = function(baseUrl, serverId, serverKey) {
   this.xhrPool_ = new goog.net.XhrIoPool(headers);
   this.registerDisposable(this.xhrPool_);
 };
-goog.inherits(gf.net.Browser, goog.Disposable);
+goog.inherits(gf.net.browser.BrowserClient, goog.Disposable);
 
 
 /**
@@ -78,7 +78,7 @@ goog.inherits(gf.net.Browser, goog.Disposable);
  * @const
  * @type {number}
  */
-gf.net.Browser.UPDATE_FREQUENCY = 5;
+gf.net.browser.BrowserClient.UPDATE_FREQUENCY = 5;
 
 
 /**
@@ -87,7 +87,7 @@ gf.net.Browser.UPDATE_FREQUENCY = 5;
  * @const
  * @type {number}
  */
-gf.net.Browser.TIMEOUT_ = 20 * 1000;
+gf.net.browser.BrowserClient.TIMEOUT_ = 20 * 1000;
 
 
 /**
@@ -98,7 +98,8 @@ gf.net.Browser.TIMEOUT_ = 20 * 1000;
  * @return {!goog.async.Deferred} A deferred fulfilled when the request
  *     completes. Callbacks and errbacks receive (statusCode, contents).
  */
-gf.net.Browser.prototype.issue_ = function(method, url, opt_content) {
+gf.net.browser.BrowserClient.prototype.issue_ =
+    function(method, url, opt_content) {
   var deferred = new goog.async.Deferred();
   var pool = this.xhrPool_;
   pool.getObject(
@@ -119,7 +120,7 @@ gf.net.Browser.prototype.issue_ = function(method, url, opt_content) {
               pool.releaseObject(xhr);
             });
 
-        xhr.setTimeoutInterval(gf.net.Browser.TIMEOUT_);
+        xhr.setTimeoutInterval(gf.net.browser.BrowserClient.TIMEOUT_);
         xhr.send(url, method, opt_content);
       });
   return deferred;
@@ -134,7 +135,7 @@ gf.net.Browser.prototype.issue_ = function(method, url, opt_content) {
  * @return {!goog.async.Deferred} A deferred fulfilled when the server has been
  *     registered with the browser.
  */
-gf.net.Browser.prototype.registerServer = function(serverInfo) {
+gf.net.browser.BrowserClient.prototype.registerServer = function(serverInfo) {
   var method = 'PUT';
   var url = this.serverUrl_;
   // TODO(benvanik): registerServer
@@ -149,7 +150,7 @@ gf.net.Browser.prototype.registerServer = function(serverInfo) {
  * @return {!goog.async.Deferred} A deferred fulfilled when the server has been
  *     unregistered from the browser.
  */
-gf.net.Browser.prototype.unregisterServer = function() {
+gf.net.browser.BrowserClient.prototype.unregisterServer = function() {
   var method = 'DELETE';
   var url = this.serverUrl_;
   // TODO(benvanik): unregisterServer
@@ -159,31 +160,15 @@ gf.net.Browser.prototype.unregisterServer = function() {
 /**
  * Updates runtime server state with the browser.
  * This should be called frequently, usually on an interval using
- * {@see gf.net.Browser.UPDATE_FREQUENCY}, or when significant state changes
+ * {@see gf.net.browser.BrowserClient.UPDATE_FREQUENCY}, or when significant state changes
  * (such as user join/leave).
  *
  * @param {!Array.<!gf.net.UserInfo>} userInfos Currently active users.
  * @return {!goog.async.Deferred} A deferred fulfilled when the server has been
  *     updated with the browser.
  */
-gf.net.Browser.prototype.updateServer = function(userInfos) {
+gf.net.browser.BrowserClient.prototype.updateServer = function(userInfos) {
   var method = 'POST';
   var url = this.serverUrl_ + 'user/';
   // TODO(benvanik): updateServer
-};
-
-
-/**
- *
- * @param {string} baseUrl Base browser HTTP endpoint with a trailing slash.
- */
-gf.net.Browser.query = function(baseUrl) {
-  // TODO(benvanik): query
-  // query args:
-  // - game type
-  // - game version
-  // - has friends
-  // - has users / not full
-  // - location
-  // - custom properties
 };
