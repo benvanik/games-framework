@@ -1,13 +1,6 @@
 Before Code
 ================================================================================
 
-* split readmes/setup/etc
-
-* root
-    * merge render/update frame
-        * add 'hasFocus' to renderframe
-    * idle detection (render)
-
 * graphics
     * glsllib usage
     * texture binding stack/etc
@@ -20,6 +13,7 @@ Before Code
         * see what compressed textures would need
 
 * binaryreader/writer (packetreader/writer)
+    * base off DataView
 
 Browser
 ================================================================================
@@ -167,6 +161,9 @@ Performance
         * remove maxCoord
     * 3D DDA
 * gf.vec.Viewport.containsBoundingBox is SLOOWWWW
+
+* root
+    * idle detection (render)
 
 Debugging
 ================================================================================

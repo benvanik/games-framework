@@ -35,6 +35,12 @@ gf.UpdateFrame = function() {
    * @type {number}
    */
   this.timeDelta = 0;
+
+  /**
+   * Whether the tab has focus or this is a forced update.
+   * @type {boolean}
+   */
+  this.hasFocus = false;
 };
 
 
@@ -44,7 +50,8 @@ gf.UpdateFrame = function() {
  * @param {number} timeDelta Amount of time elapsed since the last frame, in
  *     seconds.
  */
-gf.UpdateFrame.prototype.init = function(time, timeDelta) {
+gf.UpdateFrame.prototype.init = function(time, timeDelta, hasFocus) {
   this.time = time;
   this.timeDelta = timeDelta;
+  this.hasFocus = hasFocus;
 };
