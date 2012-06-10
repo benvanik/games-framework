@@ -2,6 +2,13 @@ GF - low-level web games framework and content pipeline
 ========================================================================================================================
 - - -
 
+1. [Features](#game-library-features)
+2. [Setup](#setup)
+3. [Tutorial](#project-tutorial)
+4. [Raison d'etre](#raison-detre)
+5. [License](#license)
+6. [Contributing](#contributing)
+
 GF is a modularized Javascript library that is built atop [Google Closure](http://code.google.com/closure/), using the
 [Closure Library](http://code.google.com/closure/library/) as a base and the
 [Closure Compiler](http://code.google.com/closure/compiler/) to build the tiny and fast output Javascript files.
@@ -10,6 +17,9 @@ Designed to be a set of tools to enable rapid high-quality games, it's not an en
 code vs. platform abstractions and content pipelines.
 
 For detailed information about the framework and its classes, see `docs/`.
+
+*DISCLAIMER*: This project should be considered alpha - it is likely to have significant changes and additions, and should not be
+considered stable yet. Use at your own risk.
 
 # Game Library Features
 
@@ -62,11 +72,6 @@ For instructions see [setup](https://github.com/benvanik/games-framework/blob/ma
 For more information about getting started, check out
 [getting_started](https://github.com/benvanik/games-framework/blob/master/docs/getting_started.md).
 
-# Disclaimer
-
-This project should be considered alpha - it is likely to have significant changes and additions, and should not be
-considered stable yet. Use at your own risk.
-
 # Raison d'etre
 
 The web is an awesome platform for games however there have been very few attempts at creating a good development flow
@@ -81,7 +86,7 @@ makes web development so much fun.
 system that was web-aware and not being able to find any that fit the bill. It's modelled after the build system used
 internally at Google and provides many things not possible with others. It's in its early stages and is the second
 revision of the build system I originally designed for this project - the benefits of it cannot be overstated and I
-hope to demonstrate them soon.
+hope to demonstrate them soon!
 
 ## Why Closure?
 
