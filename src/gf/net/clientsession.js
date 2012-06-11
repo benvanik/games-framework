@@ -109,6 +109,15 @@ gf.net.ClientSession.PING_INTERVAL_ = 2000;
 
 
 /**
+ * Gets a value indicating whether the session is running in local mode.
+ * @return {boolean} True if the session is local.
+ */
+gf.net.ClientSession.prototype.isLocal = function() {
+  return this.socket.isLocal;
+};
+
+
+/**
  * Gets the local user in this session.
  * @return {!gf.net.User} Local user.
  */

@@ -432,10 +432,12 @@ gf.net.ServerSession.prototype.handlePing_ = function(packet, packetType,
     return false;
   }
 
-  var realTime = this.clock.getServerTime();
-  gf.log.write('[' + user.sessionId + '] ping ',
-      ping.serverTime, ping.clientTime,
-      realTime, realTime - ping.serverTime / 1000, ping.latency);
+  if (gf.NODE) {
+    var realTime = this.clock.getServerTime();
+    gf.log.write('[' + user.sessionId + '] ping ',
+        ping.serverTime, ping.clientTime,
+        realTime, realTime - ping.serverTime / 1000, ping.latency);
+  }
 
   // Update statistics
   user.statistics.updateLatency(Math.abs(ping.latency));
