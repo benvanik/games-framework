@@ -41,7 +41,8 @@ gf.net.sockets.WsListenSocket = function(endpoint) {
    * @type {!WsWebSocketServer}
    */
   this.handle_ = new WsWebSocketServer({
-    port: Number(endpoint)
+    'host': undefined,
+    'port': Number(endpoint)
   });
 
   /**

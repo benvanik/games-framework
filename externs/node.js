@@ -327,7 +327,10 @@ FayeWebSocket.prototype.close = function() {};
 /**
  * @constructor
  * @extends {EventEmitter}
- * @param {{port: number}} options
+ * @param {{
+ *     host: ?string,
+ *     port: number
+ * }} options
  */
 function WsWebSocketServer(options) {}
 WsWebSocketServer.prototype.close = function() {};
