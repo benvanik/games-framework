@@ -2,6 +2,8 @@
 
 # Copyright 2012 Google Inc. All Rights Reserved.
 
+# Games Framework unix setup script
+
 # This script will install all dependencies to the system.
 # The dependencies are all global, and require root to install. If no package
 # manager is supported on your system (or this file doesn't support yours)
