@@ -18,7 +18,6 @@
 # - OS X:
 #   - MacPorts: http://www.macports.org
 
-# TODO(benvanik): install easy_install if not found
 # TODO(benvanik): support cygwin somehow (existing script?)
 # TODO(benvanik): support OS X homebrew http://mxcl.github.com/homebrew/
 # TODO(benvanik): support other Linux package managers?
@@ -33,7 +32,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # ==============================================================================
-# Check for Python
+# Check for Python/node/etc
 # ==============================================================================
 echo "Checking for dependencies..."
 
@@ -55,6 +54,16 @@ if [ "$PYTHON_CHECK" = "0" ]; then
 fi
 echo "     path: $(which python)"
 echo "  version: $PYTHON_VERSION"
+
+echo "- Python easy_install:"
+if [ ! -e "$(which easy_install)" ]; then
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "! easy_install not found or not in PATH                                        !"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "Grab the latest version from: http://pypi.python.org/pypi/setuptools"
+  exit 1
+fi
+echo "     path: $(which easy_install)"
 
 echo "- node.js 0.6.10+:"
 if [ ! -e "$(which node)" ]; then
