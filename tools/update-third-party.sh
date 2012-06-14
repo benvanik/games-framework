@@ -14,25 +14,27 @@ if [ ! -d ".git" ]; then
 fi
 
 # =============================================================================
-# node_modules
+# Git submodules
 # =============================================================================
-echo "Updating node modules..."
+echo "Updating git modules..."
 
 # TODO(benvanik): update each module
-
-echo ""
-# =============================================================================
-# Closure Library
-# =============================================================================
-echo "Updating to the latest Closure Library..."
-
+SUBMODULES=( abbrev closure-library glsl-unit nopt options ws )
 cd third_party
-cd closure-library
-git checkout master
-git pull origin master
+for m in ${SUBMODULES[@]}
+do
+  echo "-> third_party/$m"
+  cd $m
+  git checkout master
+  git pull origin master
+  git merge origin/master
+  cd ..
+done
 cd ..
-cd ..
-git add third_party/closure-library
+for m in ${SUBMODULES[@]}
+do
+  git add third_party/$m
+done
 
 # =============================================================================
 # Closure Compiler
