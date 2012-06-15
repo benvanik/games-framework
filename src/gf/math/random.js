@@ -127,7 +127,7 @@ gf.math.Random.mash_ = function(data) {
  * Generates a new 32-bit floating point random number.
  * @return {number} A random number in [0-1].
  */
-gf.math.Random.prototype.next = function() {
+gf.math.Random.prototype.random = function() {
   var t = 2091639 * this.s0_ + this.c_ * 2.3283064365386963e-10; // 2^-32
   this.s0_ = this.s1_;
   this.s1_ = this.s2_;
@@ -136,20 +136,12 @@ gf.math.Random.prototype.next = function() {
 
 
 /**
- * Generates a new 32-bit floating point random number.
- * Alias to {@see #next} for compatibility with the system Math type.
- * @return {number} A random number in [0-1].
- */
-gf.math.Random.prototype.random = gf.math.Random.prototype.next;
-
-
-/**
  * Generates a new unsigned integer random number.
  * @param {number} max Maximum value of the number.
  * @return {number} A random number in [0-max].
  */
 gf.math.Random.prototype.nextUint = function(max) {
-  return (this.next() * 0x100000000) % (Math.round(max) + 1);
+  return (this.random() * 0x100000000) % (Math.round(max) + 1);
 };
 
 
@@ -158,7 +150,7 @@ gf.math.Random.prototype.nextUint = function(max) {
  * @return {number} A random number in [0-255].
  */
 gf.math.Random.prototype.nextUint8 = function() {
-  return this.next() * 0x100;
+  return this.random() * 0x100;
 };
 
 
@@ -167,7 +159,7 @@ gf.math.Random.prototype.nextUint8 = function() {
  * @return {number} A random number in [0-65535].
  */
 gf.math.Random.prototype.nextUint16 = function() {
-  return this.next() * 0x10000;
+  return this.random() * 0x10000;
 };
 
 
@@ -176,5 +168,5 @@ gf.math.Random.prototype.nextUint16 = function() {
  * @return {number} A random number in [0-4294967295].
  */
 gf.math.Random.prototype.nextUint32 = function() {
-  return this.next() * 0x100000000;
+  return this.random() * 0x100000000;
 };
