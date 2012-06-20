@@ -94,7 +94,7 @@ gf.math.Random = function(opt_seed) {
   }
 
   for (var n = 0; n < 100; n++) {
-    this.next();
+    this.random();
   }
 };
 

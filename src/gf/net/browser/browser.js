@@ -30,16 +30,9 @@ goog.require('goog.structs.Map');
 /**
  * A single query result.
  * @constructor
- * @param {string} endpoint Server endpoint.
  * @param {!gf.net.ServerInfo} serverInfo Server information.
  */
-gf.net.browser.QueryResult = function(endpoint, serverInfo) {
-  /**
-   * Server endpoint.
-   * @type {string}
-   */
-  this.endpoint = endpoint;
-
+gf.net.browser.QueryResult = function(serverInfo) {
   /**
    * Server information.
    * @type {!gf.net.ServerInfo}
@@ -115,7 +108,6 @@ gf.net.browser.parseQueryResults_ = function(json) {
   /*
   [
     {
-      'endpoint': 'ws://...',
       'serverInfo': {...}
       },
       ...
@@ -124,16 +116,12 @@ gf.net.browser.parseQueryResults_ = function(json) {
   var results = [];
   for (var n = 0; n < json.length; n++) {
     var jsonResult = json[n];
-    var endpoint = jsonResult['endpoint'];
-    if (!endpoint || !goog.isString(endpoint)) {
-      throw 'Invalid data';
-    }
     var jsonServerInfo = jsonResult['serverInfo'];
     var serverInfo = gf.net.ServerInfo.fromJson(jsonResult['serverInfo']);
     if (!serverInfo) {
       throw 'Invalid data';
     }
-    results.push(new gf.net.browser.QueryResult(endpoint, serverInfo));
+    results.push(new gf.net.browser.QueryResult(serverInfo));
   }
   return results;
 };

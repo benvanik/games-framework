@@ -29,10 +29,22 @@ goog.require('goog.object');
  */
 gf.net.ServerInfo = function() {
   /**
+   * Accessible endpoint.
+   * @type {string}
+   */
+  this.endpoint = '';
+
+  /**
    * Human-friendly server name.
    * @type {string}
    */
   this.name = 'Server';
+
+  /**
+   * Location of the server (lower-case ISO 3166-1 alpha-2 country code).
+   * @type {string}
+   */
+  this.location = 'us';
 
   /**
    * Game type identifier.
@@ -45,12 +57,6 @@ gf.net.ServerInfo = function() {
    * @type {string}
    */
   this.gameVersion = '0';
-
-  /**
-   * Location of the server (lower-case ISO 3166-1 alpha-2 country code).
-   * @type {string}
-   */
-  this.location = 'us';
 
   /**
    * The maximum number of users allowed on the server.
@@ -78,10 +84,11 @@ gf.net.ServerInfo.fromJson = function(json) {
 
   // TODO(benvanik): more validation
   var serverInfo = new gf.net.ServerInfo();
+  serverInfo.endpoint = json['endpoint'];
   serverInfo.name = json['name'];
+  serverInfo.location = json['location'];
   serverInfo.gameType = json['gameType'];
   serverInfo.gameVersion = json['gameVersion'];
-  serverInfo.location = json['location'];
   serverInfo.maximumUsers = json['maximumUsers'];
   serverInfo.properties = json['properties'];
   return serverInfo;
@@ -94,10 +101,11 @@ gf.net.ServerInfo.fromJson = function(json) {
  */
 gf.net.ServerInfo.prototype.clone = function() {
   var clone = new gf.net.ServerInfo();
+  clone.endpoint = this.endpoint;
   clone.name = this.name;
+  clone.location = this.location;
   clone.gameType = this.gameType;
   clone.gameVersion = this.gameVersion;
-  clone.location = this.location;
   clone.maximumUsers = this.maximumUsers;
   clone.properties = /** @type {!Object.<string>} */ (
       goog.object.clone(this.properties));

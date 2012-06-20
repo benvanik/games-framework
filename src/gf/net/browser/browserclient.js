@@ -20,6 +20,7 @@ goog.require('gf');
 goog.require('goog.Disposable');
 goog.require('goog.async.Deferred');
 goog.require('goog.events');
+goog.require('goog.json');
 goog.require('goog.net.EventType');
 goog.require('goog.net.XhrIoPool');
 goog.require('goog.structs.Map');
@@ -51,7 +52,7 @@ gf.net.browser.BrowserClient = function(baseUrl, serverId, serverKey) {
    * @private
    * @type {string}
    */
-  this.serverUrl_ = baseUrl + 'api/server/' + serverId + '/';
+  this.serverUrl_ = baseUrl + 'api/server/' + serverId;
 
   // Add some additional headers, for fun
   var headers = new goog.structs.Map();
@@ -136,9 +137,16 @@ gf.net.browser.BrowserClient.prototype.issue_ =
  *     registered with the browser.
  */
 gf.net.browser.BrowserClient.prototype.registerServer = function(serverInfo) {
-  var method = 'PUT';
-  var url = this.serverUrl_;
-  // TODO(benvanik): registerServer
+  var content = goog.json.serialize({
+    'endpoint': serverInfo.endpoint,
+    'server_name': serverInfo.name,
+    'server_location': serverInfo.location,
+    'game_type': serverInfo.gameType,
+    'game_version': serverInfo.gameVersion,
+    'game_properties': serverInfo.properties,
+    'user_max': serverInfo.maximumUsers
+  });
+  return this.issue_('PUT', this.serverUrl_, content);
 };
 
 
@@ -151,9 +159,7 @@ gf.net.browser.BrowserClient.prototype.registerServer = function(serverInfo) {
  *     unregistered from the browser.
  */
 gf.net.browser.BrowserClient.prototype.unregisterServer = function() {
-  var method = 'DELETE';
-  var url = this.serverUrl_;
-  // TODO(benvanik): unregisterServer
+  return this.issue_('DELETE', this.serverUrl_);
 };
 
 
@@ -168,7 +174,16 @@ gf.net.browser.BrowserClient.prototype.unregisterServer = function() {
  *     updated with the browser.
  */
 gf.net.browser.BrowserClient.prototype.updateServer = function(userInfos) {
-  var method = 'POST';
-  var url = this.serverUrl_ + 'user/';
-  // TODO(benvanik): updateServer
+  var userObjects = [];
+  for (var n = 0; n < userInfos.length; n++) {
+    var userInfo = userInfos[n];
+    userObjects.push({
+      'display_name': userInfo.displayName
+    });
+  }
+  var content = goog.json.serialize({
+    'user_count': userObjects.length,
+    'users': userObjects
+  });
+  return this.issue_('POST', this.serverUrl_, content);
 };

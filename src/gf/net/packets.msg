@@ -78,10 +78,11 @@ message User(gf.net.User) {
  * gf.net.ServerInfo adapter.
  */
 message ServerInfo(gf.net.ServerInfo) {
+  string endpoint;
   string name;
+  string location;
   string gameType;
   string gameVersion;
-  string location;
   uint32 maximumUsers;
   map.<string, string> properties;
 };
