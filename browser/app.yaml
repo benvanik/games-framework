@@ -1,0 +1,33 @@
+# games-framework server browser
+
+application: gf-browser
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: true
+
+libraries:
+- name: jinja2
+  version: latest
+
+handlers:
+# TODO(benvanik): online server browser at /?
+
+# /admin/ handler
+- url: /admin/.*
+  script: admin.app
+  login: admin
+  auth_fail_action: redirect
+
+# /api/ handler
+- url: /api/.*
+  script: api.app
+
+# Static content (CSS/icons/etc)
+- url: /content
+  static_dir: content
+
+admin_console:
+  pages:
+  - name: Admin Page
+    url: /admin/

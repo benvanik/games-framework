@@ -1,0 +1,88 @@
+<html>
+  <head>
+    <title>gf-browser admin page : {{ user.nickname() }}</title>
+    <link type="text/css" rel="stylesheet" href="/content/common.css" />
+    <link type="text/css" rel="stylesheet" href="/content/admin.css" />
+  </head>
+  <body>
+    <h1>
+      gf-browser admin page : {{ user.nickname() }}
+    </h1>
+    <hr/>
+    <br/>
+    <div>
+      <form action="key/create" method="post">
+        New server key: <input name="email" type="text"> <input type="submit" value="Generate Key">
+      </form>
+      <table id="registration-table">
+        <thead>
+          <th style="width: 240px">e-mail</th>
+          <th style="width: 260px">uuid</th>
+          <th style="width: 260px">private key</th>
+          <th></th>
+        </thead>
+        <tbody>
+        {% for server_registration in server_registrations %}
+          <tr>
+            <td>
+              {{ server_registration.email|escape }}
+            </td>
+            <td class="uuid">
+              {{ server_registration.uuid|escape }}
+            </td>
+            <td class="uuid">
+              {{ server_registration.private_key|escape }}
+            </td>
+            <td>
+              <a href="key/{{ server_registration.uuid }}/delete">X</a>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <br/>
+    <hr/>
+    <br/>
+    <div>
+      <table id="server-table">
+        <thead>
+          <th style="width: 300px">name</th>
+          <th style="width: 200px">endpoint</th>
+          <th style="width: 120px">game type</th>
+          <th style="width: 50px">version</th>
+          <th style="width: 50px">users</th>
+          <th style="width: 260px">uuid</th>
+          <th></th>
+        </thead>
+        <tbody>
+          {% for server_entry in server_entries %}
+            <tr>
+              <td>
+                {{ server_entry.server_name|escape }}
+              </td>
+              <td class="value">
+                {{ server_entry.endpoint|escape }}
+              </td>
+              <td class="value">
+                {{ server_entry.game_type|escape }}
+              </td>
+              <td class="value" style="text-align: center">
+                {{ server_entry.game_version|escape }}
+              </td>
+              <td class="value" style="text-align: center">
+                {{ server_entry.user_count|escape }} / {{ server_entry.user_max|escape }}
+              </td>
+              <td class="uuid">
+                {{ server_entry.uuid|escape }}
+              </td>
+              <td>
+                <a href="key/{{ server_entry.uuid }}/delete">X</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>
