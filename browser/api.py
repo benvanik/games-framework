@@ -137,14 +137,15 @@ class ServerMethod(webapp2.RequestHandler):
 
 
 class QueryMethod(webapp2.RequestHandler):
-  def get(self, game_type):
+  def get(self, game_type, game_version):
     self.response.headers['Content-Type'] = 'text/plain'
     self.response.headers['Access-Control-Allow-Origin'] = '*'
 
     json_entries = []
     latest_time = datetime.datetime.utcnow() - datetime.timedelta(seconds=10)
     for server_entry in ServerEntry.gql(
-        'WHERE game_type=:1 AND update_time>:2', game_type, latest_time):
+        'WHERE game_type=:1 AND game_version=:2 AND update_time>:3',
+        game_type, game_version, latest_time):
       json_entries.append({
           'server_info': {
             'endpoint': server_entry.endpoint,
@@ -163,5 +164,5 @@ class QueryMethod(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     webapp2.Route('/api/server/<server_uuid>', ServerMethod),
-    webapp2.Route('/api/query/<game_type>', QueryMethod),
+    webapp2.Route('/api/query/<game_type>/<game_version>', QueryMethod),
     ], debug=True)
