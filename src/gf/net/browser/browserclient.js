@@ -17,13 +17,9 @@
 goog.provide('gf.net.browser.BrowserClient');
 
 goog.require('gf');
+goog.require('gf.net.http');
 goog.require('goog.Disposable');
-goog.require('goog.async.Deferred');
-goog.require('goog.events');
 goog.require('goog.json');
-goog.require('goog.net.EventType');
-goog.require('goog.net.XhrIoPool');
-goog.require('goog.structs.Map');
 
 
 
@@ -54,19 +50,16 @@ gf.net.browser.BrowserClient = function(baseUrl, serverId, serverKey) {
    */
   this.serverUrl_ = baseUrl + 'api/server/' + serverId;
 
-  // Add some additional headers, for fun
-  var headers = new goog.structs.Map();
-  headers.set('X-GF-Version', String(gf.VERSION));
-  headers.set('X-GF-Server-ID', serverId);
-  headers.set('X-GF-Server-Key', serverKey);
-
   /**
-   * XHR pool used for making all requests to the browser.
+   * Additional HTTP headers.
    * @private
-   * @type {!goog.net.XhrIoPool}
+   * @type {!Object.<string>}
    */
-  this.xhrPool_ = new goog.net.XhrIoPool(headers);
-  this.registerDisposable(this.xhrPool_);
+  this.httpHeaders_ = {
+    'X-GF-Version': String(gf.VERSION),
+    'X-GF-Server-ID': serverId,
+    'X-GF-Server-Key': serverKey
+  };
 };
 goog.inherits(gf.net.browser.BrowserClient, goog.Disposable);
 
@@ -83,52 +76,6 @@ gf.net.browser.BrowserClient.UPDATE_FREQUENCY = 5;
 
 
 /**
- * Timeout interval, in ms, for XHRs.
- * @private
- * @const
- * @type {number}
- */
-gf.net.browser.BrowserClient.TIMEOUT_ = 20 * 1000;
-
-
-/**
- * Issues an XHR request as either a GET or POST.
- * @param {string} method HTTP method, either GET or POST.
- * @param {string} url URI to make the request at.
- * @param {string=} opt_content Body for POST requests.
- * @return {!goog.async.Deferred} A deferred fulfilled when the request
- *     completes. Callbacks and errbacks receive (statusCode, contents).
- */
-gf.net.browser.BrowserClient.prototype.issue_ =
-    function(method, url, opt_content) {
-  var deferred = new goog.async.Deferred();
-  var pool = this.xhrPool_;
-  pool.getObject(
-      /**
-       * @param {!goog.net.XhrIo} xhr
-       */
-      function(xhr) {
-        var key = goog.events.listen(xhr, goog.net.EventType.COMPLETE,
-            function() {
-              var result = [xhr.getStatus(), xhr.getResponseText()];
-              if (xhr.isSuccess()) {
-                deferred.callback(result);
-              } else {
-                deferred.errback(result);
-              }
-
-              goog.events.unlistenByKey(key);
-              pool.releaseObject(xhr);
-            });
-
-        xhr.setTimeoutInterval(gf.net.browser.BrowserClient.TIMEOUT_);
-        xhr.send(url, method, opt_content);
-      });
-  return deferred;
-};
-
-
-/**
  * Registers a server with the browser.
  * If the server has already been registered its information will be updated.
  *
@@ -137,16 +84,21 @@ gf.net.browser.BrowserClient.prototype.issue_ =
  *     registered with the browser.
  */
 gf.net.browser.BrowserClient.prototype.registerServer = function(serverInfo) {
+  var properties = [];
+  for (var key in serverInfo.properties) {
+    properties.push(key + '=' + serverInfo.properties[key]);
+  }
   var content = goog.json.serialize({
     'endpoint': serverInfo.endpoint,
     'server_name': serverInfo.name,
     'server_location': serverInfo.location,
     'game_type': serverInfo.gameType,
     'game_version': serverInfo.gameVersion,
-    'game_properties': serverInfo.properties,
+    'game_properties': properties,
     'user_max': serverInfo.maximumUsers
   });
-  return this.issue_('PUT', this.serverUrl_, content);
+  return gf.net.http.issueRequest(
+      'PUT', this.serverUrl_, content, this.httpHeaders_);
 };
 
 
@@ -159,7 +111,8 @@ gf.net.browser.BrowserClient.prototype.registerServer = function(serverInfo) {
  *     unregistered from the browser.
  */
 gf.net.browser.BrowserClient.prototype.unregisterServer = function() {
-  return this.issue_('DELETE', this.serverUrl_);
+  return gf.net.http.issueRequest(
+      'DELETE', this.serverUrl_, undefined, this.httpHeaders_);
 };
 
 
@@ -185,5 +138,6 @@ gf.net.browser.BrowserClient.prototype.updateServer = function(userInfos) {
     'user_count': userObjects.length,
     'users': userObjects
   });
-  return this.issue_('POST', this.serverUrl_, content);
+  return gf.net.http.issueRequest(
+      'POST', this.serverUrl_, content, this.httpHeaders_);
 };

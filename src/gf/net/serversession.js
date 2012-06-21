@@ -128,7 +128,7 @@ gf.net.ServerSession.prototype.ready = function() {
     this.services[n].connected();
   }
 
-  gf.log.write('server ready, listening on', this.socket.endpoint.toString());
+  gf.log.write('Server ready, listening on', this.socket.endpoint.toString());
 };
 
 

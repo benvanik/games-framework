@@ -28,9 +28,10 @@ function require(name) {}
 
 /**
  * @constructor
- * @param {number} size
+ * @param {number|string} sizeOrString
+ * @param {string=} opt_encoding
  */
-function Buffer(size) {}
+function Buffer(sizeOrString, opt_encoding) {}
 /** @type {number} */
 Buffer.prototype.length;
 
@@ -71,12 +72,58 @@ Socket.prototype.setTimeout = function(timeout) {};
 
 
 /** @constructor */
+function UrlModule() {}
+/**
+ * @param {string} urlStr
+ * @param {boolean=} opt_parseQueryString
+ * @param {boolean=} opt_slashesDenoteHost
+ * @return {!Object}
+ */
+UrlModule.prototype.parse = function(
+    urlStr, opt_parseQueryString, opt_slashesDenoteHost) {};
+
+
+
+/** @constructor */
 function HttpModule() {}
 /**
  * @return {!Server}
  */
 HttpModule.prototype.createServer = function() {};
+/**
+ * @param {!Object} options
+ * @param {function(!ClientResponse)} callback
+ * @return {!ClientRequest}
+ */
+HttpModule.prototype.request = function(options, callback) {};
 
+/**
+ * @constructor
+ * @extends {EventEmitter}
+ */
+function ClientRequest() {}
+/**
+ * @param {number} timeout
+ * @param {Function=} opt_callback
+ */
+ClientRequest.prototype.setTimeout = function(timeout, opt_callback) {};
+/**
+ * @param {?string|Buffer=} opt_data
+ * @param {string=} opt_encoding
+ */
+ClientRequest.prototype.end = function(opt_data, opt_encoding) {};
+
+/**
+ * @constructor
+ * @extends {EventEmitter}
+ */
+function ClientResponse() {}
+/** @type {number} */
+ClientResponse.prototype.statusCode;
+/**
+ * @param {string} encoding
+ */
+ClientResponse.prototype.setEncoding = function(encoding) {};
 
 
 /**

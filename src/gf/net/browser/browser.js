@@ -19,11 +19,10 @@ goog.provide('gf.net.browser.QueryResult');
 
 goog.require('gf');
 goog.require('gf.net.ServerInfo');
+goog.require('gf.net.http');
+goog.require('gf.net.http.HttpResonse');
 goog.require('goog.async.Deferred');
-goog.require('goog.events');
-goog.require('goog.net.EventType');
-goog.require('goog.net.XhrIo');
-goog.require('goog.structs.Map');
+goog.require('goog.json');
 
 
 
@@ -60,37 +59,36 @@ gf.net.browser.query = function(baseUrl) {
   // - location
   // - custom properties
 
-  var deferred = new goog.async.Deferred();
-
   // TODO(benvanik): query for real - right now it's all faked
   var url = baseUrl;
 
-  var xhr = new goog.net.XhrIo();
-  xhr.setTimeoutInterval(gf.net.browser.QUERY_TIMEOUT_);
-
-  var key = goog.events.listen(xhr, goog.net.EventType.COMPLETE,
-      function() {
-        goog.events.unlistenByKey(key);
-        goog.dispose(xhr);
-        if (xhr.isSuccess()) {
-          var results;
-          try {
-            results = gf.net.browser.parseQueryResults_(xhr.getResponseJson());
-          } catch (e) {
-            deferred.errback(e);
-          }
-          if (results) {
-            deferred.callback(results);
-          }
+  var deferred = new goog.async.Deferred();
+  gf.net.http.issueRequest('GET', url, undefined, {
+    'X-GF-Version': String(gf.VERSION)
+  }).addCallbacks(
+      /**
+       * @param {!gf.net.http.HttpResponse} response
+       */
+      function(response) {
+        var result = null;
+        try {
+          var json = goog.json.parse(response.content);
+          result = gf.net.browser.parseQueryResults_(json);
+        } catch (e) {
+          deferred.errback(e);
+        }
+        deferred.callback(result);
+      },
+      /**
+       * @param {!gf.net.http.HttpResponse|*} arg
+       */
+      function(arg) {
+        if (arg instanceof gf.net.http.HttpResonse) {
+          deferred.errback(arg.statusCode);
         } else {
-          deferred.errback(xhr.getStatus());
+          deferred.errback(arg);
         }
       });
-
-  var headers = new goog.structs.Map();
-  headers.set('X-GF-Version', String(gf.VERSION));
-  xhr.send(url, undefined, undefined, headers);
-
   return deferred;
 };
 
@@ -108,7 +106,7 @@ gf.net.browser.parseQueryResults_ = function(json) {
   /*
   [
     {
-      'serverInfo': {...}
+      'server_info': {...}
       },
       ...
   ]
@@ -116,8 +114,8 @@ gf.net.browser.parseQueryResults_ = function(json) {
   var results = [];
   for (var n = 0; n < json.length; n++) {
     var jsonResult = json[n];
-    var jsonServerInfo = jsonResult['serverInfo'];
-    var serverInfo = gf.net.ServerInfo.fromJson(jsonResult['serverInfo']);
+    var jsonServerInfo = jsonResult['server_info'];
+    var serverInfo = gf.net.ServerInfo.fromJson(jsonResult['server_info']);
     if (!serverInfo) {
       throw 'Invalid data';
     }
@@ -125,12 +123,3 @@ gf.net.browser.parseQueryResults_ = function(json) {
   }
   return results;
 };
-
-
-/**
- * Timeout, in ms, for query requests.
- * @private
- * @const
- * @type {number}
- */
-gf.net.browser.QUERY_TIMEOUT_ = 20 * 1000;
