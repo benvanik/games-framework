@@ -7,9 +7,6 @@
 [submodule "third_party/ws"]
 	path = third_party/ws
 	url = https://github.com/einaros/ws.git
-[submodule "third_party/nopt"]
-	path = third_party/nopt
-	url = https://github.com/isaacs/nopt.git
 [submodule "third_party/abbrev"]
 	path = third_party/abbrev
 	url = https://github.com/isaacs/abbrev-js.git
