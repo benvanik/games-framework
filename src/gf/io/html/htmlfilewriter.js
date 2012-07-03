@@ -153,7 +153,12 @@ gf.io.html.HtmlFileWriter.prototype.write = function(offset, var_args) {
   }
 
   var args = Array.prototype.slice.call(arguments, 1);
-  var blob = goog.fs.getBlob.apply(goog.global, args);
+  for (var n = 0; n < args.length; n++) {
+    if (args[n] instanceof ArrayBuffer) {
+      args[n] = new Uint8Array(args[n]);
+    }
+  }
+  var blob = new Blob(args);
 
   if (offset > this.getLength()) {
     this.setLength(offset + blob.size).addCallbacks(
