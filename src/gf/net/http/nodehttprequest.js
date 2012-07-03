@@ -17,6 +17,8 @@
 goog.provide('gf.net.http.NodeHttpRequest');
 
 goog.require('gf.net.http.HttpRequest');
+goog.require('gf.net.http.HttpResponse');
+goog.require('goog.async.Deferred');
 
 
 

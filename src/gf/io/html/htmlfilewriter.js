@@ -26,7 +26,6 @@ goog.require('gf.io.FileWriter');
 goog.require('goog.Disposable');
 goog.require('goog.async.Deferred');
 goog.require('goog.events.EventHandler');
-goog.require('goog.fs');
 goog.require('goog.fs.FileSaver');
 
 
