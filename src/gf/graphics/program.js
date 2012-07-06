@@ -22,6 +22,7 @@ goog.provide('gf.graphics.Program');
 
 goog.require('gf.graphics.Resource');
 goog.require('gf.log');
+goog.require('goog.string');
 goog.require('goog.webgl');
 
 
@@ -233,7 +234,7 @@ gf.graphics.Program.prototype.verifyShader = function(type, shader) {
   var gl = this.graphicsContext.gl;
 
   // Always get logs - may have warnings
-  var log = gl.getShaderInfoLog(shader);
+  var log = goog.string.trim(gl.getShaderInfoLog(shader));
   if (log && log.length) {
     this.infoLogs = this.infoLogs || [];
     var logLines = log.split('\n');
@@ -301,7 +302,7 @@ gf.graphics.Program.prototype.verifyProgram = function(program) {
   var gl = this.graphicsContext.gl;
 
   // Always get logs - may have warnings
-  var log = gl.getProgramInfoLog(program);
+  var log = goog.string.trim(gl.getProgramInfoLog(program));
   if (log && log.length) {
     this.infoLogs = this.infoLogs || [];
     var logLines = log.split('\n');
