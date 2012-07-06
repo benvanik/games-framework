@@ -109,6 +109,13 @@ gf.dom.Display = function(dom, opt_parentElement) {
   this.registerDisposable(this.canvas);
 
   /**
+   * Whether the display is visible.
+   * @private
+   * @type {boolean}
+   */
+  this.isVisible_ = true;
+
+  /**
    * Whether full screen mode is supported.
    * @type {boolean}
    */
@@ -261,6 +268,27 @@ gf.dom.Display.prototype.getInputElement = function() {
  */
 gf.dom.Display.prototype.getSize = function() {
   return this.canvas.size;
+};
+
+
+/**
+ * @return {boolean} Whether the display is visible.
+ */
+gf.dom.Display.prototype.isVisible = function() {
+  return this.isVisible_;
+};
+
+
+/**
+ * Sets whether the display is visible.
+ * @param {boolean} value True to show the display.
+ */
+gf.dom.Display.prototype.setVisible = function(value) {
+  if (value == this.isVisible_) {
+    return;
+  }
+  this.isVisible_ = value;
+  goog.style.showElement(this.canvas.el);
 };
 
 
