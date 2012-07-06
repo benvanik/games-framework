@@ -41,8 +41,25 @@ gf.audio.Listener = function(context) {
    * @type {AudioContext}
    */
   this.context = context;
+
+  /**
+   * Listener position at the last update.
+   * @private
+   * @type {!goog.vec.Vec3.Float32}
+   */
+  this.position_ = goog.vec.Vec3.createFloat32();
 };
 goog.inherits(gf.audio.Listener, goog.Disposable);
+
+
+/**
+ * Gets the distance between the listener and the other point.
+ * @param {!goog.vec.Vec3.Type} other Other point.
+ * @return {number} Distance in world units.
+ */
+gf.audio.Listener.prototype.getDistance = function(other) {
+  return goog.vec.Vec3.distance(this.position_, other);
+};
 
 
 /**
@@ -66,6 +83,7 @@ gf.audio.Listener.prototype.update = function(opt_inverseViewMatrix) {
     goog.vec.Vec3.setFromValues(v0, 0, 0, 0);
     goog.vec.Mat4.multVec3(vm, v0, v0);
     listener.setPosition(v0[0], v0[1], v0[2]);
+    goog.vec.Vec3.setFromArray(this.position_, v0);
 
     // Orientation - get the front and up vectors
     goog.vec.Vec3.setFromValues(v0, 0, 0, 1);
