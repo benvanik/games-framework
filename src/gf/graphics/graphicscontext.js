@@ -373,7 +373,7 @@ gf.graphics.GraphicsContext.prototype.setup = function(opt_attributes) {
     // TODO(benvanik): hold onto this deferred and issue the errback on the
     // webglcontextcreationerror event... unfortunately it doesn't seem well
     // implemented so it can't be relied upon yet
-    deferred.errback(null);
+    deferred.errback('Unable to create the WebGL context');
   }
 
   return deferred;

@@ -76,7 +76,7 @@ goog.inherits(gf.Runtime, goog.Disposable);
  */
 gf.Runtime.prototype.disposeInternal = function() {
   // Dispose all components
-  goog.array.forEach(this.components, goog.dispose);
+  goog.disposeAll(this.components);
   this.components.length = 0;
 
   goog.base(this, 'disposeInternal');

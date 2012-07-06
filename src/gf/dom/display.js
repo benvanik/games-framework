@@ -43,8 +43,10 @@ goog.require('goog.style');
  * @constructor
  * @extends {goog.events.EventTarget}
  * @param {!goog.dom.DomHelper} dom DOM helper.
+ * @param {Element=} opt_parentElement Parent element. If omitted the document
+ *     body will be used.
  */
-gf.dom.Display = function(dom) {
+gf.dom.Display = function(dom, opt_parentElement) {
   goog.base(this);
 
   /**
@@ -52,6 +54,13 @@ gf.dom.Display = function(dom) {
    * @type {!goog.dom.DomHelper}
    */
   this.dom = dom;
+  var doc = dom.getDocument();
+
+  /**
+   * Parent DOM element.
+   * @type {!Element}
+   */
+  this.parentElement = opt_parentElement || doc.body;
 
   /**
    * Event handler.
@@ -61,15 +70,9 @@ gf.dom.Display = function(dom) {
   this.eh_ = new goog.events.EventHandler(this);
   this.registerDisposable(this.eh_);
 
-  // <body>
+  // <parentElement>
   //   <mainFrame>
   //     <canvasParent>
-
-  var doc = dom.getDocument();
-  var body = doc.body;
-  goog.style.setStyle(body, {
-    'margin': '0 0 0 0'
-  });
 
   var mainFrame = dom.createElement(goog.dom.TagName.DIV);
   goog.style.setStyle(mainFrame, {
@@ -79,7 +82,7 @@ gf.dom.Display = function(dom) {
     'right': 0,
     'bottom': 0
   });
-  dom.appendChild(body, mainFrame);
+  dom.appendChild(this.parentElement, mainFrame);
 
   var canvasParent = dom.createElement(goog.dom.TagName.DIV);
   goog.style.setStyle(canvasParent, {
@@ -93,9 +96,10 @@ gf.dom.Display = function(dom) {
 
   /**
    * Main frame element.
+   * @private
    * @type {!Element}
    */
-  this.mainFrame = mainFrame;
+  this.mainFrame_ = mainFrame;
 
   /**
    * <canvas> wrapper.
@@ -223,6 +227,16 @@ gf.dom.Display.Orientation = {
 
 
 /**
+ * Gets the DOM element that owns the display and can be used to add overlays.
+ * @return {!Element} The parent element of the element that is used for
+ *     displaying content.
+ */
+gf.dom.Display.prototype.getDomElement = function() {
+  return this.mainFrame_;
+};
+
+
+/**
  * Gets the DOM element that is responsible for display.
  * @return {!Element} An element that is used for displaying content.
  */
@@ -278,7 +292,7 @@ gf.dom.Display.prototype.enterFullScreen = function() {
     return;
   }
 
-  var el = this.mainFrame;
+  var el = this.mainFrame_;
 
   var requestFullScreen =
       el.requestFullScreen ||
