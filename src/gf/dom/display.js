@@ -22,6 +22,7 @@ goog.provide('gf.dom.Display');
 
 goog.require('gf.dom.EventType');
 goog.require('goog.Disposable');
+goog.require('goog.asserts');
 goog.require('goog.dom.TagName');
 goog.require('goog.dom.ViewportSizeMonitor');
 goog.require('goog.events.EventHandler');
@@ -55,12 +56,14 @@ gf.dom.Display = function(dom, opt_parentElement) {
    */
   this.dom = dom;
   var doc = dom.getDocument();
+  var body = doc.body;
+  goog.asserts.assert(body);
 
   /**
    * Parent DOM element.
    * @type {!Element}
    */
-  this.parentElement = opt_parentElement || doc.body;
+  this.parentElement = opt_parentElement || body;
 
   /**
    * Event handler.
@@ -288,7 +291,7 @@ gf.dom.Display.prototype.setVisible = function(value) {
     return;
   }
   this.isVisible_ = value;
-  goog.style.showElement(this.canvas.el);
+  goog.style.showElement(this.canvas.el, value);
 };
 
 
