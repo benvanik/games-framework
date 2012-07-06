@@ -90,7 +90,7 @@ gf.ui.ScreenManager.prototype.setScreen = function(screen) {
  */
 gf.ui.ScreenManager.prototype.pushScreen = function(screen) {
   goog.asserts.assert(!screen.getScreenManager());
-  screen.setScreenManager(screen);
+  screen.setScreenManager(this);
   this.stack_.push(screen);
   this.updateScreenStates_();
   screen.enterDocument();
