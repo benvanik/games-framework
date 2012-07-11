@@ -98,10 +98,14 @@ gf.audio.MusicController.prototype.getTrackList = function() {
  * @param {gf.audio.TrackList} trackList New track list. Assumed unloaded.
  */
 gf.audio.MusicController.prototype.setTrackList = function(trackList) {
+  if (trackList == this.trackList_) {
+    return;
+  }
+
   // Stop and unload existing tracks
   if (this.trackList_) {
     this.stop();
-    this.audioManager_.unloadTrackList(trackList);
+    this.audioManager_.unloadTrackList(this.trackList_);
   }
 
   // Set the new track list
