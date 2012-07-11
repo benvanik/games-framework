@@ -110,7 +110,9 @@ gf.audio.MusicController.prototype.setTrackList = function(trackList) {
   // Load and start playing the new track list
   if (this.trackList_) {
     this.audioManager_.loadTrackList(this.trackList_);
-    this.scheduleNextPlay_(0);
+    if (!this.isMuted_) {
+      this.scheduleNextPlay_(0);
+    }
   }
 };
 
