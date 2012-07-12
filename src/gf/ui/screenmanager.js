@@ -129,6 +129,23 @@ gf.ui.ScreenManager.prototype.getTopScreen = function() {
 
 
 /**
+ * Enumerates all screens in stack order from bottom to top.
+ * Do not modify the screen manager while enumerating.
+ * @param {!function(!gf.ui.Screen):boolean|undefined} callback Function called
+ *     once for each screen.
+ * @param {Object=} opt_scope Scope to call the callback in.
+ */
+gf.ui.ScreenManager.prototype.forEachScreen = function(callback, opt_scope) {
+  for (var n = 0; n < this.stack_.length; n++) {
+    var screen = this.stack_[n];
+    if (callback.call(opt_scope || goog.global, screen) === false) {
+      break;
+    }
+  }
+};
+
+
+/**
  * Replaces the entire screen stack with the given screen.
  * @param {!gf.ui.Screen} screen Screen to display.
  * @param {boolean=} opt_suppressHistory Suppress history updates.
