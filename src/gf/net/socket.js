@@ -166,7 +166,7 @@ gf.net.Socket.prototype.write = function(data) {
     if (this.simulationInterval_ === null) {
       this.simulationInterval_ = goog.global.setInterval(goog.bind(function() {
         if (this.state == gf.net.Socket.State.CONNECTED) {
-          this.flushWriteQueue();
+          this.flush();
         }
       }, this), 5);
     }
@@ -180,7 +180,7 @@ gf.net.Socket.prototype.write = function(data) {
 
   this.writeQueue_.push(packet);
   if (this.state == gf.net.Socket.State.CONNECTED) {
-    this.flushWriteQueue();
+    this.flush();
   }
 };
 
@@ -204,7 +204,7 @@ gf.net.Socket.prototype.queueRead = function(packet) {
  * Flushes all pending writes.
  * @param {boolean=} opt_force Forces even delayed packets to be written.
  */
-gf.net.Socket.prototype.flushWriteQueue = function(opt_force) {
+gf.net.Socket.prototype.flush = function(opt_force) {
   var now = goog.now();
   while (this.writeQueue_.length) {
     var packet = this.writeQueue_[0];

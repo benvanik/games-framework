@@ -82,7 +82,7 @@ goog.inherits(gf.net.sockets.HtmlWebSocket, gf.net.Socket);
 gf.net.sockets.HtmlWebSocket.prototype.handleOpen_ = function(e) {
   // Drain waiting queue
   this.state = gf.net.Socket.State.CONNECTED;
-  this.flushWriteQueue();
+  this.flush();
 };
 
 

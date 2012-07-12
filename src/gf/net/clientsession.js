@@ -477,7 +477,7 @@ gf.net.ClientSession.prototype.setDisconnected_ = function(reason) {
 gf.net.ClientSession.prototype.disconnect = function() {
   this.send(gf.net.packets.Disconnect.createData(
       gf.net.DisconnectReason.USER));
-  this.socket.flushWriteQueue(true);
+  this.socket.flush(true);
   this.setDisconnected_(gf.net.DisconnectReason.USER);
 };
 
