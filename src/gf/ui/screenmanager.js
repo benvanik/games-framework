@@ -20,9 +20,12 @@
 
 goog.provide('gf.ui.ScreenManager');
 
+goog.require('gf.log');
 goog.require('gf.ui.Screen');
 goog.require('goog.Disposable');
 goog.require('goog.asserts');
+goog.require('goog.events');
+goog.require('goog.history.EventType');
 
 
 
@@ -48,6 +51,20 @@ gf.ui.ScreenManager = function(dom) {
    * @type {!Array.<!gf.ui.Screen>}
    */
   this.stack_ = [];
+
+  /**
+   * HTML5 history manager, used for navigation.
+   * @private
+   * @type {!goog.history.Html5History}
+   */
+  this.history_ = null;
+  // TODO(benvanik): need to figure out issues with duplicate events/etc
+  // if (goog.history.Html5History.isSupported()) {
+  //   this.history_ = new goog.history.Html5History();
+  //   goog.events.listen(this.history_, goog.history.EventType.NAVIGATE,
+  //       this.historyNavigated_, false, this);
+  //   this.history_.setEnabled(true);
+  // }
 };
 goog.inherits(gf.ui.ScreenManager, goog.Disposable);
 
@@ -56,6 +73,13 @@ goog.inherits(gf.ui.ScreenManager, goog.Disposable);
  * @override
  */
 gf.ui.ScreenManager.prototype.disposeInternal = function() {
+  if (this.history_) {
+    goog.events.unlisten(this.history_, goog.history.EventType.NAVIGATE,
+        this.historyNavigated_, false, this);
+    goog.dispose(this.history_);
+    this.history_ = null;
+  }
+
   while (this.stack_.length) {
     var screen = this.stack_.pop();
     screen.setScreenManager(null);
@@ -63,6 +87,36 @@ gf.ui.ScreenManager.prototype.disposeInternal = function() {
   }
 
   goog.base(this, 'disposeInternal');
+};
+
+
+/**
+ * Handles HTML5 history change events.
+ * @private
+ * @param {!goog.history.Event} e Event.
+ */
+gf.ui.ScreenManager.prototype.historyNavigated_ = function(e) {
+  gf.log.write('navigate: ', e.token, e.isNavigation);
+};
+
+
+/**
+ * Updates the URL to the current stack.
+ * @private
+ */
+gf.ui.ScreenManager.prototype.updateHistory_ = function() {
+  if (!this.history_) {
+    return;
+  }
+
+  var tokens = [];
+  for (var n = 0; n < this.stack_.length; n++) {
+    var screen = this.stack_[n];
+    tokens.push(screen.getHashToken());
+  }
+  var token = tokens.join('/');
+
+  this.history_.replaceToken(token);
 };
 
 
@@ -77,45 +131,66 @@ gf.ui.ScreenManager.prototype.getTopScreen = function() {
 /**
  * Replaces the entire screen stack with the given screen.
  * @param {!gf.ui.Screen} screen Screen to display.
+ * @param {boolean=} opt_suppressHistory Suppress history updates.
  */
-gf.ui.ScreenManager.prototype.setScreen = function(screen) {
-  this.popAllScreens();
-  this.pushScreen(screen);
+gf.ui.ScreenManager.prototype.setScreen = function(
+    screen, opt_suppressHistory) {
+  this.popAllScreens(true);
+  this.pushScreen(screen, true);
+
+  if (!opt_suppressHistory) {
+    this.updateHistory_();
+  }
 };
 
 
 /**
  * Pushes a new screen on to the stack.
  * @param {!gf.ui.Screen} screen Screen to display.
+ * @param {boolean=} opt_suppressHistory Suppress history updates.
  */
-gf.ui.ScreenManager.prototype.pushScreen = function(screen) {
+gf.ui.ScreenManager.prototype.pushScreen = function(
+    screen, opt_suppressHistory) {
   goog.asserts.assert(!screen.getScreenManager());
   screen.setScreenManager(this);
   this.stack_.push(screen);
   this.updateScreenStates_();
   screen.enterDocument();
+
+  if (!opt_suppressHistory) {
+    this.updateHistory_();
+  }
 };
 
 
 /**
  * Pops the screen at the top of the stack and disposes it.
+ * @param {boolean=} opt_suppressHistory Suppress history updates.
  */
-gf.ui.ScreenManager.prototype.popScreen = function() {
+gf.ui.ScreenManager.prototype.popScreen = function(opt_suppressHistory) {
   goog.asserts.assert(this.stack_.length);
   var screen = this.stack_.pop();
   screen.setScreenManager(null);
   goog.dispose(screen);
 
   this.updateScreenStates_();
+
+  if (!opt_suppressHistory) {
+    this.updateHistory_();
+  }
 };
 
 
 /**
  * Pops all screens and disposes them.
+ * @param {boolean=} opt_suppressHistory Suppress history updates.
  */
-gf.ui.ScreenManager.prototype.popAllScreens = function() {
+gf.ui.ScreenManager.prototype.popAllScreens = function(opt_suppressHistory) {
   while (this.stack_.length) {
-    this.popScreen();
+    this.popScreen(true);
+  }
+  if (!opt_suppressHistory) {
+    this.updateHistory_();
   }
 };
 

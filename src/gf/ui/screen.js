@@ -31,9 +31,10 @@ goog.require('goog.asserts');
  * etc.
  * @constructor
  * @extends {goog.Disposable}
+ * @param {string} hashToken History URL hash token.
  * @param {number} flags Bitmask of {@see gf.ui.Screen.Flags} values.
  */
-gf.ui.Screen = function(flags) {
+gf.ui.Screen = function(hashToken, flags) {
   goog.base(this);
 
   /**
@@ -42,6 +43,13 @@ gf.ui.Screen = function(flags) {
    * @type {gf.ui.ScreenManager}
    */
   this.screenManager_ = null;
+
+  /**
+   * HTML5 history hash token.
+   * @private
+   * @type {string}
+   */
+  this.hashToken_ = hashToken;
 
   /**
    * Bitmask of flags for the screen.
@@ -91,6 +99,14 @@ gf.ui.Screen.prototype.getScreenManager = function() {
  */
 gf.ui.Screen.prototype.setScreenManager = function(value) {
   this.screenManager_ = value;
+};
+
+
+/**
+ * @return {string} URL hash token.
+ */
+gf.ui.Screen.prototype.getHashToken = function() {
+  return this.hashToken_;
 };
 
 
