@@ -67,7 +67,7 @@ gf.net.browser.query = function(baseUrl) {
     'X-GF-Version': String(gf.VERSION)
   }).addCallbacks(
       /**
-       * @param {!gf.net.http.HttpResponse} response
+       * @param {!gf.net.http.HttpResponse} response HTTP response.
        */
       function(response) {
         var result = null;
@@ -80,7 +80,7 @@ gf.net.browser.query = function(baseUrl) {
         deferred.callback(result);
       },
       /**
-       * @param {!gf.net.http.HttpResponse|*} arg
+       * @param {!gf.net.http.HttpResponse|*} arg Error argument.
        */
       function(arg) {
         if (arg instanceof gf.net.http.HttpResonse) {

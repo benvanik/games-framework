@@ -119,8 +119,8 @@ gf.net.browser.BrowserClient.prototype.unregisterServer = function() {
 /**
  * Updates runtime server state with the browser.
  * This should be called frequently, usually on an interval using
- * {@see gf.net.browser.BrowserClient.UPDATE_FREQUENCY}, or when significant state changes
- * (such as user join/leave).
+ * {@see gf.net.browser.BrowserClient.UPDATE_FREQUENCY}, or when significant
+ * state changes (such as user join/leave).
  *
  * @param {!Array.<!gf.net.UserInfo>} userInfos Currently active users.
  * @return {!goog.async.Deferred} A deferred fulfilled when the server has been

@@ -49,6 +49,7 @@ gf.UpdateFrame = function() {
  * @param {number} time Current game time, in seconds.
  * @param {number} timeDelta Amount of time elapsed since the last frame, in
  *     seconds.
+ * @param {boolean} hasFocus Whether the tab has focus during this update.
  */
 gf.UpdateFrame.prototype.init = function(time, timeDelta, hasFocus) {
   this.time = time;
