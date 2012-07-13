@@ -59,14 +59,6 @@ gf.Game = function(launchOptions, opt_clock) {
   this.lastTime_ = this.clock.getClientTime();
 
   /**
-   * Monotonically increasing render frame number.
-   * TODO(benvanik): wraparound
-   * @private
-   * @type {number}
-   */
-  this.frameNumber_ = 0;
-
-  /**
    * Whether to use a fixed timestep for updates.
    * If true, then all update frames will have the same time delta and render
    * frames will have some timeAlpha value <= 1.
@@ -95,11 +87,27 @@ gf.Game = function(launchOptions, opt_clock) {
   this.updateFrame_ = new gf.UpdateFrame();
 
   /**
+   * Monotonically increasing update frame number.
+   * TODO(benvanik): wraparound
+   * @private
+   * @type {number}
+   */
+  this.updateFrameNumber_ = 0;
+
+  /**
    * Cached render frame.
    * @private
    * @type {!gf.RenderFrame}
    */
   this.renderFrame_ = new gf.RenderFrame();
+
+  /**
+   * Monotonically increasing render frame number.
+   * TODO(benvanik): wraparound
+   * @private
+   * @type {number}
+   */
+  this.renderFrameNumber_ = 0;
 
   var self = this;
   /**
@@ -226,7 +234,11 @@ gf.Game.prototype.renderTick_ = function(timestamp) {
 gf.Game.prototype.update_ = function(time, timeDelta) {
   goog.asserts.assert(timeDelta >= 0);
   var frame = this.updateFrame_;
-  frame.init(time, timeDelta, this.renderTimer.hasFocus());
+  frame.init(
+      this.updateFrameNumber_++,
+      time,
+      timeDelta,
+      this.renderTimer.hasFocus());
   this.update(frame);
 };
 
@@ -241,7 +253,11 @@ gf.Game.prototype.update_ = function(time, timeDelta) {
 gf.Game.prototype.render_ = function(time, timeDelta, timeAlpha) {
   // Setup the render frame/poll input/etc
   var frame = this.renderFrame_;
-  frame.init(this.frameNumber_++, time, timeDelta, timeAlpha);
+  frame.init(
+      this.renderFrameNumber_++,
+      time,
+      timeDelta,
+      timeAlpha);
   this.render(frame);
 };
 

@@ -25,7 +25,7 @@ goog.provide('gf.RenderFrame');
  */
 gf.RenderFrame = function() {
   /**
-   * Monotonically increasing frame number.
+   * Monotonically increasing render frame number.
    * @type {number}
    */
   this.frameNumber = 0;
