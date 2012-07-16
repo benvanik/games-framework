@@ -383,3 +383,23 @@ gf.net.PacketWriter.prototype.writeString = function(value) {
   this.writeUint16(byteCount);
   this.offset = oldOffset;
 };
+
+
+/**
+ * Shared packet writer singleton.
+ * @private
+ * @type {!gf.net.PacketWriter}
+ */
+gf.net.PacketWriter.sharedWriter_ = null;
+
+
+/**
+ * Gets a shared packet writer singleton.
+ * @return {!gf.net.PacketWriter} Packet writer.
+ */
+gf.net.PacketWriter.getSharedWriter = function() {
+  if (!gf.net.PacketWriter.sharedWriter_) {
+    gf.net.PacketWriter.sharedWriter_ = new gf.net.PacketWriter();
+  }
+  return gf.net.PacketWriter.sharedWriter_;
+};

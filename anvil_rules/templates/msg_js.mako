@@ -212,7 +212,7 @@ ${member.name}\
 % endif
 % endfor
 ) {
-  var writer = ${file.namespace}.packetWriter_;
+  var writer = gf.net.PacketWriter.getSharedWriter();
   var messageInstance = ${file.namespace}.${message.name}.writeInstance;
 % for member in message.members:
 % if member.type.is_vec:
@@ -228,11 +228,3 @@ ${member.name}\
   return writer.finish();
 };
 % endfor
-
-
-/**
- * Shared packet writer.
- * @private
- * @type {!gf.net.PacketWriter}
- */
-${file.namespace}.packetWriter_ = new gf.net.PacketWriter();

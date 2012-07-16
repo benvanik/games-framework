@@ -308,7 +308,7 @@ gf.net.ServerSession.prototype.poll = function(opt_timeLimit) {
  */
 gf.net.ServerSession.prototype.pollJoiningSockets_ = function() {
   // Poll all sockets
-  var reader = gf.net.ServerSession.packetReader_;
+  var reader = gf.net.PacketReader.getSharedReader();
   for (var n = 0; n < this.joiningSockets_.length; n++) {
     var socket = this.joiningSockets_[n];
     var removeFromList = false;
@@ -558,11 +558,3 @@ gf.net.ServerSession.prototype.send = function(data, opt_user) {
     }
   }
 };
-
-
-/**
- * Shared packet reader.
- * @private
- * @type {!gf.net.PacketReader}
- */
-gf.net.ServerSession.packetReader_ = new gf.net.PacketReader();

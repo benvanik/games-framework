@@ -66,7 +66,7 @@ gf.net.PacketSwitch.prototype.register = function(packetType, handler,
  * @return {boolean} True if the packet was handled successfully.
  */
 gf.net.PacketSwitch.prototype.dispatch = function(packet) {
-  var reader = gf.net.PacketSwitch.packetReader_;
+  var reader = gf.net.PacketReader.getSharedReader();
   reader.begin(packet.data, 0);
   if (!reader.hasBytes(1)) {
     return false;
@@ -81,11 +81,3 @@ gf.net.PacketSwitch.prototype.dispatch = function(packet) {
   }
   return false;
 };
-
-
-/**
- * Shared packet reader.
- * @private
- * @type {!gf.net.PacketReader}
- */
-gf.net.PacketSwitch.packetReader_ = new gf.net.PacketReader();

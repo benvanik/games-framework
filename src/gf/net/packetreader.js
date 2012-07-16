@@ -376,3 +376,23 @@ gf.net.PacketReader.prototype.readString = function() {
   }
   return out.join('');
 };
+
+
+/**
+ * Shared packet reader singleton.
+ * @private
+ * @type {!gf.net.PacketReader}
+ */
+gf.net.PacketReader.sharedReader_ = null;
+
+
+/**
+ * Gets a shared packet reader singleton.
+ * @return {!gf.net.PacketReader} Packet reader.
+ */
+gf.net.PacketReader.getSharedReader = function() {
+  if (!gf.net.PacketReader.sharedReader_) {
+    gf.net.PacketReader.sharedReader_ = new gf.net.PacketReader();
+  }
+  return gf.net.PacketReader.sharedReader_;
+};
