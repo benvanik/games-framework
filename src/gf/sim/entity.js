@@ -21,7 +21,6 @@
 goog.provide('gf.sim.Entity');
 goog.provide('gf.sim.EntityDirtyFlag');
 goog.provide('gf.sim.EntityFlag');
-goog.provide('gf.sim.EntityType');
 
 goog.require('gf.sim');
 goog.require('gf.sim.EntityDirtyFlag');
@@ -216,56 +215,6 @@ gf.sim.Entity.prototype.resetDirtyState = function() {
 };
 
 
-
-/**
- * Entity type descriptor.
- *
- * @constructor
- * @param {number} typeId Entity type ID.
- * @param {!function(new:gf.sim.Entity)} entityCtor Entity constructor.
- */
-gf.sim.EntityType = function(typeId, entityCtor) {
-  /**
-   * Entity type ID.
-   * @type {number}
-   */
-  this.typeId = typeId;
-
-  /**
-   * Constructor for the entity type.
-   * @private
-   * @type {!function(new:gf.sim.Entity)}
-   */
-  this.entityCtor_ = entityCtor;
-};
-
-
-/**
- * Creates a new entity of this type.
- * @param {!gf.sim.ClientSimulator} simulator Owning simulator.
- * @param {number} entityId Entity ID.
- * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag}.
- * @return {!gf.sim.ClientEntity} A new entity.
- */
-gf.sim.EntityType.prototype.createClientEntity = function(
-    simulator, entityId, entityFlags) {
-  return new this.entityCtor_(simulator, entityId, entityFlags);
-};
-
-
-/**
- * Creates a new entity of this type.
- * @param {!gf.sim.ServerSimulator} simulator Owning simulator.
- * @param {number} entityId Entity ID.
- * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag}.
- * @return {!gf.sim.ServerEntity} A new entity.
- */
-gf.sim.EntityType.prototype.createServerEntity = function(
-    simulator, entityId, entityFlags) {
-  return new this.entityCtor_(simulator, entityId, entityFlags);
-};
-
-
 /**
  * Entity state flags.
  * Used as a bitmask to define entity state information, such as whether the
@@ -298,13 +247,21 @@ gf.sim.EntityFlag = {
   FREQUENT_UPDATES: 1 << 2,
 
   /**
+   * Entity has variables that are predicted.
+   * Predicted entities are significantly more expensive than unpredicted
+   * ones and should only be used when the entity is controllable by a player.
+   * Examples: player controlled entities, projectiles.
+   */
+  PREDICTED: 1 << 3,
+
+  /**
    * Entity participates in the latency compensation system.
    * An entity with this bit will have past state recorded to enable the
    * history system to rewind time. It is expensive to have an entity
    * latency compensated, so only use for appropraite types.
    * Examples: player controlled entities, projectiles.
    */
-  LATENCY_COMPENSATED: 1 << 3
+  LATENCY_COMPENSATED: 1 << 4
 };
 
 

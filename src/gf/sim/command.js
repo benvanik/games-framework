@@ -19,8 +19,6 @@
  */
 
 goog.provide('gf.sim.Command');
-goog.provide('gf.sim.CommandType');
-goog.provide('gf.sim.PredictedCommand');
 
 goog.require('gf.sim');
 
@@ -34,13 +32,14 @@ goog.require('gf.sim');
  * Commands are heavily pooled and should always reset completely.
  *
  * @constructor
+ * @param {!gf.sim.CommandType} commandType Command type.
  */
-gf.sim.Command = function() {
+gf.sim.Command = function(commandType) {
   /**
-   * Command type ID.
-   * @type {number}
+   * Command type.
+   * @type {!gf.sim.CommandType}
    */
-  this.typeId = typeId;
+  this.commandType = commandType;
 
   /**
    * Game simulation time the command was generated, in seconds.
@@ -57,97 +56,9 @@ gf.sim.Command = function() {
 };
 
 
-
 /**
- * Simulation command supporting prediction.
- *
- * @constructor
- * @extends {gf.sim.Command}
+ * Releases the command back to its parent pool.
  */
-gf.sim.PredictedCommand = function() {
-  goog.base(this);
-
-  /**
-   * Sequence identifier.
-   * Monotonically increasing number used for confirming commands.
-   * @type {number}
-   */
-  this.sequence = 0;
-
-  /**
-   * Amount of time this command covers, in seconds.
-   * @type {number}
-   */
-  this.timeDelta = 0;
-
-  /**
-   * Whether this command has been predicted on the client already.
-   * This will be set to false on the first execution and true on all subsequent
-   * ones. Commands that create entities/etc in response to commands must always
-   * ensure they only do such on the first call.
-   * @type {boolean}
-   */
-  this.hasPredicted = false;
-};
-goog.inherits(gf.sim.PredictedCommand, gf.sim.Command);
-
-
-
-/**
- * Command type descriptor.
- * Aids in serializing and deserializing commands, as well as provides a
- * pool of commands to prevent allocations.
- *
- * @constructor
- * @param {number} typeId Command type ID.
- * @param {!function(new:gf.sim.Command)} commandCtor Command constructor.
- */
-gf.sim.CommandType = function(typeId, commandCtor) {
-  /**
-   * Command type ID.
-   * @type {number}
-   */
-  this.typeId = typeId;
-
-  /**
-   * Constructor for the command type.
-   * @private
-   * @type {!function(new:gf.sim.Command)}
-   */
-  this.commandCtor_ = commandCtor;
-
-  /**
-   * Unused command instances.
-   * @private
-   * @type {!Array.<!gf.sim.Command>}
-   */
-  this.unusedCommands_ = [];
-};
-
-
-/**
- * Allocates a command to use from the pool.
- * The returned command will have random values and must be fully reset.
- * @return {!gf.sim.Command} A new or re-used command. Uninitialized.
- */
-gf.sim.CommandType.prototype.allocate = function() {
-  if (this.unusedCommands_.length) {
-    var command = this.unusedCommands_.pop();
-    // Reset the important fields that everyone will mess up
-    command.targetEntityId = gf.sim.NO_ENTITY_ID;
-    return command;
-  } else {
-    var command = new this.commandCtor_();
-    command.typeId = this.typeId;
-    return command;
-  }
-};
-
-
-/**
- * Releases a command to the pool.
- * @param {!gf.sim.Command} command Command to release.
- */
-gf.sim.CommandType.prototype.release = function(command) {
-  this.unusedCommands_.push(command);
+gf.sim.Command.prototype.release = function() {
+  this.commandType.release(this);
 };

@@ -260,10 +260,11 @@ gf.sim.Simulator.prototype.update = goog.abstractMethod;
 
 /**
  * Executes incoming or pending commands.
- * @param {!Array.<!gf.sim.Command>} commands Command list.
+ * @param {!Arrray.<!gf.sim.Command>} commands Commands to execute.
+ * @param {number} commandCount Count of commands to execute.
  */
-gf.sim.Simulator.prototype.executeCommands = function(commands) {
-  for (var n = 0; n < commands.length; n++) {
+gf.sim.Simulator.prototype.executeCommands = function(commands, commandCount) {
+  for (var n = 0; n < commandCount; n++) {
     var command = commands[n];
 
     // Get the target entity (if any)

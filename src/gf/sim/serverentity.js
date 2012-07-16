@@ -48,7 +48,11 @@ gf.sim.ServerEntity.prototype.getSimulator = function() {
 };
 
 
-// TODO(benvanik): command handling
+/**
+ * @override
+ */
+gf.sim.ServerEntity.prototype.executeCommand = function(command) {
+};
 
 
 /**

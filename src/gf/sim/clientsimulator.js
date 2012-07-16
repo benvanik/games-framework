@@ -20,10 +20,12 @@
 
 goog.provide('gf.sim.ClientSimulator');
 
-goog.require('gf.log');
 goog.require('gf.net.NetworkService');
-goog.require('gf.sim.PredictedCommand');
+goog.require('gf.sim.CommandList');
+goog.require('gf.sim.EntityFlags');
+goog.require('gf.sim.PredictedCommandList');
 goog.require('gf.sim.Simulator');
+goog.require('goog.array');
 
 
 
@@ -55,6 +57,7 @@ gf.sim.ClientSimulator = function(runtime, session) {
   this.netService_ = new gf.sim.ClientSimulator.NetService_(this, session);
   this.registerDisposable(this.netService_);
 
+  // TODO(benvanik): slotted list
   /**
    * A list of entities needing prediction.
    * @private
@@ -63,34 +66,24 @@ gf.sim.ClientSimulator = function(runtime, session) {
   this.predictedEntities_ = [];
 
   /**
-   * Next unique sequence ID.
+   * List of incoming commands from the network.
+   * Commands will be processed on the next update.
    * @private
-   * @type {number}
+   * @type {!gf.sim.CommandList}
    */
-  this.nextSequenceId_ = 1;
+  this.incomingCommandList_ = new gf.sim.CommandList();
 
   /**
-   * Commands waiting to be sent to the server.
+   * List of outgoing commands to the network.
+   * Contains logic for predicted commands; both those sent to the server and
+   * unconfirmed
+   * ({@see gf.sim.PredictedCommandList#getUnconfirmedPredictedArray}) and
+   * those waiting to be sent
+   * ({@see gf.sim.PredictedCommandList#getOutgoingPredictedArray}).
    * @private
-   * @type {!Array.<!gf.sim.Command>}
+   * @type {!gf.sim.CommandList}
    */
-  this.pendingCommands_ = [];
-
-  /**
-   * Predicted commands that have not yet been confirmed by the server and
-   * should be used for prediction.
-   * @private
-   * @type {!Array.<!gf.sim.PredictedCommand>}
-   */
-  this.unconfirmedPredictionCommands_ = [];
-
-  /**
-   * Predicted commands waiting to be sent to the server.
-   * Used only for prediction.
-   * @private
-   * @type {!Array.<!gf.sim.PredictedCommand>}
-   */
-  this.pendingPredictionCommands_ = [];
+  this.outgoingCommandList_ = new gf.sim.PredictedCommandList();
 
   /**
    * Last time commands were sent to the server.
@@ -107,6 +100,33 @@ goog.inherits(gf.sim.ClientSimulator, gf.sim.Simulator);
  */
 gf.sim.ClientSimulator.prototype.disposeInternal = function() {
   goog.base(this, 'disposeInternal');
+};
+
+
+/**
+ * @override
+ */
+gf.sim.ClientSimulator.prototype.addEntity = function(entity) {
+  goog.base(this, 'addEntity', entity);
+
+  // Track predicted entities
+  if (entity.getFlags() & gf.sim.EntityFlags.PREDICTED) {
+    this.predictedEntities_.push(entity);
+  }
+};
+
+
+/**
+ * @override
+ */
+gf.sim.ClientSimulator.prototype.removeEntity = function(entity) {
+  goog.base(this, 'removeEntity', entity);
+
+  // Un-track predicted entities
+  // TODO(benvanik): faster removal via slotted list
+  if (entity.getFlags() & gf.sim.EntityFlags.PREDICTED) {
+    goog.array.remove(this.predictedEntities_, entity);
+  }
 };
 
 
@@ -140,10 +160,9 @@ gf.sim.ClientSimulator.prototype.update = function(frame) {
   // Process sync packets
   // TODO(benvanik): process sync packets, adding/updating/deleting entities
   var confirmedSequence = 0;
-  var commands = [];
 
   // Confirm commands and remove them from the unconfirmed list
-  this.confirmCommands_(confirmedSequence);
+  this.outgoingCommandList_.confirmSequence(confirmedSequence);
 
   // Apply server state updates
   // This must be done before command processing to ensure that any entities
@@ -151,7 +170,10 @@ gf.sim.ClientSimulator.prototype.update = function(frame) {
   // call entity.preUpdate(frame) if it changed in the sync
 
   // Process incoming commands
-  this.executeCommands(commands);
+  this.executeCommands(
+      this.incomingCommandList_.getArray(),
+      this.incomingCommandList_.getCount());
+  this.incomingCommandList_.releaseAllCommands();
 
   // Run scheduled events
   this.getScheduler().update(frame);
@@ -164,54 +186,6 @@ gf.sim.ClientSimulator.prototype.update = function(frame) {
 
   // Compact, if needed - this prevents memory leaks from caches
   this.compact_();
-};
-
-
-/**
- * Confirms commands from the server up to and including the given sequence ID.
- * @private
- * @param {number} sequence Sequence identifier.
- */
-gf.sim.ClientSimulator.prototype.confirmCommands_ = function(sequence) {
-  var commands = this.unconfirmedPredictionCommands_;
-  if (!commands.length) {
-    return;
-  }
-
-  if (commands[commands.length - 1].sequence <= sequence) {
-    // All commands confirmed - release all pool
-    var lastType = null;
-    for (var n = 0; n < commands.length; n++) {
-      var command = commands[n];
-      if (!lastType || command.typeId != lastType.typeId) {
-        lastType = this.getCommandType(command.typeId);
-      }
-      lastType.release(command);
-    }
-    commands.length = 0;
-  } else {
-    // Run through until we find a command that hasn't been confirmed
-    var killCount = commands.length;
-    var lastType = null;
-    for (var n = 0; n < commands.length; n++) {
-      var command = commands[n];
-
-      // If we are not yet confirmed, abort
-      if (command.sequence > sequence) {
-        killCount = n;
-        break;
-      }
-
-      // Release to pool
-      if (!lastType || command.typeId != lastType.typeId) {
-        lastType = this.getCommandType(command.typeId);
-      }
-      lastType.release(command);
-    }
-
-    // Remove confirmed commands
-    commands.splice(0, killCount);
-  }
 };
 
 
@@ -230,14 +204,7 @@ gf.sim.ClientSimulator.prototype.executeCommand = function(command) {
  * @param {!gf.sim.Command} command Command to transmit.
  */
 gf.sim.ClientSimulator.prototype.sendCommand = function(command) {
-  this.pendingCommands_.push(command);
-
-  // Assign predicted commands sequence numbers and add to tracking list
-  if (command instanceof gf.sim.PredictedCommand) {
-    command.sequence = this.nextSequenceId_++;
-    command.hasPredicted = false;
-    this.pendingPredictionCommands_.push(command);
-  }
+  this.outgoingCommandList_.addCommand(command);
 };
 
 
@@ -247,47 +214,12 @@ gf.sim.ClientSimulator.prototype.sendCommand = function(command) {
  * @param {!gf.UpdateFrame} frame Current update frame.
  */
 gf.sim.ClientSimulator.prototype.sendPendingCommands_ = function(frame) {
-  if (!this.pendingCommands_.length) {
-    return;
-  }
-
   var delta = frame.time - this.lastSendTime_;
   if (delta >= gf.sim.ClientSimulator.CLIENT_UPDATE_RATE_) {
     this.lastSendTime_ = frame.time;
 
     // Build command packet
-    // Move all pending commands to the unconfirmed list to use for prediction
-    var lastType = null;
-    for (var n = 0; n < this.pendingCommands_.length; n++) {
-      var command = this.pendingCommands_[n];
-
-      // Add command to packet
-      // TODO(benvanik): add to packet
-
-      // Cleanup command
-      if (command instanceof gf.sim.PredictedCommand) {
-        // Predicted - it's part of the sequence flow
-        // Keep it around so we can re-execute it
-        this.unconfirmedPredictionCommands_.push(command);
-      } else {
-        // Unpredicted - just release now, as it doesn't matter
-        if (!lastType || command.typeId != lastType.typeId) {
-          lastType = this.getCommandType(command.typeId);
-        }
-        lastType.release(command);
-      }
-    }
-
-    // Reset lists
-    // All pending predicted commands were added to the unconfirmed list above
-    this.pendingCommands_.length = 0;
-    this.pendingPredictionCommands_.length = 0;
-  }
-
-  // Check to see if we've blocked up
-  if (this.unconfirmedPredictionCommands_.length > 1500) {
-    gf.log.debug('massive backup of commands, dying');
-    // TODO(benvanik): death flag
+    //this.outgoingCommandList_.write(writer);
   }
 };
 
@@ -316,6 +248,10 @@ gf.sim.ClientSimulator.prototype.compact_ = function() {
 
   // TODO(benvanik): stage this out over multiple ticks to prevent spikes
   // TODO(benvanik): compact dirty entities list?
+
+  // Compact command lists
+  this.incomingCommandList_.compact();
+  this.outgoingCommandList_.compact();
 };
 
 
@@ -326,20 +262,18 @@ gf.sim.ClientSimulator.prototype.compact_ = function() {
  * It should be called every render frame before running local physics/etc.
  * @param {!gf.RenderFrame} frame Current render frame.
  */
-gf.sim.ClientSimulator.prototype.predictEntities = function(frame) {
+gf.sim.ClientSimulator.prototype.predictEntities =
+    gf.sim.ClientSimulator.PREDICTION_ENABLED_ ? function(frame) {
   // Reset predicted entities to their confirmed states
   for (var n = 0; n < this.predictedEntities_.length; n++) {
     var entity = this.predictedEntities_[n];
+
+    // TODO(benvanik): reset state
   }
 
-  if (gf.sim.ClientSimulator.PREDICTION_ENABLED_) {
-    // Predict all sent but unconfirmed commands
-    this.executeCommands(this.unconfirmedPredictionCommands_);
-
-    // Predict all unsent commands
-    this.executeCommands(this.pendingPredictionCommands_);
-  }
-};
+  // Execute prediction commands
+  this.outgoingCommandList_.executePrediction(this);
+} : goog.nullFunction;
 
 
 

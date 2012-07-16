@@ -22,6 +22,7 @@ goog.provide('gf.sim.ServerSimulator');
 
 goog.require('gf.log');
 goog.require('gf.net.NetworkService');
+goog.require('gf.sim.CommandList');
 goog.require('gf.sim.Simulator');
 goog.require('goog.array');
 goog.require('goog.asserts');
@@ -74,11 +75,22 @@ gf.sim.ServerSimulator = function(runtime, session) {
   this.userObservers_ = {};
 
   /**
-   * A list of commands that need to released after a full flush.
+   * List of incoming commands from the network.
+   * Commands will be processed on the next update.
    * @private
-   * @type {!Array.<!gf.sim.Command>}
+   * @type {!gf.sim.CommandList}
    */
-  this.outstandingCommands_ = [];
+  this.incomingCommandList_ = new gf.sim.CommandList();
+
+  /**
+   * A list of commands that need to released after a full flush.
+   * This is required because many commands are queued on multiple observers
+   * and must only be released once. With this list it's possible to cleanup
+   * all commands after all of the observers have processed.
+   * @private
+   * @type {!gf.sim.CommandList}
+   */
+  this.cleanupCommandList_ = new gf.sim.CommandList();
 };
 goog.inherits(gf.sim.ServerSimulator, gf.sim.Simulator);
 
@@ -139,10 +151,11 @@ gf.sim.ServerSimulator.prototype.update = function(frame) {
   // Poll network to find new packets
   // TODO(benvanik): poll network
 
-  var commands = [];
-
   // Process incoming commands
-  this.executeCommands(commands);
+  this.executeCommands(
+      this.incomingCommandList_.getArray(),
+      this.incomingCommandList_.getCount());
+  this.incomingCommandList_.releaseAllCommands();
 
   // Run scheduled events
   this.getScheduler().update(frame);
@@ -185,8 +198,8 @@ gf.sim.ServerSimulator.prototype.broadcastCommand = function(
     observer.queueCommand(command);
   }
 
-  // Queue for release
-  this.outstandingCommands_.push(command);
+  // Queue for release at a later time
+  this.cleanupCommandList_.addCommand(command);
 };
 
 
@@ -204,8 +217,8 @@ gf.sim.ServerSimulator.prototype.sendCommand = function(command, user) {
     gf.log.debug('unable to find user ' + user.sessionId + ' to queue command');
   }
 
-  // Queue for release
-  this.outstandingCommands_.push(command);
+  // Queue for release at a later time
+  this.cleanupCommandList_.addCommand(command);
 };
 
 
@@ -238,18 +251,8 @@ gf.sim.ServerSimulator.prototype.flushAll_ = function(frame) {
     observer.flush(frame.time);
   }
 
-  // Cleanup any outstanding commands
-  if (this.outstandingCommands_.length) {
-    var lastType = null;
-    for (var n = 0; n < this.outstandingCommands_.length; n++) {
-      var command = this.outstandingCommands_[n];
-      if (!lastType || command.typeId != lastType.typeId) {
-        lastType = this.getCommandType(command.typeId);
-      }
-      lastType.release(command);
-    }
-    this.outstandingCommands_.length = 0;
-  }
+  // Cleanup any outstanding release requests
+  this.cleanupCommandList_.releaseAllCommands(this);
 };
 
 
@@ -278,7 +281,9 @@ gf.sim.ServerSimulator.prototype.compact_ = function() {
   // TODO(benvanik): stage this out over multiple ticks to prevent spikes
   // TODO(benvanik): compact dirty entities list?
 
-  // TODO(benvanik): compact this.outstandingCommands_
+  // Compact command lists
+  this.incomingCommandList_.compact();
+  this.cleanupCommandList_.compact();
 
   // Compact all observers
   for (var n = 0; n < this.observers_.length; n++) {

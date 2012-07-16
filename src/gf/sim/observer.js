@@ -22,6 +22,7 @@ goog.provide('gf.sim.Observer');
 
 goog.require('gf.log');
 goog.require('gf.sim');
+goog.require('gf.sim.CommandList');
 goog.require('gf.sim.EntityDirtyFlag');
 goog.require('goog.Disposable');
 
@@ -37,25 +38,32 @@ goog.require('goog.Disposable');
  *
  * @constructor
  * @extends {goog.Disposable}
- * @param {gf.net.User=} opt_user User this observer is representing, if any.
+ * @param {!gf.net.ServerSession} session Network session.
+ * @param {!gf.net.User} user User this observer is representing.
  */
-gf.sim.Observer = function(opt_user) {
+gf.sim.Observer = function(session, user) {
   goog.base(this);
 
   /**
-   * The user this observer is representing, if any.
-   * This
-   * @type {gf.net.User}
+   * Network session.
+   * @private
+   * @type {!gf.net.ServerSession}
    */
-  this.user = opt_user || null;
+  this.session_ = session;
+
+  /**
+   * The user this observer is representing.
+   * @type {!gf.net.User}
+   */
+  this.user = user;
 
   /**
    * A list of pending commands to send to the observer on the next flush.
    * This list is not filtered by relevance and must be checked on flush.
    * @private
-   * @type {!Array.<!gf.sim.Command>}
+   * @type {!gf.sim.CommandList}
    */
-  this.pendingCommands_ = [];
+  this.pendingCommandList_ = new gf.sim.CommandList();
 
   /**
    * A set of entities currently tracked by this observer.
@@ -119,7 +127,7 @@ gf.sim.Observer.prototype.compact = function() {
 gf.sim.Observer.prototype.queueCommand = function(command) {
   // NOTE: we wait until flush to do the should-we-send logic to ensure
   // that we have a consistent state based on entity updates
-  this.pendingCommands_.push(command);
+  this.pendingCommandList_.addCommand(command);
 };
 
 
@@ -195,11 +203,14 @@ gf.sim.Observer.prototype.flush = function(time) {
 
   // Prepare packet
   // TODO(benvanik): get shared packet writer/etc
+  var writer = null;
 
   // Commands
-  if (this.pendingCommands_.length) {
-    for (var n = 0; n < this.pendingCommands_.length; n++) {
-      var command = this.pendingCommands_[n];
+  var pendingCommands = this.pendingCommandList_.getArray();
+  var pendingCommandCount = this.pendingCommandList_.getCount();
+  if (pendingCommandCount) {
+    for (var n = 0; n < pendingCommandCount; n++) {
+      var command = commands[n];
 
       // Check if the command targets an irrelevant entity
       if (command.targetEntityId != gf.sim.NO_ENTITY_ID) {
@@ -209,9 +220,10 @@ gf.sim.Observer.prototype.flush = function(time) {
         }
       }
 
-      // TODO(benvanik): write command
+      // Write command
+      command.write(writer);
     }
-    this.pendingCommands_.length = 0;
+    this.pendingCommandList_.resetList();
   }
 
   // For each relevant entity that changed this tick...
@@ -246,17 +258,9 @@ gf.sim.Observer.prototype.flush = function(time) {
 
   // IFF we have a valid packet, emit
   // TODO(benvanik): check to ensure something got changed
-  //this.emitSyncPacket();
+  this.session_.send(..., this.user);
 
   // Reset state for the next tick
   // TODO(benvanik): prevent this resize and reuse the list
   this.updatedEntitiesList_.length = 0;
 };
-
-
-// TODO(benvanik): emitSyncPacket signature
-/**
- * Emits a fully-populated sync packet.
- * @protected
- */
-gf.sim.Observer.prototype.emitSyncPacket = goog.abstractMethod;

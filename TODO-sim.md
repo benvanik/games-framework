@@ -146,6 +146,13 @@ Command:
 
 
 
+make observer target client specific (add user/etc)
+
+
+SyncPacket:
+  uint4
+
+
 
 Network packets:
   - SyncEntities {s->c}
