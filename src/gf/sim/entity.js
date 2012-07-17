@@ -213,12 +213,13 @@ gf.sim.Entity.prototype.update = goog.abstractMethod;
  * Schedules a standard update in the future by the given time delta.
  * @protected
  * @param {gf.sim.SchedulingPriority} priority Priority of the event.
- * @param {number} targetTime Target time to execute the update.
+ * @param {number=} opt_targetTime Target time to execute the update. If omitted
+ *     then the update will be processed on the next tick.
  */
-gf.sim.Entity.prototype.scheduleUpdate = function(priority, targetTime) {
+gf.sim.Entity.prototype.scheduleUpdate = function(priority, opt_targetTime) {
   this.simulator.getScheduler().scheduleEvent(
       priority,
-      targetTime,
+      opt_targetTime || 0,
       this.update, this);
 };
 

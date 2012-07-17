@@ -22,6 +22,7 @@ goog.provide('gf.sim.VariableTable');
 
 goog.require('gf.sim.Variable');
 goog.require('gf.sim.VariableFlag');
+goog.require('goog.asserts');
 
 
 
@@ -44,6 +45,13 @@ gf.sim.VariableTable = function(variableList) {
     variableList[n].ordinal = n;
   }
   variableList.sort(gf.sim.Variable.sortByPriority);
+
+  /**
+   * Maps variable tags to variables, allowing for lookup by tag.
+   * @private
+   * @type {!Object.<number, !gf.sim.Variable>}
+   */
+  this.ordinalLookup_ = {};
 
   /**
    * Variables that have their {@see gf.sim.VariableFlag#PREDICTED} bit set.
@@ -69,6 +77,7 @@ gf.sim.VariableTable = function(variableList) {
     // Clone variable so that different types can have different ordinals
     var v = variableList[n].clone();
     this.variables_[n] = v;
+    this.ordinalLookup_[v.tag] = v;
 
     // Assign ordinal
     v.ordinal = n;
@@ -90,6 +99,18 @@ gf.sim.VariableTable = function(variableList) {
  */
 gf.sim.VariableTable.prototype.getCount = function() {
   return this.variables_.length;
+};
+
+
+/**
+ * Gets the ordinal of a variable.
+ * @param {number} tag Variable tag.
+ * @return {number} Variable ordinal.
+ */
+gf.sim.VariableTable.prototype.getOrdinal = function(tag) {
+  var v = this.ordinalLookup_[tag];
+  goog.asserts.assert(v);
+  return v.ordinal;
 };
 
 

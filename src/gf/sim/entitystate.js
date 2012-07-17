@@ -109,12 +109,15 @@ gf.sim.EntityState.declareVariables = goog.abstractMethod;
  * @param {number} ordinal Variable ordinal.
  */
 gf.sim.EntityState.prototype.setVariableDirty = function(ordinal) {
+  var wasDirty = this.dirtyBits00_31_ || this.dirtyBits32_63_;
   if (ordinal <= 31) {
     this.dirtyBits00_31_ |= 1 << ordinal;
   } else {
     this.dirtyBits32_63_ |= 1 << (ordinal - 32);
   }
-  this.entity_.invalidate();
+  if (!wasDirty) {
+    this.entity_.invalidate();
+  }
 };
 
 

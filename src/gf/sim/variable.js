@@ -36,9 +36,19 @@ goog.require('goog.vec.Vec3');
  * and cannot vary between the two based on state/options/etc.
  *
  * @constructor
+ * @param {number} tag Tag, from {@see gf.sim.Variable#getUniqueTag}.
  * @param {number} flags Bitmask of {@see gf.sim.VariableFlag} values.
  */
-gf.sim.Variable = function(flags) {
+gf.sim.Variable = function(tag, flags) {
+  /**
+   * Runtime tag.
+   * This is used to enable entity state implementations to rendezvous with the
+   * variable ordinals. A compiler could obviate the need for these, but that's
+   * a lot more work.
+   * @type {number}
+   */
+  this.tag = tag;
+
   /**
    * Ordinal in the variable table.
    * This is populated by the {@see gf.sim.VariableTable} upon creation.
@@ -94,6 +104,25 @@ gf.sim.Variable.prototype.copy = goog.abstractMethod;
  * @param {!Object} result Storage object.
  */
 gf.sim.Variable.prototype.interpolate = goog.abstractMethod;
+
+
+/**
+ * Next tag ID to assign.
+ * @private
+ * @type {number}
+ */
+gf.sim.Variable.nextTagId_ = 0;
+
+
+/**
+ * Gets a unique tag ID that can be used when creating variables.
+ * These IDs are build specific and should not be used for anything but runtime
+ * assignment.
+ * @return {number} A tag ID.
+ */
+gf.sim.Variable.getUniqueTag = function() {
+  return gf.sim.Variable.nextTagId_++;
+};
 
 
 /**
@@ -154,12 +183,13 @@ gf.sim.VariableFlag = {
  *
  * @constructor
  * @extends {gf.sim.Variable}
+ * @param {number} tag Tag, from {@see gf.sim.Variable#getUniqueTag}.
  * @param {number} flags Bitmask of {@see gf.sim.VariableFlag} values.
  * @param {!function():number} getter Prototype function that gets the value.
  * @param {!function(number)} setter Prototype function that sets the value.
  */
-gf.sim.Variable.Float = function(flags, getter, setter) {
-  goog.base(this, flags);
+gf.sim.Variable.Float = function(tag, flags, getter, setter) {
+  goog.base(this, tag, flags);
 
   /**
    * @private
@@ -180,7 +210,8 @@ goog.inherits(gf.sim.Variable.Float, gf.sim.Variable);
  * @override
  */
 gf.sim.Variable.Float.prototype.clone = function() {
-  return new gf.sim.Variable.Float(this.flags, this.getter_, this.setter_);
+  return new gf.sim.Variable.Float(this.tag, this.flags,
+      this.getter_, this.setter_);
 };
 
 
@@ -224,12 +255,13 @@ gf.sim.Variable.Float.prototype.interpolate = function(source, target, t,
  *
  * @constructor
  * @extends {gf.sim.Variable}
+ * @param {number} tag Tag, from {@see gf.sim.Variable#getUniqueTag}.
  * @param {number} flags Bitmask of {@see gf.sim.VariableFlag} values.
  * @param {!function():!goog.vec.Vec3.Float32} getter Function that returns the
  *    value directly (no copy).
  */
-gf.sim.Variable.Vec3 = function(flags, getter) {
-  goog.base(this, flags);
+gf.sim.Variable.Vec3 = function(tag, flags, getter) {
+  goog.base(this, tag, flags);
 
   /**
    * @private
@@ -244,7 +276,8 @@ goog.inherits(gf.sim.Variable.Vec3, gf.sim.Variable);
  * @override
  */
 gf.sim.Variable.Vec3.prototype.clone = function() {
-  return new gf.sim.Variable.Vec3(this.flags, this.getter_);
+  return new gf.sim.Variable.Vec3(this.tag, this.flags,
+      this.getter_);
 };
 
 
@@ -293,13 +326,14 @@ gf.sim.Variable.Vec3.prototype.interpolate = function(source, target, t,
  *
  * @constructor
  * @extends {gf.sim.Variable}
+ * @param {number} tag Tag, from {@see gf.sim.Variable#getUniqueTag}.
  * @param {number} flags Bitmask of {@see gf.sim.VariableFlag} values.
  * @param {!function():!goog.vec.Quaternion.Float32} getter Function that
  *    returns the value directly (no copy).
  * @param {boolean} normalized True if the quaternion is normalized.
  */
-gf.sim.Variable.Quaternion = function(flags, getter, normalized) {
-  goog.base(this, flags);
+gf.sim.Variable.Quaternion = function(tag, flags, getter, normalized) {
+  goog.base(this, tag, flags);
 
   /**
    * @private
@@ -323,8 +357,8 @@ goog.inherits(gf.sim.Variable.Quaternion, gf.sim.Variable);
  * @override
  */
 gf.sim.Variable.Quaternion.prototype.clone = function() {
-  return new gf.sim.Variable.Quaternion(this.flags, this.getter_,
-      this.normalized_);
+  return new gf.sim.Variable.Quaternion(this.tag, this.flags,
+      this.getter_, this.normalized_);
 };
 
 
