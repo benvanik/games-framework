@@ -236,3 +236,14 @@ gf.sim.ClientEntity.prototype.update = function(time, timeDelta) {
  */
 gf.sim.ClientEntity.prototype.postTickUpdate = function(frame) {
 };
+
+
+/**
+ * @override
+ */
+gf.sim.ClientEntity.prototype.resetDirtyState = function() {
+  goog.base(this, 'resetDirtyState');
+
+  // When this is called we've already flushed deltas, so reset the bits
+  this.state.resetDirtyState();
+};
