@@ -145,10 +145,6 @@ Command:
   ChangeSkinCommand
 
 
-
-make observer target client specific (add user/etc)
-
-
 Network packets:
   - SyncSimulation {s->c}
     - varint sequence #, counts for each type
@@ -173,6 +169,42 @@ Network packets:
       - [data]
 
 
+EntityState:
+  - entity
+  - ctor:
+    someVarOrdinal_ = declareVariable(setSomeVar)
+  - f.e. var:
+    - someVar_
+    - someVarOrdinal_
+    - getSomeVar(): return someVar_
+    - setSomeVar(v):
+        if (!eq(someVar_, v)) {
+          set(someVar_, v);
+          flagDirtyVar(someVarOrdinal_);
+          this.entity.invalidate();
+        }
+  - read()
+  - readDelta()
+    presenceBits = readVarInt() // multiple?
+    ordinal = 0
+    while presenceBits:
+      if (presenceBits & 1) {
+        networkTable[ordinal].read(this, reader)
+      }
+      ordinal++
+      presenceBits >>= 1
+  - write()
+  - writeDelta()
+    ordinal = 0
+    writeVarInt(dirtyBits) // multiple
+    while dirtyBits:
+      if (dirtyBits & 1) {
+        networkTable[ordinal].write(this, writer)
+      }
+      ordinal++
+      dirtyBits >>= 1
+
+http://jsperf.com/ifs-vs-table <-- use tables
 
 
 Entity:
