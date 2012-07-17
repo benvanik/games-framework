@@ -18,7 +18,7 @@
  * @author benvanik@google.com (Ben Vanik)
  */
 
-goog.provide('gf.sim.SyncSimulationWriter');
+goog.provide('gf.sim.util.SyncSimulationWriter');
 
 goog.require('gf.log');
 goog.require('gf.net.PacketWriter');
@@ -32,7 +32,7 @@ goog.require('gf.sim.packets.SyncSimulation');
  *
  * @constructor
  */
-gf.sim.SyncSimulationWriter = function() {
+gf.sim.util.SyncSimulationWriter = function() {
   /**
    * Confirmed sequence number.
    * @private
@@ -106,7 +106,7 @@ gf.sim.SyncSimulationWriter = function() {
  * Begins writing the sync simulation packet.
  * @param {number} confirmedSequence Sequence number.
  */
-gf.sim.SyncSimulationWriter.prototype.begin = function(confirmedSequence) {
+gf.sim.util.SyncSimulationWriter.prototype.begin = function(confirmedSequence) {
   this.confirmedSequence_ = confirmedSequence;
 };
 
@@ -115,7 +115,7 @@ gf.sim.SyncSimulationWriter.prototype.begin = function(confirmedSequence) {
  * Adds a command action to the packet.
  * @param {!gf.sim.Command} command Command.
  */
-gf.sim.SyncSimulationWriter.prototype.addCommand = function(command) {
+gf.sim.util.SyncSimulationWriter.prototype.addCommand = function(command) {
   this.commands_[this.commandCount_++] = command;
 };
 
@@ -124,7 +124,7 @@ gf.sim.SyncSimulationWriter.prototype.addCommand = function(command) {
  * Adds a create entity action to the packet.
  * @param {!gf.sim.ServerEntity} entity Entity.
  */
-gf.sim.SyncSimulationWriter.prototype.addCreateEntity = function(entity) {
+gf.sim.util.SyncSimulationWriter.prototype.addCreateEntity = function(entity) {
   this.createEntities_[this.createEntityCount_++] = entity;
 };
 
@@ -133,7 +133,7 @@ gf.sim.SyncSimulationWriter.prototype.addCreateEntity = function(entity) {
  * Adds an update entity action to the packet.
  * @param {!gf.sim.ServerEntity} entity Entity.
  */
-gf.sim.SyncSimulationWriter.prototype.addUpdateEntity = function(entity) {
+gf.sim.util.SyncSimulationWriter.prototype.addUpdateEntity = function(entity) {
   this.updateEntities_[this.updateEntityCount_++] = entity;
 };
 
@@ -142,7 +142,7 @@ gf.sim.SyncSimulationWriter.prototype.addUpdateEntity = function(entity) {
  * Adds a delete entity action to the packet.
  * @param {!gf.sim.ServerEntity} entity Entity.
  */
-gf.sim.SyncSimulationWriter.prototype.addDeleteEntity = function(entity) {
+gf.sim.util.SyncSimulationWriter.prototype.addDeleteEntity = function(entity) {
   this.deleteEntities_[this.deleteEntityCount_++] = entity;
 };
 
@@ -151,7 +151,7 @@ gf.sim.SyncSimulationWriter.prototype.addDeleteEntity = function(entity) {
  * Ends the writing operation and returns the final packet.
  * @return {!ArrayBuffer} Finalized packet for sending.
  */
-gf.sim.SyncSimulationWriter.prototype.finish = function() {
+gf.sim.util.SyncSimulationWriter.prototype.finish = function() {
   // Add header
   var writer = gf.net.PacketWriter.getSharedWriter();
   gf.sim.packets.SyncSimulation.write(

@@ -18,7 +18,7 @@
  * @author benvanik@google.com (Ben Vanik)
  */
 
-goog.provide('gf.sim.PredictedCommandList');
+goog.provide('gf.sim.util.PredictedCommandList');
 
 goog.require('gf.log');
 goog.require('gf.sim.PredictedCommand');
@@ -33,7 +33,7 @@ goog.require('goog.asserts');
  *
  * @constructor
  */
-gf.sim.PredictedCommandList = function() {
+gf.sim.util.PredictedCommandList = function() {
   /**
    * Next unique sequence ID.
    * @private
@@ -92,7 +92,7 @@ gf.sim.PredictedCommandList = function() {
  * This should be called somewhat frequently to ensure the lists do not grow
  * without bound.
  */
-gf.sim.PredictedCommandList.prototype.compact = function() {
+gf.sim.util.PredictedCommandList.prototype.compact = function() {
   // TODO(benvanik): compaction
 };
 
@@ -101,7 +101,8 @@ gf.sim.PredictedCommandList.prototype.compact = function() {
  * Confirms commands from the server up to and including the given sequence ID.
  * @param {number} sequence Sequence identifier.
  */
-gf.sim.PredictedCommandList.prototype.confirmSequence = function(sequence) {
+gf.sim.util.PredictedCommandList.prototype.confirmSequence = function(
+    sequence) {
   var unconfirmedList = this.unconfirmedPredictedArray_;
   var unconfirmedCount = this.unconfirmedPredictedCount_;
   if (!unconfirmedCount) {
@@ -143,7 +144,7 @@ gf.sim.PredictedCommandList.prototype.confirmSequence = function(sequence) {
 /**
  * @override
  */
-gf.sim.PredictedCommandList.prototype.addCommand = function(command) {
+gf.sim.util.PredictedCommandList.prototype.addCommand = function(command) {
   this.outgoingArray_[this.outgoingCount_++] = command;
 
   // Assign predicted commands sequence numbers and add to tracking list
@@ -158,7 +159,7 @@ gf.sim.PredictedCommandList.prototype.addCommand = function(command) {
 /**
  * @return {boolean} True if there are any outgoing packets waiting to be sent.
  */
-gf.sim.PredictedCommandList.prototype.hasOutgoing = function() {
+gf.sim.util.PredictedCommandList.prototype.hasOutgoing = function() {
   return !!this.outgoingCount_;
 };
 
@@ -168,7 +169,7 @@ gf.sim.PredictedCommandList.prototype.hasOutgoing = function() {
  * state.
  * @param {!gf.net.PacketWriter} writer Packet writer.
  */
-gf.sim.PredictedCommandList.prototype.write = function(writer) {
+gf.sim.util.PredictedCommandList.prototype.write = function(writer) {
   goog.asserts.assert(this.outgoingCount_);
 
   // Write count
@@ -211,7 +212,8 @@ gf.sim.PredictedCommandList.prototype.write = function(writer) {
  * Executes all prediction commands against the simulator.
  * @param {!gf.sim.Simulator} simulator Target simulator.
  */
-gf.sim.PredictedCommandList.prototype.executePrediction = function(simulator) {
+gf.sim.util.PredictedCommandList.prototype.executePrediction = function(
+    simulator) {
   // Predict all sent but unconfirmed commands
   simulator.executeCommands(
       this.unconfirmedPredictedArray_,

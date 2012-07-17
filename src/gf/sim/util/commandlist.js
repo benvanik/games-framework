@@ -18,7 +18,7 @@
  * @author benvanik@google.com (Ben Vanik)
  */
 
-goog.provide('gf.sim.CommandList');
+goog.provide('gf.sim.util.CommandList');
 
 
 
@@ -29,7 +29,7 @@ goog.provide('gf.sim.CommandList');
  *
  * @constructor
  */
-gf.sim.CommandList = function() {
+gf.sim.util.CommandList = function() {
   /**
    * Command array.
    * The size of this array does not correspond to the number of valid commands
@@ -53,7 +53,7 @@ gf.sim.CommandList = function() {
  * This should be called somewhat frequently to ensure the lists do not grow
  * without bound.
  */
-gf.sim.CommandList.prototype.compact = function() {
+gf.sim.util.CommandList.prototype.compact = function() {
   // TODO(benvanik): compaction
 };
 
@@ -61,7 +61,7 @@ gf.sim.CommandList.prototype.compact = function() {
 /**
  * @return {!Array.<!gf.sim.Command>} Current underlying command array.
  */
-gf.sim.CommandList.prototype.getArray = function() {
+gf.sim.util.CommandList.prototype.getArray = function() {
   return this.array_;
 };
 
@@ -69,7 +69,7 @@ gf.sim.CommandList.prototype.getArray = function() {
 /**
  * @return {number} The number of commands currently in the list.
  */
-gf.sim.CommandList.prototype.getCount = function() {
+gf.sim.util.CommandList.prototype.getCount = function() {
   return this.count_;
 };
 
@@ -78,7 +78,7 @@ gf.sim.CommandList.prototype.getCount = function() {
  * Adds a command to the list.
  * @param {!gf.sim.Command} command Command to add.
  */
-gf.sim.CommandList.prototype.addCommand = function(command) {
+gf.sim.util.CommandList.prototype.addCommand = function(command) {
   this.array_[this.count_++] = command;
 };
 
@@ -86,7 +86,7 @@ gf.sim.CommandList.prototype.addCommand = function(command) {
 /**
  * Releases all commands in the list.
  */
-gf.sim.CommandList.prototype.releaseAllCommands = function() {
+gf.sim.util.CommandList.prototype.releaseAllCommands = function() {
   for (var n = 0; n < this.count_; n++) {
     var command = this.array_[n];
     command.commandType.release(command);
@@ -98,6 +98,6 @@ gf.sim.CommandList.prototype.releaseAllCommands = function() {
 /**
  * Quickly resets the entire list without releasing any commands.
  */
-gf.sim.CommandList.prototype.resetList = function() {
+gf.sim.util.CommandList.prototype.resetList = function() {
   this.count_ = 0;
 };

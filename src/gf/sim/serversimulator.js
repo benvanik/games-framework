@@ -24,10 +24,10 @@ goog.require('gf.log');
 goog.require('gf.net.NetworkService');
 goog.require('gf.net.packets.ExecCommands');
 goog.require('gf.sim');
-goog.require('gf.sim.CommandList');
 goog.require('gf.sim.EntityFlag');
 goog.require('gf.sim.Observer');
 goog.require('gf.sim.Simulator');
+goog.require('gf.sim.util.CommandList');
 goog.require('goog.array');
 goog.require('goog.asserts');
 
@@ -92,9 +92,9 @@ gf.sim.ServerSimulator = function(runtime, session, observerCtor) {
    * and must only be released once. With this list it's possible to cleanup
    * all commands after all of the observers have processed.
    * @private
-   * @type {!gf.sim.CommandList}
+   * @type {!gf.sim.util.CommandList}
    */
-  this.cleanupCommandList_ = new gf.sim.CommandList();
+  this.cleanupCommandList_ = new gf.sim.util.CommandList();
 };
 goog.inherits(gf.sim.ServerSimulator, gf.sim.Simulator);
 
@@ -333,7 +333,7 @@ gf.sim.ServerSimulator.NetService_ = function(simulator, session) {
    * @private
    * @type {!gf.net.ServerSession}
    */
-  this.serverSession_ = session;
+  this.session_ = session;
 };
 goog.inherits(gf.sim.ServerSimulator.NetService_, gf.net.NetworkService);
 
@@ -360,7 +360,7 @@ gf.sim.ServerSimulator.NetService_.prototype.userConnected = function(user) {
   }
 
   // Create the observer and add to the simulator
-  observer = new gf.sim.Observer(this.serverSession_, user);
+  observer = new gf.sim.Observer(this.session_, user);
   this.simulator_.addObserver(observer);
 };
 

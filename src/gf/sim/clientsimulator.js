@@ -24,11 +24,11 @@ goog.require('gf.log');
 goog.require('gf.net.NetworkService');
 goog.require('gf.net.PacketWriter');
 goog.require('gf.net.packets.SyncSimulation');
-goog.require('gf.sim.CommandList');
 goog.require('gf.sim.EntityFlag');
-goog.require('gf.sim.PredictedCommandList');
 goog.require('gf.sim.Simulator');
 goog.require('gf.sim.packets.ExecCommands');
+goog.require('gf.sim.util.CommandList');
+goog.require('gf.sim.util.PredictedCommandList');
 goog.require('goog.array');
 
 
@@ -73,21 +73,21 @@ gf.sim.ClientSimulator = function(runtime, session) {
    * List of incoming commands from the network.
    * Commands will be processed on the next update.
    * @private
-   * @type {!gf.sim.CommandList}
+   * @type {!gf.sim.util.CommandList}
    */
-  this.incomingCommandList_ = new gf.sim.CommandList();
+  this.incomingCommandList_ = new gf.sim.util.CommandList();
 
   /**
    * List of outgoing commands to the network.
    * Contains logic for predicted commands; both those sent to the server and
    * unconfirmed
-   * ({@see gf.sim.PredictedCommandList#getUnconfirmedPredictedArray}) and
+   * ({@see gf.sim.util.PredictedCommandList#getUnconfirmedPredictedArray}) and
    * those waiting to be sent
-   * ({@see gf.sim.PredictedCommandList#getOutgoingPredictedArray}).
+   * ({@see gf.sim.util.PredictedCommandList#getOutgoingPredictedArray}).
    * @private
-   * @type {!gf.sim.CommandList}
+   * @type {!gf.sim.util.CommandList}
    */
-  this.outgoingCommandList_ = new gf.sim.PredictedCommandList();
+  this.outgoingCommandList_ = new gf.sim.util.PredictedCommandList();
 
   /**
    * Last time commands were sent to the server.
@@ -310,7 +310,7 @@ gf.sim.ClientSimulator.NetService_ = function(simulator, session) {
    * @private
    * @type {!gf.net.ClientSession}
    */
-  this.clientSession_ = session;
+  this.session_ = session;
 };
 goog.inherits(gf.sim.ClientSimulator.NetService_, gf.net.NetworkService);
 

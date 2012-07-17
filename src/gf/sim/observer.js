@@ -22,10 +22,10 @@ goog.provide('gf.sim.Observer');
 goog.provide('gf.sim.ObserverCtor');
 
 goog.require('gf.sim');
-goog.require('gf.sim.CommandList');
 goog.require('gf.sim.EntityDirtyFlag');
 goog.require('gf.sim.PredictedCommand');
-goog.require('gf.sim.SyncSimulationWriter');
+goog.require('gf.sim.util.CommandList');
+goog.require('gf.sim.util.SyncSimulationWriter');
 goog.require('goog.Disposable');
 goog.require('goog.asserts');
 
@@ -79,17 +79,17 @@ gf.sim.Observer = function(session, user) {
    * List of incoming commands from the network.
    * Commands will be processed on the next update.
    * @private
-   * @type {!gf.sim.CommandList}
+   * @type {!gf.sim.util.CommandList}
    */
-  this.incomingCommandList_ = new gf.sim.CommandList();
+  this.incomingCommandList_ = new gf.sim.util.CommandList();
 
   /**
    * A list of pending commands to send to the observer on the next flush.
    * This list is not filtered by relevance and must be checked on flush.
    * @private
-   * @type {!gf.sim.CommandList}
+   * @type {!gf.sim.util.CommandList}
    */
-  this.outgoingCommandList_ = new gf.sim.CommandList();
+  this.outgoingCommandList_ = new gf.sim.util.CommandList();
 
   /**
    * A set of entities currently tracked by this observer.
@@ -135,9 +135,9 @@ gf.sim.Observer = function(session, user) {
   /**
    * Sync packet writer.
    * @private
-   * @type {!gf.sim.SyncSimulationWriter}
+   * @type {!gf.sim.util.SyncSimulationWriter}
    */
-  this.writer_ = new gf.sim.SyncSimulationWriter();
+  this.writer_ = new gf.sim.util.SyncSimulationWriter();
 };
 goog.inherits(gf.sim.Observer, goog.Disposable);
 
