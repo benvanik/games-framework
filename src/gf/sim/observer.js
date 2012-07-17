@@ -23,6 +23,7 @@ goog.provide('gf.sim.ObserverCtor');
 
 goog.require('gf.sim');
 goog.require('gf.sim.EntityDirtyFlag');
+goog.require('gf.sim.EntityFlag');
 goog.require('gf.sim.PredictedCommand');
 goog.require('gf.sim.util.CommandList');
 goog.require('gf.sim.util.SyncSimulationWriter');
@@ -224,6 +225,11 @@ gf.sim.Observer.prototype.isEntityChangeRelevant = function(entity) {
  * @param {!gf.sim.ServerEntity} entity Entity that changed this tick.
  */
 gf.sim.Observer.prototype.notifyEntityChange = function(entity) {
+  // Don't replicate entities that aren't replicated
+  if (entity.getFlags() & gf.sim.EntityFlag.NOT_REPLICATED) {
+    return;
+  }
+
   // Tracking changes
   var id = entity.getId();
   var wasTracked = this.trackedEntities_[id] || false;

@@ -23,10 +23,10 @@ goog.provide('gf.sim.ClientSimulator');
 goog.require('gf.log');
 goog.require('gf.net.NetworkService');
 goog.require('gf.net.PacketWriter');
-goog.require('gf.net.packets.SyncSimulation');
 goog.require('gf.sim.EntityFlag');
 goog.require('gf.sim.Simulator');
 goog.require('gf.sim.packets.ExecCommands');
+goog.require('gf.sim.packets.SyncSimulation');
 goog.require('gf.sim.util.CommandList');
 goog.require('gf.sim.util.PredictedCommandList');
 goog.require('goog.array');
@@ -321,7 +321,7 @@ goog.inherits(gf.sim.ClientSimulator.NetService_, gf.net.NetworkService);
 gf.sim.ClientSimulator.NetService_.prototype.setupSwitch =
     function(packetSwitch) {
   packetSwitch.register(
-      gf.net.packets.SyncSimulation.ID,
+      gf.sim.packets.SyncSimulation.ID,
       this.handleSyncSimulation_, this);
 };
 

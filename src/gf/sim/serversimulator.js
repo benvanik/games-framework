@@ -25,7 +25,6 @@ goog.require('gf.net.NetworkService');
 goog.require('gf.net.packets.ExecCommands');
 goog.require('gf.sim');
 goog.require('gf.sim.EntityFlag');
-goog.require('gf.sim.Observer');
 goog.require('gf.sim.Simulator');
 goog.require('gf.sim.util.CommandList');
 goog.require('goog.array');
@@ -360,7 +359,7 @@ gf.sim.ServerSimulator.NetService_.prototype.userConnected = function(user) {
   }
 
   // Create the observer and add to the simulator
-  observer = new gf.sim.Observer(this.session_, user);
+  observer = new this.simulator_.observerCtor_(this.session_, user);
   this.simulator_.addObserver(observer);
 };
 

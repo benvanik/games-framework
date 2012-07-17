@@ -176,6 +176,21 @@ gf.sim.Simulator.prototype.allocateEntityId = function() {
 
 
 /**
+ * Creates a new entity of the given type.
+ * The entity must later be explicitly added to the simulation with
+ * {@see #addEntity}.
+ * @param {number} typeId Entity type ID.
+ * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag}.
+ * @return {!gf.sim.Entity} A new entity.
+ */
+gf.sim.Simulator.prototype.createEntity = function(typeId, entityFlags) {
+  var entityType = this.entityTypes_[typeId];
+  goog.asserts.assert(entityType);
+  return entityType.createEntity(this, this.allocateEntityId(), entityFlags);
+};
+
+
+/**
  * Adds the given entity to the simulation.
  * Depending on the entity type it will be scheduled for replication to clients
  * and tracked for future updates.

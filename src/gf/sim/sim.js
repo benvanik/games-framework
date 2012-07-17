@@ -52,4 +52,9 @@ gf.sim.createTypeId = function(module, type) {
   // this becomes too limiting then it can be loosened up.
   goog.asserts.assert(type < 64);
   return (module << 6) | type;
+
+  // TODO(benvanik): evaluate putting the module bits at LSB
+  // [type id] | [module id]
+  // If assume at most 4 modules (2 bits), has a constant cost and does not
+  // restrict type count - but means only 32 ids get in a 1 byte varint
 };

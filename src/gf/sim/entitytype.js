@@ -57,25 +57,12 @@ gf.sim.EntityType = function(typeId, entityCtor, stateCtor) {
 
 /**
  * Creates a new entity of this type.
- * @param {!gf.sim.ClientSimulator} simulator Owning simulator.
+ * @param {!gf.sim.Simulator} simulator Owning simulator.
  * @param {number} entityId Entity ID.
  * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag}.
- * @return {!gf.sim.ClientEntity} A new entity.
+ * @return {!gf.sim.Entity} A new entity.
  */
-gf.sim.EntityType.prototype.createClientEntity = function(
-    simulator, entityId, entityFlags) {
-  return new this.entityCtor_(simulator, this, entityId, entityFlags);
-};
-
-
-/**
- * Creates a new entity of this type.
- * @param {!gf.sim.ServerSimulator} simulator Owning simulator.
- * @param {number} entityId Entity ID.
- * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag}.
- * @return {!gf.sim.ServerEntity} A new entity.
- */
-gf.sim.EntityType.prototype.createServerEntity = function(
+gf.sim.EntityType.prototype.createEntity = function(
     simulator, entityId, entityFlags) {
   return new this.entityCtor_(simulator, this, entityId, entityFlags);
 };
