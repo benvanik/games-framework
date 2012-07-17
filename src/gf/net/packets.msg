@@ -30,6 +30,8 @@ const PROTOCOL_VERSION = 3;
  */
 const MAX_SYSTEM_PACKET_TYPE = 63;
 
+// gf.sim.packets slices out packets 30-39
+
 
 /**
  * Simple user statistics.

@@ -22,6 +22,7 @@ goog.provide('gf.sim.PredictedCommandList');
 
 goog.require('gf.log');
 goog.require('gf.sim.PredictedCommand');
+goog.require('goog.asserts');
 
 
 
@@ -143,15 +144,22 @@ gf.sim.PredictedCommandList.prototype.confirmSequence = function(sequence) {
  * @override
  */
 gf.sim.PredictedCommandList.prototype.addCommand = function(command) {
-  this.outgoingArray_.push(command);
-  this.outgoingCount_++;
+  this.outgoingArray_[this.outgoingCount_++] = command;
 
   // Assign predicted commands sequence numbers and add to tracking list
   if (command instanceof gf.sim.PredictedCommand) {
     command.sequence = this.nextSequenceId_++;
     command.hasPredicted = false;
-    this.outgoingPredictedArray_.push(command);
+    this.outgoingPredictedArray_[this.outgoingPredictedCount_++] = command;
   }
+};
+
+
+/**
+ * @return {boolean} True if there are any outgoing packets waiting to be sent.
+ */
+gf.sim.PredictedCommandList.prototype.hasOutgoing = function() {
+  return !!this.outgoingCount_;
 };
 
 
@@ -161,23 +169,25 @@ gf.sim.PredictedCommandList.prototype.addCommand = function(command) {
  * @param {!gf.net.PacketWriter} writer Packet writer.
  */
 gf.sim.PredictedCommandList.prototype.write = function(writer) {
-  if (!this.outgoingCount_) {
-    return;
-  }
+  goog.asserts.assert(this.outgoingCount_);
+
+  // Write count
+  writer.writeVarInt(this.outgoingCount_);
 
   // Move all pending commands to the unconfirmed list to use for prediction
   for (var n = 0; n < this.outgoingCount_; n++) {
     var command = this.outgoingArray_[n];
 
     // Add command to packet
-    // TODO(benvanik): add to packet
+    writer.writeVarInt(command.commandType.typeId);
+    command.write(writer);
 
     // Cleanup command
     if (command instanceof gf.sim.PredictedCommand) {
       // Predicted - it's part of the sequence flow
       // Keep it around so we can re-execute it
-      this.unconfirmedPredictedArray_.push(command);
-      this.unconfirmedPredictedCount_++;
+      this.unconfirmedPredictedArray_[this.unconfirmedPredictedCount_++] =
+          command;
     } else {
       // Unpredicted - just release now, as it doesn't matter
       command.commandType.release(command);

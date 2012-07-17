@@ -35,6 +35,16 @@ goog.require('gf.sim.Entity');
  */
 gf.sim.ServerEntity = function(simulator, entityId, entityFlags) {
   goog.base(this, simulator, entityId, entityFlags);
+
+  /**
+   * Owning user, if any.
+   * An owning user generally has more permission to modify an entity than
+   * others. For example, an owning user can issue kill commands on themselves
+   * but not on anyone else.
+   * @private
+   * @type {gf.net.User}
+   */
+  this.owner_ = null;
 };
 goog.inherits(gf.sim.ServerEntity, gf.sim.Entity);
 
@@ -45,6 +55,24 @@ goog.inherits(gf.sim.ServerEntity, gf.sim.Entity);
  */
 gf.sim.ServerEntity.prototype.getSimulator = function() {
   return this.simulator;
+};
+
+
+/**
+ * Gets the owning user of the entity, if any.
+ * @return {gf.net.User} Owning user.
+ */
+gf.sim.ServerEntity.prototype.getOwner = function() {
+  return this.owner_;
+};
+
+
+/**
+ * Sets the owning user of the entity, if any.
+ * @param {gf.net.User} value New owning user.
+ */
+gf.sim.ServerEntity.prototype.setOwner = function(value) {
+  this.owner_ = value;
 };
 
 

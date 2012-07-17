@@ -35,7 +35,7 @@ gf.sim.CommandList = function() {
    * The size of this array does not correspond to the number of valid commands
    * inside of it. Use {@see #getCount} for the real count.
    * @private
-   * @type {!gf.sim.Command}
+   * @type {!Array.<!gf.sim.Command>}
    */
   this.array_ = [];
 
@@ -79,8 +79,7 @@ gf.sim.CommandList.prototype.getCount = function() {
  * @param {!gf.sim.Command} command Command to add.
  */
 gf.sim.CommandList.prototype.addCommand = function(command) {
-  this.array_.push(command);
-  this.count_++;
+  this.array_[this.count_++] = command;
 };
 
 

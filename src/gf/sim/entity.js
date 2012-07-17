@@ -87,13 +87,6 @@ gf.sim.Entity = function(simulator, entityId, entityFlags) {
   this.entityFlags_ = entityFlags;
 
   /**
-   * Owning user, if any.
-   * @private
-   * @type {gf.net.User}
-   */
-  this.owner_ = null;
-
-  /**
    * A bitmask of {@see gf.sim.EntityDirtyFlag} indicating the dirty state
    * of the entity.
    * This value is tracked per tick and will be reset.
@@ -121,21 +114,6 @@ gf.sim.Entity.prototype.getId = function() {
 gf.sim.Entity.prototype.getFlags = function() {
   return this.entityFlags_;
 };
-
-
-// gf.sim.Entity.prototype.getOwner = function() {
-//   return this.owner_;
-// };
-
-
-// gf.sim.Entity.prototype.setOwner = function(value) {
-//   if (this.owner_ == value) {
-//     return;
-//   }
-//   this.owner_ = value;
-//   // TODO(benvanik): track value change
-//   this.invalidate();
-// };
 
 
 /**

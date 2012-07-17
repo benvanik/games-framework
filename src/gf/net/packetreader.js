@@ -186,6 +186,23 @@ gf.net.PacketReader.prototype.readUint32 = function() {
  * Reads a value from the buffer.
  * @return {number} Value read.
  */
+gf.net.PacketReader.prototype.readVarInt = function() {
+  goog.asserts.assert(this.offset + 1 <= this.buffer.length);
+  var result = 0;
+  var shift = 0;
+  do {
+    var nextByte = this.buffer[this.offset++] & 0xFF;
+    result += (nextByte & 0x7F) << shift;
+    shift += 7;
+  } while (nextByte >= 0x80);
+  return result;
+};
+
+
+/**
+ * Reads a value from the buffer.
+ * @return {number} Value read.
+ */
 gf.net.PacketReader.prototype.readFloat32 = function() {
   goog.asserts.assert(this.offset + 4 <= this.buffer.length);
   this.float32byte_[0] = this.buffer[this.offset++];

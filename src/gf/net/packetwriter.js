@@ -201,6 +201,24 @@ gf.net.PacketWriter.prototype.writeUint32 = function(value) {
  * Writes a value to the buffer.
  * @param {number} value Value to write.
  */
+gf.net.PacketWriter.prototype.writeVarInt = function(value) {
+  this.ensureCapacity(4);
+  var bytesWritten = 0;
+  do {
+    var nextByte = value & 0x7F;
+    if (value >= 0x80) {
+      nextByte |= 0x80;
+    }
+    this.buffer[this.offset++] = nextByte;
+    value >>= 7;
+  } while (value);
+};
+
+
+/**
+ * Writes a value to the buffer.
+ * @param {number} value Value to write.
+ */
 gf.net.PacketWriter.prototype.writeFloat32 = function(value) {
   this.ensureCapacity(4);
   this.float32_[0] = value;

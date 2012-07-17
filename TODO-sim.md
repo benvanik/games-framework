@@ -149,27 +149,27 @@ Command:
 make observer target client specific (add user/etc)
 
 
-SyncPacket:
-  uint4
-
-
-
 Network packets:
-  - SyncEntities {s->c}
-    - [sim shared data] <- sequence #, etc
+  - SyncSimulation {s->c}
+    - varint sequence #, counts for each type
     - creates[]:
-      - entity id
+      - varint entity id
       - flags:
         - temporary
+        - ??
       - [full data]
     - updates[]:
-      - entity id
+      - varint entity id
       - [delta data]
     - deletes[]:
-      - entity id
-  - SendCommands {c->s}
+      - varint entity id
     - commands[]:
-      - typeId
+      - varint typeId
+      - [data]
+  - ExecCommands {c->s}
+    - varint count
+    - commands[]:
+      - varint typeId
       - [data]
 
 

@@ -57,6 +57,16 @@ gf.sim.Command = function(commandType) {
 
 
 /**
+ * Writes the command to the given packet writer.
+ * @param {!gf.net.PacketWriter} writer Packet writer.
+ */
+gf.sim.Command.prototype.write = function(writer) {
+  writer.writeUint32((this.time * 1000) | 0);
+  writer.writeVarInt(this.targetEntityId);
+};
+
+
+/**
  * Releases the command back to its parent pool.
  */
 gf.sim.Command.prototype.release = function() {

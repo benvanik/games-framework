@@ -22,7 +22,10 @@ goog.provide('gf.sim.ServerSimulator');
 
 goog.require('gf.log');
 goog.require('gf.net.NetworkService');
+goog.require('gf.net.packets.ExecCommands');
+goog.require('gf.sim');
 goog.require('gf.sim.CommandList');
+goog.require('gf.sim.Observer');
 goog.require('gf.sim.Simulator');
 goog.require('goog.array');
 goog.require('goog.asserts');
@@ -38,8 +41,9 @@ goog.require('goog.asserts');
  * @extends {gf.sim.Simulator}
  * @param {!gf.Runtime} runtime Runtime instance.
  * @param {!gf.net.ServerSession} session Network session.
+ * @param {!gf.sim.ObserverCtor} observerCtor Observer constructor.
  */
-gf.sim.ServerSimulator = function(runtime, session) {
+gf.sim.ServerSimulator = function(runtime, session, observerCtor) {
   goog.base(this, runtime, 2);
 
   /**
@@ -48,6 +52,13 @@ gf.sim.ServerSimulator = function(runtime, session) {
    * @type {!gf.net.ServerSession}
    */
   this.session_ = session;
+
+  /**
+   * Observer constructor.
+   * @private
+   * @type {!gf.sim.ObserverCtor}
+   */
+  this.observerCtor_ = observerCtor_;
 
   /**
    * Simulator network service.
@@ -73,14 +84,6 @@ gf.sim.ServerSimulator = function(runtime, session) {
    * @type {!Object.<!gf.sim.Observer>}
    */
   this.userObservers_ = {};
-
-  /**
-   * List of incoming commands from the network.
-   * Commands will be processed on the next update.
-   * @private
-   * @type {!gf.sim.CommandList}
-   */
-  this.incomingCommandList_ = new gf.sim.CommandList();
 
   /**
    * A list of commands that need to released after a full flush.
@@ -128,6 +131,16 @@ gf.sim.ServerSimulator.prototype.addObserver = function(observer) {
 
 
 /**
+ * Gets the observer for the given user.
+ * @param {!gf.net.User} user User.
+ * @return {gf.sim.Observer} Observer for the given user, if it exists.
+ */
+gf.sim.ServerSimulator.prototype.getObserverForUser = function(user) {
+  return this.userObservers_[user.sessionId] || null;
+};
+
+
+/**
  * Removes an observer.
  * @param {!gf.sim.Observer} observer Observer to remove.
  */
@@ -151,11 +164,11 @@ gf.sim.ServerSimulator.prototype.update = function(frame) {
   // Poll network to find new packets
   // TODO(benvanik): poll network
 
-  // Process incoming commands
-  this.executeCommands(
-      this.incomingCommandList_.getArray(),
-      this.incomingCommandList_.getCount());
-  this.incomingCommandList_.releaseAllCommands();
+  // Process incoming commands for each observer
+  for (var n = 0; n < this.observers_.length; n++) {
+    var observer = this.observers_[n];
+    observer.executeIncomingCommands();
+  }
 
   // Run scheduled events
   this.getScheduler().update(frame);
@@ -195,7 +208,7 @@ gf.sim.ServerSimulator.prototype.broadcastCommand = function(
     }
 
     // Queue on observer
-    observer.queueCommand(command);
+    observer.queueOutgoingCommand(command);
   }
 
   // Queue for release at a later time
@@ -212,7 +225,7 @@ gf.sim.ServerSimulator.prototype.sendCommand = function(command, user) {
   // Queue on observer
   var observer = this.userObservers_[user.sessionId];
   if (observer) {
-    observer.queueCommand(command);
+    observer.queueOutgoingCommand(command);
   } else {
     gf.log.debug('unable to find user ' + user.sessionId + ' to queue command');
   }
@@ -282,7 +295,6 @@ gf.sim.ServerSimulator.prototype.compact_ = function() {
   // TODO(benvanik): compact dirty entities list?
 
   // Compact command lists
-  this.incomingCommandList_.compact();
   this.cleanupCommandList_.compact();
 
   // Compact all observers
@@ -327,5 +339,102 @@ goog.inherits(gf.sim.ServerSimulator.NetService_, gf.net.NetworkService);
  */
 gf.sim.ServerSimulator.NetService_.prototype.setupSwitch =
     function(packetSwitch) {
-  // TODO(benvanik): register packets
+  packetSwitch.register(
+      gf.net.packets.ExecCommands.ID,
+      this.handleExecCommands_, this);
+};
+
+
+/**
+ * @override
+ */
+gf.sim.ServerSimulator.NetService_.userConnected = function(user) {
+  // Ensure no existing observer - not sure this is possible
+  var observer = this.simulator_.getObserverForUser(user);
+  if (observer) {
+    return;
+  }
+
+  // Create the observer and add to the simulator
+  observer = new gf.sim.Observer(this.serverSession_, user);
+  this.simulator_.addObserver(observer);
+};
+
+
+/**
+ * @override
+ */
+gf.sim.ServerSimulator.NetService_.prototype.userDisconnected = function(user) {
+  // Grab observer
+  var observer = this.simulator_.getObserverForUser(user);
+  if (!observer) {
+    return;
+  }
+
+  // Remove from the simulator (and dispose implicitly)
+  this.simulator_.removeObserver(observer);
+};
+
+
+/**
+ * Handles command execution requests.
+ * @private
+ * @param {!gf.net.Packet} packet Packet.
+ * @param {number} packetType Packet type ID.
+ * @param {!gf.net.PacketReader} reader Packet reader.
+ * @return {boolean} True if the packet was handled successfully.
+ */
+gf.sim.ServerSimulator.NetService_.prototype.handleExecCommands_ =
+    function(packet, packetType, reader) {
+  // Verify observer
+  if (!packet.user) {
+    return false;
+  }
+  var observer = this.simulator_.getObserverForUser(packet.user);
+  if (!observer) {
+    return false;
+  }
+
+  // Read header
+  var commandCount = reader.readVarInt();
+
+  // Commands
+  for (var n = 0; n < commandCount; n++) {
+    // Read command type
+    var commandTypeId = reader.readVarInt();
+    var commandType = this.simulator_.getCommandType(commandTypeId);
+    if (!commandType) {
+      // Invalid command
+      gf.log.debug('Invalid command type ' + commandTypeId + ' from client');
+      // TODO(benvanik): kill connection, as cannot parse the rest
+      return false;
+    }
+
+    // Read command data
+    var command = commandType.allocate();
+    command.read(reader);
+
+    // Limit command execution to entities owned by the user only
+    // Basically:
+    // - commands must target entities
+    // - target entity must exist
+    // - target entity must have owner == user
+    // TODO(benvanik): better security around commands
+    var invalidTarget = command.targetEntityId == gf.sim.NO_ENTITY_ID;
+    if (!invalidTarget) {
+      var entity = this.simulator_.getEntity(command.targetEntityId);
+      invalidTarget = !entity || entity.getOwner() != packet.user;
+    }
+    if (invalidTarget) {
+      // TODO(benvanik): kill connection
+      gf.log.debug('Invalid client command target');
+      command.release();
+      return false;
+    }
+
+    // Queue on observer for processing
+    observer.queueIncomingCommand(command);
+  }
+
+  return true;
 };

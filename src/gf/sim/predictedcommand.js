@@ -65,3 +65,15 @@ gf.sim.PredictedCommand = function(commandType) {
   this.hasPredicted = false;
 };
 goog.inherits(gf.sim.PredictedCommand, gf.sim.Command);
+
+
+/**
+ * @override
+ */
+gf.sim.PredictedCommand.prototype.write = function(writer) {
+  goog.base(this, 'write', writer);
+
+  writer.writeVarInt(this.sequence);
+  // TODO(benvanik): write compressed time - this could probably fit in 16bits
+  writer.writeUint32((this.timeDelta * 1000) | 0);
+};

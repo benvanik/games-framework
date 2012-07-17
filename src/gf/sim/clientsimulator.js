@@ -20,11 +20,15 @@
 
 goog.provide('gf.sim.ClientSimulator');
 
+goog.require('gf.log');
 goog.require('gf.net.NetworkService');
+goog.require('gf.net.PacketWriter');
+goog.require('gf.net.packets.SyncSimulation');
 goog.require('gf.sim.CommandList');
 goog.require('gf.sim.EntityFlags');
 goog.require('gf.sim.PredictedCommandList');
 goog.require('gf.sim.Simulator');
+goog.require('gf.sim.packets.ExecCommands');
 goog.require('goog.array');
 
 
@@ -157,17 +161,13 @@ gf.sim.ClientSimulator.prototype.update = function(frame) {
   // Poll network to find new packets
   // TODO(benvanik): poll network
 
-  // Process sync packets
-  // TODO(benvanik): process sync packets, adding/updating/deleting entities
-  var confirmedSequence = 0;
-
-  // Confirm commands and remove them from the unconfirmed list
-  this.outgoingCommandList_.confirmSequence(confirmedSequence);
-
   // Apply server state updates
   // This must be done before command processing to ensure that any entities
   // required have been created
   // call entity.preUpdate(frame) if it changed in the sync
+  // TODO(benvanik): call all deletes (add back to pools/etc)
+  // TODO(benvanik): call all updates
+  // TODO(benvanik): call all creates
 
   // Process incoming commands
   this.executeCommands(
@@ -214,12 +214,25 @@ gf.sim.ClientSimulator.prototype.sendCommand = function(command) {
  * @param {!gf.UpdateFrame} frame Current update frame.
  */
 gf.sim.ClientSimulator.prototype.sendPendingCommands_ = function(frame) {
+  if (!this.outgoingCommandList_.hasOutgoing()) {
+    return;
+  }
+
   var delta = frame.time - this.lastSendTime_;
   if (delta >= gf.sim.ClientSimulator.CLIENT_UPDATE_RATE_) {
     this.lastSendTime_ = frame.time;
 
     // Build command packet
-    //this.outgoingCommandList_.write(writer);
+    // Add header
+    var writer = gf.net.PacketWriter.getSharedWriter();
+    gf.sim.packets.ExecCommands.write(
+        writer, gf.sim.packets.ExecCommands.writeInstance);
+
+    // Write commands
+    this.outgoingCommandList_.write(writer);
+
+    // Send
+    this.session_.send(writer.finish());
   }
 };
 
@@ -310,5 +323,80 @@ goog.inherits(gf.sim.ClientSimulator.NetService_, gf.net.NetworkService);
  */
 gf.sim.ClientSimulator.NetService_.prototype.setupSwitch =
     function(packetSwitch) {
-  // TODO(benvanik): register packets
+  packetSwitch.register(
+      gf.net.packets.SyncSimulation.ID,
+      this.handleSyncSimulation_, this);
+};
+
+
+/**
+ * Handles simulation sync packets.
+ * @private
+ * @param {!gf.net.Packet} packet Packet.
+ * @param {number} packetType Packet type ID.
+ * @param {!gf.net.PacketReader} reader Packet reader.
+ * @return {boolean} True if the packet was handled successfully.
+ */
+gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
+    function(packet, packetType, reader) {
+  // Read header
+  var confirmedSequence = reader.readVarInt();
+  var createEntityCount = reader.readVarInt();
+  var updateEntityCount = reader.readVarInt();
+  var deleteEntityCount = reader.readVarInt();
+  var commandCount = reader.readVarInt();
+
+  // Confirm prediction sequence number
+  // This performs the slicing of the stashed command list to be only those
+  // sent or unsent and not yet confirmed
+  this.simulator_.outgoingCommandList_.confirmSequence(confirmedSequence);
+
+  // Create entities
+  for (var n = 0; n < createEntityCount; n++) {
+    // Read entity ID, uncompress into full ID
+    var entityId = reader.readVarInt() << 1;
+
+    // TODO(benvanik): queue for create
+    gf.log.write('<- create entity', entityId);
+  }
+
+  // Update entities
+  for (var n = 0; n < updateEntityCount; n++) {
+    // Read entity ID, uncompress into full ID
+    var entityId = reader.readVarInt() << 1;
+
+    // TODO(benvanik): queue for update
+    gf.log.write('<- update entity', entityId);
+  }
+
+  // Delete entities
+  for (var n = 0; n < deleteEntityCount; n++) {
+    // Read entity ID, uncompress into full ID
+    var entityId = reader.readVarInt() << 1;
+
+    // TODO(benvanik): queue for delete
+    gf.log.write('<- delete entity', entityId);
+  }
+
+  // Commands
+  for (var n = 0; n < commandCount; n++) {
+    // Read command type
+    var commandTypeId = reader.readVarInt();
+    var commandType = this.simulator_.getCommandType(commandTypeId);
+    if (!commandType) {
+      // Invalid command
+      gf.log.debug('Invalid command type ' + commandTypeId + ' from server');
+      // TODO(benvanik): kill connection
+      return false;
+    }
+
+    // Read command data
+    var command = commandType.allocate();
+    command.read(reader);
+
+    // Queue for processing
+    this.simulator_.incomingCommandList_.addCommand(command);
+  }
+
+  return true;
 };
