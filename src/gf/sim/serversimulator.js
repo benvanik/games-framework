@@ -352,7 +352,7 @@ gf.sim.ServerSimulator.NetService_.prototype.setupSwitch =
 /**
  * @override
  */
-gf.sim.ServerSimulator.NetService_.userConnected = function(user) {
+gf.sim.ServerSimulator.NetService_.prototype.userConnected = function(user) {
   // Ensure no existing observer - not sure this is possible
   var observer = this.simulator_.getObserverForUser(user);
   if (observer) {

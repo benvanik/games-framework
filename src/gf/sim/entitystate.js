@@ -80,7 +80,7 @@ gf.sim.EntityState = function(entity, variableTable) {
 
 /**
  * Gets the shared variable table for {@see gf.sim.EntityState} types.
- * @param {!}
+ * @param {!Function} type Entity state type.
  * @return {!gf.sim.VariableTable} A shared variable table.
  */
 gf.sim.EntityState.getVariableTable = function(type) {
@@ -114,6 +114,7 @@ gf.sim.EntityState.prototype.setVariableDirty = function(ordinal) {
   } else {
     this.dirtyBits32_63_ |= 1 << (ordinal - 32);
   }
+  this.entity_.invalidate();
 };
 
 

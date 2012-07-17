@@ -133,6 +133,7 @@ gf.sim.Simulator.prototype.registerCommandType = function(commandType) {
 
 /**
  * Gets the command type descriptor with the given type ID, if it is found.
+ * @param {number} typeId Command type ID.
  * @return {gf.sim.CommandType} An command type descriptor with the given ID.
  */
 gf.sim.Simulator.prototype.getCommandType = function(typeId) {
@@ -153,6 +154,7 @@ gf.sim.Simulator.prototype.registerEntityType = function(entityType) {
 
 /**
  * Gets the entity type descriptor with the given type ID, if it is found.
+ * @param {number} typeId Entity type ID.
  * @return {gf.sim.EntityType} An entity type descriptor with the given ID.
  */
 gf.sim.Simulator.prototype.getEntityType = function(typeId) {
@@ -195,6 +197,7 @@ gf.sim.Simulator.prototype.addEntity = function(entity) {
 
 /**
  * Gets the entity with the given ID.
+ * @param {number} entityId Entity ID.
  * @return {gf.sim.Entity} Entity with the given ID, if found.
  */
 gf.sim.Simulator.prototype.getEntity = function(entityId) {

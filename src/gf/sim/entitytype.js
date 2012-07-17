@@ -83,6 +83,7 @@ gf.sim.EntityType.prototype.createServerEntity = function(
 
 /**
  * Allocates a new entity state instance, reusing an existing one if possible.
+ * @param {!gf.sim.Entity} entity Entity to allocate the state for.
  * @return {!gf.sim.EntityState} New or recycled entity state.
  */
 gf.sim.EntityType.prototype.allocateState = function(entity) {

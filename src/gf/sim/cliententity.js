@@ -166,7 +166,8 @@ gf.sim.ClientEntity.prototype.interpolate_ = function(time) {
   //   return;
   // } else if (this.previousStates.length == 1) {
   //   // Only one state - just copy the variables
-  //   this.state.interpolate(this.previousStates[0], this.previousStates[0], 0);
+  //   this.state.interpolate(this.previousStates[0], this.previousStates[0],
+  //       0);
   //   this.state.time = time;
   //   return;
   // }
