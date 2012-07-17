@@ -59,7 +59,7 @@ gf.sim.ClientSimulator = function(runtime, session) {
    * @type {!gf.sim.ClientSimulator.NetService_}
    */
   this.netService_ = new gf.sim.ClientSimulator.NetService_(this, session);
-  this.registerDisposable(this.netService_);
+  this.session_.registerService(this.netService_);
 
   // TODO(benvanik): slotted list
   /**

@@ -129,7 +129,7 @@ goog.inherits(gf.net.Session, goog.Disposable);
  * @override
  */
 gf.net.Session.prototype.disposeInternal = function() {
-  goog.array.forEach(this.services, goog.dispose);
+  goog.disposeAll(this.services);
   this.services.length = 0;
 
   goog.base(this, 'disposeInternal');

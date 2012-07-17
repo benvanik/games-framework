@@ -79,7 +79,15 @@ gf.sim.Observer = function(simulator, session, user) {
   this.user_ = user;
 
   /**
-   * Last confirmed sequence number.
+   * Last sequence number sent to the client.
+   * @private
+   * @type {number}
+   */
+  this.lastSentSequence_ = 0;
+
+  /**
+   * Confirmed sequence number.
+   * May be pending send.
    * @private
    * @type {number}
    */
@@ -290,6 +298,8 @@ gf.sim.Observer.prototype.flush = function(time) {
   // Prepare packet
   var writer = this.writer_;
   writer.begin(this.confirmedSequence_);
+  var needsSequenceFlush = this.confirmedSequence_ != this.lastSentSequence_;
+  this.lastSentSequence_ = this.confirmedSequence_;
 
   // Commands
   var outgoingCommands = this.outgoingCommandList_.getArray();
@@ -325,7 +335,8 @@ gf.sim.Observer.prototype.flush = function(time) {
     // If the entity was created and deleted this tick, ignore entirely and
     // avoid sending to the client
     if (!dirtyFlags ||
-        (dirtyFlags & gf.sim.EntityDirtyFlag.CREATED_AND_DELETED)) {
+        (dirtyFlags & gf.sim.EntityDirtyFlag.CREATED_AND_DELETED) ==
+        gf.sim.EntityDirtyFlag.CREATED_AND_DELETED) {
       continue;
     }
 
@@ -339,9 +350,13 @@ gf.sim.Observer.prototype.flush = function(time) {
     }
   }
 
-  // IFF we have a valid packet, emit
-  // TODO(benvanik): check to ensure something got changed
-  this.session_.send(writer.finish(), this.user_);
+  // IFF we have a valid packet, emit -- note that we may send empty packets
+  // if we need to flush a sequence confirmation number
+  if (needsSequenceFlush || writer.hasContents()) {
+    this.session_.send(writer.finish(), this.user_);
+  } else {
+    writer.drop();
+  }
 
   // Reset state for the next tick
   // TODO(benvanik): prevent this resize and reuse the list (being careful of

@@ -68,7 +68,7 @@ gf.sim.ServerSimulator = function(runtime, session, observerCtor) {
    * @type {!gf.sim.ServerSimulator.NetService_}
    */
   this.netService_ = new gf.sim.ServerSimulator.NetService_(this, session);
-  this.registerDisposable(this.netService_);
+  this.session_.registerService(this.netService_);
 
   /**
    * A list of observers.
@@ -128,7 +128,14 @@ gf.sim.ServerSimulator.prototype.addObserver = function(observer) {
     this.userObservers_[user.sessionId] = observer;
   }
 
-  // TODO(benvanik): schedule creations for existing entities
+  // Ensure all relevant entities get created on the observer
+  // TODO(benvanik): optimize this - with a large number of entities
+  //     this could take a bit and cause fat server frames
+  this.forEachEntity(function(entity) {
+    // Notify of change
+    // If the entity is relevant this will schedule a creation
+    observer.notifyEntityChange(entity);
+  }, this);
 };
 
 

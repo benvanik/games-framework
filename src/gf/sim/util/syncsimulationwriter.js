@@ -103,6 +103,19 @@ gf.sim.util.SyncSimulationWriter = function() {
 
 
 /**
+ * Checks to see if the writer has any useful contents.
+ * @return {boolean} True if the writer has contents.
+ */
+gf.sim.util.SyncSimulationWriter.prototype.hasContents = function() {
+  return (
+      this.commandCount_ +
+      this.createEntityCount_ +
+      this.updateEntityCount_ +
+      this.deleteEntityCount_) > 0;
+};
+
+
+/**
  * Begins writing the sync simulation packet.
  * @param {number} confirmedSequence Sequence number.
  */
@@ -229,4 +242,28 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function() {
 
   // Finish
   return writer.finish();
+};
+
+
+/**
+ * Drops all pending data.
+ */
+gf.sim.util.SyncSimulationWriter.prototype.drop = function() {
+  this.confirmedSequence_ = 0;
+  for (var n = 0; n < this.createEntityCount_; n++) {
+    this.createEntities_[n] = null;
+  }
+  this.createEntityCount_ = 0;
+  for (var n = 0; n < this.updateEntityCount_; n++) {
+    this.updateEntities_[n] = null;
+  }
+  this.updateEntityCount_ = 0;
+  for (var n = 0; n < this.deleteEntityCount_; n++) {
+    this.deleteEntities_[n] = null;
+  }
+  this.deleteEntityCount_ = 0;
+  for (var n = 0; n < this.commandCount_; n++) {
+    this.commands_[n] = null;
+  }
+  this.commandCount_ = 0;
 };
