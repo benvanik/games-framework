@@ -193,6 +193,7 @@ http://jsperf.com/ifs-vs-table <-- use tables
 
 Entity:
   state = current state
+  parent
 
 ClientEntity:
   confirmedState = last confirmed state from the server [client only]
@@ -200,3 +201,48 @@ ClientEntity:
   renderState = interpolated/predicted state, may point at state if neither enabled
 
 ServerEntity:
+
+
+
+blk.sim.MapEntity
+blk.sim.EnvironmentEntity
+blk.sim.MusicEntity
+blk.sim.PositionedEntity
+  blk.sim.SoundEffectEntity
+  blk.sim.ActorEntity
+    blk.sim.ToolEntity
+      blk.sim.tools.PickaxeEntity
+      blk.sim.tools.RocketLauncherEntity
+    blk.sim.ProjectileEntity
+      blk.sim.tools.RocketEntity
+    blk.sim.ControllableEntity
+      blk.sim.controllables.HumanEntity
+  audio ?
+blk.sim.ControllerEntity
+  blk.sim.controllers.PlayerEntity
+
+WorldEntity:
+- position (PRED | INTERP | FREQ)
+- orientation (PRED | INTERP | FREQ)
+
+ActorEntity:
+- model/etc
+
+ToolEntity:
+-
+
+ProjectileEntity:
+-
+
+ControllableEntity:
+- controller {entity var type}
+
+ControllerEntity:
+-
+
+PlayerEntity:
+
+
+
+how does controller entity set pos/orientation on parent so pred/interp
+entity parenting

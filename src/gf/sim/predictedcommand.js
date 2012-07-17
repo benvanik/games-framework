@@ -70,6 +70,17 @@ goog.inherits(gf.sim.PredictedCommand, gf.sim.Command);
 /**
  * @override
  */
+gf.sim.PredictedCommand.prototype.read = function(reader) {
+  goog.base(this, 'read', reader);
+
+  this.sequence = reader.readVarInt();
+  this.timeDelta = reader.readUint32() / 1000;
+};
+
+
+/**
+ * @override
+ */
 gf.sim.PredictedCommand.prototype.write = function(writer) {
   goog.base(this, 'write', writer);
 

@@ -22,6 +22,7 @@ goog.provide('gf.sim.ClientEntity');
 
 goog.require('gf.sim.Entity');
 goog.require('gf.sim.EntityFlag');
+goog.require('gf.sim.commands.ReparentCommand');
 goog.require('goog.asserts');
 
 
@@ -34,7 +35,7 @@ goog.require('goog.asserts');
  * @param {!gf.sim.ClientSimulator} simulator Owning client simulator.
  * @param {!gf.sim.EntityType} entityType Entity type.
  * @param {number} entityId Entity ID.
- * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag}.
+ * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag} values.
  */
 gf.sim.ClientEntity = function(simulator, entityType, entityId, entityFlags) {
   goog.base(this, simulator, entityType, entityId, entityFlags, stateType);
@@ -209,6 +210,9 @@ gf.sim.ClientEntity.prototype.interpolate_ = function(time) {
  * @override
  */
 gf.sim.ClientEntity.prototype.executeCommand = function(command) {
+  if (command instanceof gf.sim.commands.ReparentCommand) {
+    this.setParent(command.parentId);
+  }
 };
 
 

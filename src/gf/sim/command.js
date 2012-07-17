@@ -47,12 +47,24 @@ gf.sim.Command = function(commandType) {
    */
   this.time = 0;
 
+  // We don't have a separate EntityCommand that has this because almost all
+  // commands are entity-specific
   /**
    * Target entity ID.
    * May be {@see gf.sim#NO_ENTITY_ID} to target the global scope.
    * @type {number}
    */
   this.targetEntityId = gf.sim.NO_ENTITY_ID;
+};
+
+
+/**
+ * Reads the command contents from the given packet reader.
+ * @param {!gf.net.PacketReader} reader Packet reader.
+ */
+gf.sim.Command.prototype.read = function(reader) {
+  this.time = reader.readUint32() / 1000;
+  this.targetEntityId = reader.readVarInt();
 };
 
 

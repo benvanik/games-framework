@@ -20,7 +20,10 @@
 
 goog.provide('gf.sim.ServerEntity');
 
+goog.require('gf.sim');
 goog.require('gf.sim.Entity');
+goog.require('gf.sim.EntityFlag');
+goog.require('gf.sim.commands.ReparentCommand');
 
 
 
@@ -32,7 +35,7 @@ goog.require('gf.sim.Entity');
  * @param {!gf.sim.ClientSimulator} simulator Owning server simulator.
  * @param {!gf.sim.EntityType} entityType Entity type.
  * @param {number} entityId Entity ID.
- * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag}.
+ * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag} values.
  */
 gf.sim.ServerEntity = function(simulator, entityType, entityId, entityFlags) {
   goog.base(this, simulator, entityType, entityId, entityFlags);
@@ -94,6 +97,22 @@ gf.sim.ServerEntity.prototype.getOwner = function() {
  */
 gf.sim.ServerEntity.prototype.setOwner = function(value) {
   this.owner_ = value;
+};
+
+
+/**
+ * @override
+ */
+gf.sim.ServerEntity.prototype.parentChanged = function(oldParent, newParent) {
+  // Ignore if not replicated
+  if (this.getFlags() & gf.sim.EntityFlag.NOT_REPLICATED) {
+    return;
+  }
+
+  // Send reparent command
+  var command = this.createCommand(gf.sim.commands.ReparentCommand.ID);
+  command.parentId = newParent ? newParent.getId() : gf.sim.NO_ENTITY_ID;
+  this.simulator.broadcastCommand(command);
 };
 
 

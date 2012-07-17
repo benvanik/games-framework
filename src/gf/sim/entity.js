@@ -56,7 +56,7 @@ goog.require('goog.asserts');
  * @param {!gf.sim.Simulator} simulator Owning simulator.
  * @param {!gf.sim.EntityType} entityType Entity type.
  * @param {number} entityId Entity ID.
- * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag}.
+ * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag} values.
  */
 gf.sim.Entity = function(simulator, entityType, entityId, entityFlags) {
   goog.base(this);
@@ -95,6 +95,13 @@ gf.sim.Entity = function(simulator, entityType, entityId, entityFlags) {
   this.entityFlags_ = entityFlags;
 
   /**
+   * Parent entity.
+   * @private
+   * @type {gf.sim.Entity}
+   */
+  this.parent_ = null;
+
+  /**
    * A bitmask of {@see gf.sim.EntityDirtyFlag} indicating the dirty state
    * of the entity.
    * This value is tracked per tick and will be reset.
@@ -130,6 +137,52 @@ gf.sim.Entity.prototype.getId = function() {
  */
 gf.sim.Entity.prototype.getFlags = function() {
   return this.entityFlags_;
+};
+
+
+/**
+ * Gets the parent of the entity.
+ * @return {gf.sim.Entity} Parent entity, if any.
+ */
+gf.sim.Entity.prototype.getParent = function() {
+  return this.parent_;
+};
+
+
+/**
+ * Sets the parent of the entity.
+ * @param {gf.sim.Entity} value New parent entity, if any.
+ */
+gf.sim.Entity.prototype.setParent = function(value) {
+  if (this.parent_ != value) {
+    var oldParent = this.parent_;
+    this.parent_ = value;
+    this.parentChanged(oldParent, value);
+  }
+};
+
+
+/**
+ * Handles parent entity changes.
+ * @protected
+ * @param {gf.sim.Entity} oldEntity Old parent entity, if any.
+ * @param {gf.sim.Entity} newEntity New parent entity, if any.
+ */
+gf.sim.Entity.prototype.parentChanged = goog.nullFunction;
+
+
+/**
+ * Creates a command targetted at this entity.
+ * @protected
+ * @param {number} typeId Command type ID.
+ * @return {!gf.sim.Command} New command.
+ */
+gf.sim.Entity.prototype.createCommand = function(typeId) {
+  var commandType = this.simulator.getCommandType(typeId);
+  goog.asserts.assert(commandType);
+  var command = commandType.allocate();
+  command.targetEntityId = this.entityId_;
+  return command;
 };
 
 
