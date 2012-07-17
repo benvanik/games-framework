@@ -27,9 +27,12 @@ goog.provide('gf.sim.EntityType');
  *
  * @constructor
  * @param {number} typeId Entity type ID.
- * @param {!function(new:gf.sim.Entity)} entityCtor Entity constructor.
+ * @param {!function(new:gf.sim.Entity, !gf.sim.Simulator, !gf.sim.EntityType,
+ *     number, number)} entityCtor Entity constructor.
+ * @param {!function(new:gf.sim.EntityState, !gf.sim.Entity)} stateCtor Entity
+ *     state constructor.
  */
-gf.sim.EntityType = function(typeId, entityCtor) {
+gf.sim.EntityType = function(typeId, entityCtor, stateCtor) {
   /**
    * Entity type ID.
    * @type {number}
@@ -42,6 +45,13 @@ gf.sim.EntityType = function(typeId, entityCtor) {
    * @type {!function(new:gf.sim.Entity)}
    */
   this.entityCtor_ = entityCtor;
+
+  /**
+   * Constructor for the entity state type.
+   * @private
+   * @type {!function(new:gf.sim.EntityState, !gf.sim.Entity)}
+   */
+  this.stateCtor_ = stateCtor;
 };
 
 
@@ -54,7 +64,7 @@ gf.sim.EntityType = function(typeId, entityCtor) {
  */
 gf.sim.EntityType.prototype.createClientEntity = function(
     simulator, entityId, entityFlags) {
-  return new this.entityCtor_(simulator, entityId, entityFlags);
+  return new this.entityCtor_(simulator, this, entityId, entityFlags);
 };
 
 
@@ -67,5 +77,24 @@ gf.sim.EntityType.prototype.createClientEntity = function(
  */
 gf.sim.EntityType.prototype.createServerEntity = function(
     simulator, entityId, entityFlags) {
-  return new this.entityCtor_(simulator, entityId, entityFlags);
+  return new this.entityCtor_(simulator, this, entityId, entityFlags);
+};
+
+
+/**
+ * Allocates a new entity state instance, reusing an existing one if possible.
+ * @return {!gf.sim.EntityState} New or recycled entity state.
+ */
+gf.sim.EntityType.prototype.allocateState = function(entity) {
+  // TODO(benvanik): pooling of entity state
+  return new this.stateCtor_(entity);
+};
+
+
+/**
+ * Releases entity state back to the pool.
+ * @param {!gf.sim.EntityState} entityState Entity state that can be released.
+ */
+gf.sim.EntityType.prototype.releaseState = function(entityState) {
+  // TODO(benvanik): pooling of entity state
 };

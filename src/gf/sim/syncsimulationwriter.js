@@ -174,7 +174,13 @@ gf.sim.SyncSimulationWriter.prototype.finish = function() {
     // Since only server IDs are being sent we cheat and send shifted by 1
     writer.writeVarInt(entity.getId() >> 1);
 
-    // TODO(benvanik): write entity create
+    // Write entity info
+    writer.writeVarInt(entity.getTypeId());
+    writer.writeVarInt(entity.getFlags());
+
+    // Write entire entity
+    entity.write(writer);
+
     gf.log.write('-> create entity', entity.getId());
   }
   this.createEntityCount_ = 0;
@@ -188,7 +194,9 @@ gf.sim.SyncSimulationWriter.prototype.finish = function() {
     // Since only server IDs are being sent we cheat and send shifted by 1
     writer.writeVarInt(entity.getId() >> 1);
 
-    // TODO(benvanik): write entity update
+    // Write changes
+    entity.writeDelta(writer);
+
     gf.log.write('-> update entity', entity.getId());
   }
   this.updateEntityCount_ = 0;

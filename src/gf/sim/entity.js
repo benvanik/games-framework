@@ -54,10 +54,11 @@ goog.require('goog.asserts');
  * @constructor
  * @extends {goog.Disposable}
  * @param {!gf.sim.Simulator} simulator Owning simulator.
+ * @param {!gf.sim.EntityType} entityType Entity type.
  * @param {number} entityId Entity ID.
  * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag}.
  */
-gf.sim.Entity = function(simulator, entityId, entityFlags) {
+gf.sim.Entity = function(simulator, entityType, entityId, entityFlags) {
   goog.base(this);
 
   goog.asserts.assert(entityId != gf.sim.NO_ENTITY_ID);
@@ -68,6 +69,13 @@ gf.sim.Entity = function(simulator, entityId, entityFlags) {
    * @type {!gf.sim.Simulator}
    */
   this.simulator = simulator;
+
+  /**
+   * Entity type.
+   * @protected
+   * @type {!gf.sim.EntityType}
+   */
+  this.entityType = entityType;
 
   /**
    * Session-unique entity ID.
@@ -95,6 +103,15 @@ gf.sim.Entity = function(simulator, entityId, entityFlags) {
   this.dirtyFlags = 0;
 };
 goog.inherits(gf.sim.Entity, goog.Disposable);
+
+
+/**
+ * Gets the entity type ID.
+ * @return {number} Entity type ID.
+ */
+gf.sim.Entity.prototype.getTypeId = function() {
+  return this.entityType.typeId;
+};
 
 
 /**
@@ -203,18 +220,10 @@ gf.sim.Entity.prototype.resetDirtyState = function() {
  */
 gf.sim.EntityFlag = {
   /**
-   * Entity exists only the server and should not be replicated to clients.
-   * Examples: AI nodes, game rule triggers.
+   * Entity is not replicated and exists only on the host it was created on.
+   * Examples: AI nodes (server only), game rule triggers (server only).
    */
-  SERVER_ONLY: 1 << 0,
-
-  /**
-   * Entity is transient and will not persist on the server.
-   * Entities created with this will be replicated to clients and then
-   * detached on the server.
-   * Examples: sound effects, particle effects.
-   */
-  TRANSIENT: 1 << 1,
+  NOT_REPLICATED: 1 << 0,
 
   /**
    * Entity updates frequently (every tick).
@@ -222,15 +231,24 @@ gf.sim.EntityFlag = {
    * optimizations.
    * Examples: player controlled entities, projectiles.
    */
-  FREQUENT_UPDATES: 1 << 2,
+  UPDATED_FREQUENTLY: 1 << 1,
 
   /**
    * Entity has variables that are predicted.
    * Predicted entities are significantly more expensive than unpredicted
    * ones and should only be used when the entity is controllable by a player.
-   * Examples: player controlled entities, projectiles.
+   * Examples: local player controlled entities, local projectiles.
    */
-  PREDICTED: 1 << 3,
+  PREDICTED: 1 << 2,
+
+  /**
+   * Entity has variables that are interpolated.
+   * Interpolated entities have some of their variables interpolated each
+   * render frame to approximate the correct state inbetween updates from the
+   * server.
+   * Examples: remote player controlled entities, remote projectiles.
+   */
+  INTERPOLATED: 1 << 3,
 
   /**
    * Entity participates in the latency compensation system.
@@ -239,7 +257,15 @@ gf.sim.EntityFlag = {
    * latency compensated, so only use for appropraite types.
    * Examples: player controlled entities, projectiles.
    */
-  LATENCY_COMPENSATED: 1 << 4
+  LATENCY_COMPENSATED: 1 << 4,
+
+  /**
+   * Entity is transient and will not persist on the server.
+   * Entities created with this will be replicated to clients and then
+   * detached on the server.
+   * Examples: sound effects, particle effects.
+   */
+  TRANSIENT: 1 << 5
 };
 
 

@@ -25,6 +25,7 @@ goog.require('gf.net.NetworkService');
 goog.require('gf.net.packets.ExecCommands');
 goog.require('gf.sim');
 goog.require('gf.sim.CommandList');
+goog.require('gf.sim.EntityFlag');
 goog.require('gf.sim.Observer');
 goog.require('gf.sim.Simulator');
 goog.require('goog.array');
@@ -161,9 +162,6 @@ gf.sim.ServerSimulator.prototype.removeObserver = function(observer) {
  * @override
  */
 gf.sim.ServerSimulator.prototype.update = function(frame) {
-  // Poll network to find new packets
-  // TODO(benvanik): poll network
-
   // Process incoming commands for each observer
   for (var n = 0; n < this.observers_.length; n++) {
     var observer = this.observers_[n];
@@ -173,11 +171,12 @@ gf.sim.ServerSimulator.prototype.update = function(frame) {
   // Run scheduled events
   this.getScheduler().update(frame);
 
-  // Perform post-update work on entities that were marked as dirty
+  // Perform post-update work on entities that were marked as dirty, such
+  // as queuing them for transmission
   this.postTickUpdateEntities(frame);
 
-  // Flush observers of any pending changes
-  this.flushAll_(frame);
+  // Flush observers of any pending changes, reset state
+  this.postUpdate(frame);
 
   // Compact, if needed - this prevents memory leaks from caches
   this.compact_();
@@ -242,6 +241,11 @@ gf.sim.ServerSimulator.prototype.postTickUpdateEntity = function(
     frame, genericEntity) {
   var entity = /** @type {!gf.sim.ServerEntity} */ (genericEntity);
 
+  // Ignore if not replicated
+  if (entity.getFlags() & gf.sim.EntityFlag.NOT_REPLICATED) {
+    return;
+  }
+
   // TODO(benvanik): something with each entity? maybe pack/prepare data?
 
   // Notify all observers about the entity change
@@ -253,11 +257,9 @@ gf.sim.ServerSimulator.prototype.postTickUpdateEntity = function(
 
 
 /**
- * Flushes all observers at the end of a frame.
- * @private
- * @param {!gf.UpdateFrame} frame Current update frame.
+ * @override
  */
-gf.sim.ServerSimulator.prototype.flushAll_ = function(frame) {
+gf.sim.ServerSimulator.prototype.postUpdate = function(frame) {
   // Flush observers
   for (var n = 0; n < this.observers_.length; n++) {
     var observer = this.observers_[n];
@@ -266,6 +268,8 @@ gf.sim.ServerSimulator.prototype.flushAll_ = function(frame) {
 
   // Cleanup any outstanding release requests
   this.cleanupCommandList_.releaseAllCommands(this);
+
+  goog.base(this, 'postUpdate', frame);
 };
 
 

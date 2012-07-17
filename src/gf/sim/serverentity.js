@@ -30,11 +30,12 @@ goog.require('gf.sim.Entity');
  * @constructor
  * @extends {gf.sim.Entity}
  * @param {!gf.sim.ClientSimulator} simulator Owning server simulator.
+ * @param {!gf.sim.EntityType} entityType Entity type.
  * @param {number} entityId Entity ID.
  * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag}.
  */
-gf.sim.ServerEntity = function(simulator, entityId, entityFlags) {
-  goog.base(this, simulator, entityId, entityFlags);
+gf.sim.ServerEntity = function(simulator, entityType, entityId, entityFlags) {
+  goog.base(this, simulator, entityType, entityId, entityFlags);
 
   /**
    * Owning user, if any.
@@ -45,8 +46,28 @@ gf.sim.ServerEntity = function(simulator, entityId, entityFlags) {
    * @type {gf.net.User}
    */
   this.owner_ = null;
+
+  /**
+   * Current entity state.
+   * This is the authoritative state that is replicated to all observers.
+   * It is kept consistent each server tick.
+   * @protected
+   * @type {!gf.sim.EntityState}
+   */
+  this.state = entityType.allocateState();
 };
 goog.inherits(gf.sim.ServerEntity, gf.sim.Entity);
+
+
+/**
+ * @override
+ */
+gf.sim.ServerEntity.prototype.disposeInternal = function() {
+  // Return entity states back to the pool
+  this.entityType.releaseState(this.state);
+
+  goog.base(this, 'disposeInternal');
+};
 
 
 /**
@@ -77,6 +98,24 @@ gf.sim.ServerEntity.prototype.setOwner = function(value) {
 
 
 /**
+ * Writes all state to the given writer.
+ * @param {!gf.net.PacketWriter} writer Packet writer.
+ */
+gf.sim.ServerEntity.prototype.write = function(writer) {
+  this.state.write(writer);
+};
+
+
+/**
+ * Writes a state delta to the given writer.
+ * @param {!gf.net.PacketWriter} writer Packet writer.
+ */
+gf.sim.ServerEntity.prototype.writeDelta = function(writer) {
+  this.state.writeDelta(writer);
+};
+
+
+/**
  * @override
  */
 gf.sim.ServerEntity.prototype.executeCommand = function(command) {
@@ -94,4 +133,15 @@ gf.sim.ServerEntity.prototype.update = function(time, timeDelta) {
  * @override
  */
 gf.sim.ServerEntity.prototype.postTickUpdate = function(frame) {
+};
+
+
+/**
+ * @override
+ */
+gf.sim.ServerEntity.prototype.resetDirtyState = function() {
+  goog.base(this, 'resetDirtyState');
+
+  // When this is called we've already flushed deltas, so reset the bits
+  this.state.resetDirtyState();
 };

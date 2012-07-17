@@ -309,14 +309,13 @@ gf.sim.Simulator.prototype.executeCommand = goog.nullFunction;
 
 /**
  * Calls {@see gf.sim.Entity#postTickUpdate} on all entities that were updated
- * this tick and resets their state.
+ * this tick. The entities states are not reset.
  * @protected
  * @param {!gf.UpdateFrame} frame Current update frame.
  */
 gf.sim.Simulator.prototype.postTickUpdateEntities = function(frame) {
   for (var n = 0; n < this.dirtyEntitiesLength_; n++) {
     var entity = this.dirtyEntities_[n];
-    this.dirtyEntities_[n] = null;
 
     // Run per-frame change entity logic
     entity.postTickUpdate(frame);
@@ -324,11 +323,7 @@ gf.sim.Simulator.prototype.postTickUpdateEntities = function(frame) {
     // Run custom simulator code on the entity
     // This may send commands, network sync packets, etc
     this.postTickUpdateEntity(frame, entity);
-
-    // Reset entity state
-    entity.resetDirtyState();
   }
-  this.dirtyEntitiesLength_ = 0;
 };
 
 
@@ -342,3 +337,21 @@ gf.sim.Simulator.prototype.postTickUpdateEntities = function(frame) {
  * @param {!gf.sim.Entity} entity Entity that was updated.
  */
 gf.sim.Simulator.prototype.postTickUpdateEntity = goog.nullFunction;
+
+
+/**
+ * Runs after all tick actions are done and state can be flushed/reset.
+ * @protected
+ * @param {!gf.UpdateFrame} frame Current update frame.
+ */
+gf.sim.Simulator.prototype.postUpdate = function(frame) {
+  // Clean up the dirty entity list and reset state
+  for (var n = 0; n < this.dirtyEntitiesLength_; n++) {
+    var entity = this.dirtyEntities_[n];
+    this.dirtyEntities_[n] = null;
+
+    // Reset entity state
+    entity.resetDirtyState();
+  }
+  this.dirtyEntitiesLength_ = 0;
+};

@@ -25,7 +25,7 @@ goog.require('gf.net.NetworkService');
 goog.require('gf.net.PacketWriter');
 goog.require('gf.net.packets.SyncSimulation');
 goog.require('gf.sim.CommandList');
-goog.require('gf.sim.EntityFlags');
+goog.require('gf.sim.EntityFlag');
 goog.require('gf.sim.PredictedCommandList');
 goog.require('gf.sim.Simulator');
 goog.require('gf.sim.packets.ExecCommands');
@@ -63,11 +63,11 @@ gf.sim.ClientSimulator = function(runtime, session) {
 
   // TODO(benvanik): slotted list
   /**
-   * A list of entities needing prediction.
+   * A list of entities needing prediction/interpolation.
    * @private
    * @type {!Array.<!gf.sim.ClientEntity>}
    */
-  this.predictedEntities_ = [];
+  this.interpolatedEntities_ = [];
 
   /**
    * List of incoming commands from the network.
@@ -114,8 +114,9 @@ gf.sim.ClientSimulator.prototype.addEntity = function(entity) {
   goog.base(this, 'addEntity', entity);
 
   // Track predicted entities
-  if (entity.getFlags() & gf.sim.EntityFlags.PREDICTED) {
-    this.predictedEntities_.push(entity);
+  if (entity.getFlags() & (
+      gf.sim.EntityFlag.PREDICTED | gf.sim.EntityFlag.INTERPOLATED)) {
+    this.interpolatedEntities_.push(entity);
   }
 };
 
@@ -128,19 +129,11 @@ gf.sim.ClientSimulator.prototype.removeEntity = function(entity) {
 
   // Un-track predicted entities
   // TODO(benvanik): faster removal via slotted list
-  if (entity.getFlags() & gf.sim.EntityFlags.PREDICTED) {
-    goog.array.remove(this.predictedEntities_, entity);
+  if (entity.getFlags() & (
+      gf.sim.EntityFlag.PREDICTED | gf.sim.EntityFlag.INTERPOLATED)) {
+    goog.array.remove(this.interpolatedEntities_, entity);
   }
 };
-
-
-/**
- * Whether client-side prediction is enabled.
- * @private
- * @const
- * @type {boolean}
- */
-gf.sim.ClientSimulator.PREDICTION_ENABLED_ = true;
 
 
 /**
@@ -158,16 +151,11 @@ gf.sim.ClientSimulator.CLIENT_UPDATE_RATE_ = 20;
  * @override
  */
 gf.sim.ClientSimulator.prototype.update = function(frame) {
-  // Poll network to find new packets
-  // TODO(benvanik): poll network
+  // NOTE: updates to entity state (create/update/delete) have been done already
+  //       in the netservice
 
-  // Apply server state updates
-  // This must be done before command processing to ensure that any entities
-  // required have been created
-  // call entity.preUpdate(frame) if it changed in the sync
-  // TODO(benvanik): call all deletes (add back to pools/etc)
-  // TODO(benvanik): call all updates
-  // TODO(benvanik): call all creates
+  // Prepare entity states for update with interpolation/prediction
+  this.interpolateEntities(frame.time);
 
   // Process incoming commands
   this.executeCommands(
@@ -184,8 +172,38 @@ gf.sim.ClientSimulator.prototype.update = function(frame) {
   // Flush any pending commands generated during this update
   this.sendPendingCommands_(frame);
 
+  // Post update
+  this.postUpdate(frame);
+
   // Compact, if needed - this prevents memory leaks from caches
   this.compact_();
+};
+
+
+/**
+ * Prepares all entities for rendering.
+ * This must be called each render frame to handle interpolation and client-side
+ * prediction before running local physics/etc.
+ *
+ * It works by interpolating variables on entities that need it and running
+ * client-side prediction code by executing all commands that have been
+ * unconfirmed or unsent to the server. When this function returns the entity
+ * state will be the predicted state.
+ *
+ * This function is also called automatically once per update tick to ensure all
+ * entity logic runs with the latest state.
+ *
+ * @param {number} time Current time.
+ */
+gf.sim.ClientSimulator.prototype.interpolateEntities = function(time) {
+  // Interpolate all entities (and prepare predicted entities)
+  for (var n = 0; n < this.interpolatedEntities_.length; n++) {
+    var entity = this.interpolatedEntities_[n];
+    entity.interpolate(time);
+  }
+
+  // Execute prediction commands
+  this.outgoingCommandList_.executePrediction(this);
 };
 
 
@@ -268,27 +286,6 @@ gf.sim.ClientSimulator.prototype.compact_ = function() {
 };
 
 
-/**
- * Runs client-side prediction code by executing all commands that have been
- * unconfirmed or unsent to the server.
- * When this function returns the entity state will be the predicted state.
- * It should be called every render frame before running local physics/etc.
- * @param {!gf.RenderFrame} frame Current render frame.
- */
-gf.sim.ClientSimulator.prototype.predictEntities =
-    gf.sim.ClientSimulator.PREDICTION_ENABLED_ ? function(frame) {
-  // Reset predicted entities to their confirmed states
-  for (var n = 0; n < this.predictedEntities_.length; n++) {
-    var entity = this.predictedEntities_[n];
-
-    // TODO(benvanik): reset state
-  }
-
-  // Execute prediction commands
-  this.outgoingCommandList_.executePrediction(this);
-} : goog.nullFunction;
-
-
 
 /**
  * Manages dispatching client simulator packets.
@@ -356,7 +353,28 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     // Read entity ID, uncompress into full ID
     var entityId = reader.readVarInt() << 1;
 
-    // TODO(benvanik): queue for create
+    // Read entity info
+    var entityTypeId = reader.readVarInt();
+    var entityFlags = reader.readVarInt();
+
+    // Get entity type factory
+    var entityType = this.simulator_.getEntityType(entityTypeId);
+    if (!entityType) {
+      // Invalid entity type
+      gf.log.debug('Invalid entity type ' + entityTypeId + ' from server');
+      return false;
+    }
+
+    // Create entity
+    var entity = entityType.createClientEntity(
+        this.simulator_, entityId, entityFlags);
+
+    // Load initial values
+    entity.read(reader);
+
+    // Add to simulation
+    this.simulator_.addEntity(entity);
+
     gf.log.write('<- create entity', entityId);
   }
 
@@ -365,7 +383,17 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     // Read entity ID, uncompress into full ID
     var entityId = reader.readVarInt() << 1;
 
-    // TODO(benvanik): queue for update
+    // Find entity
+    var entity = this.simulator_.getEntity(entityId);
+    if (!entity) {
+      // Entity not found
+      gf.log.debug('Target entity of server update not found ' + entityId);
+      return false;
+    }
+
+    // Load delta values
+    entity.readDelta(reader);
+
     gf.log.write('<- update entity', entityId);
   }
 
@@ -374,7 +402,17 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     // Read entity ID, uncompress into full ID
     var entityId = reader.readVarInt() << 1;
 
-    // TODO(benvanik): queue for delete
+    // Find entity
+    var entity = this.simulator_.getEntity(entityId);
+    if (!entity) {
+      // Entity not found
+      gf.log.debug('Target entity of server delete not found ' + entityId);
+      return false;
+    }
+
+    // Remove from simulation
+    this.simulator_.removeEntity(entity);
+
     gf.log.write('<- delete entity', entityId);
   }
 
@@ -386,7 +424,6 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     if (!commandType) {
       // Invalid command
       gf.log.debug('Invalid command type ' + commandTypeId + ' from server');
-      // TODO(benvanik): kill connection
       return false;
     }
 
