@@ -18,7 +18,7 @@
  * @author benvanik@google.com (Ben Vanik)
  */
 
-goog.provide('gf.sim.CommandType');
+goog.provide('gf.sim.CommandFactory');
 
 goog.require('gf.sim');
 
@@ -31,10 +31,10 @@ goog.require('gf.sim');
  *
  * @constructor
  * @param {number} typeId Command type ID.
- * @param {!function(new:gf.sim.Command, !gf.sim.CommandType)} commandCtor
+ * @param {!function(new:gf.sim.Command, !gf.sim.CommandFactory)} commandCtor
  *     Command constructor.
  */
-gf.sim.CommandType = function(typeId, commandCtor) {
+gf.sim.CommandFactory = function(typeId, commandCtor) {
   /**
    * Command type ID.
    * @type {number}
@@ -44,7 +44,7 @@ gf.sim.CommandType = function(typeId, commandCtor) {
   /**
    * Constructor for the command type.
    * @private
-   * @type {!function(new:gf.sim.Command, !gf.sim.CommandType)}
+   * @type {!function(new:gf.sim.Command, !gf.sim.CommandFactory)}
    */
   this.commandCtor_ = commandCtor;
 
@@ -62,7 +62,7 @@ gf.sim.CommandType = function(typeId, commandCtor) {
  * The returned command will have random values and must be fully reset.
  * @return {!gf.sim.Command} A new or re-used command. Uninitialized.
  */
-gf.sim.CommandType.prototype.allocate = function() {
+gf.sim.CommandFactory.prototype.allocate = function() {
   if (this.unusedCommands_.length) {
     var command = this.unusedCommands_.pop();
     // Reset the important fields that everyone will mess up
@@ -78,6 +78,6 @@ gf.sim.CommandType.prototype.allocate = function() {
  * Releases a command to the pool.
  * @param {!gf.sim.Command} command Command to release.
  */
-gf.sim.CommandType.prototype.release = function(command) {
+gf.sim.CommandFactory.prototype.release = function(command) {
   this.unusedCommands_.push(command);
 };

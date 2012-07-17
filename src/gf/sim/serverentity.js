@@ -33,12 +33,13 @@ goog.require('gf.sim.commands.ReparentCommand');
  * @constructor
  * @extends {gf.sim.Entity}
  * @param {!gf.sim.ServerSimulator} simulator Owning server simulator.
- * @param {!gf.sim.EntityType} entityType Entity type.
+ * @param {!gf.sim.EntityFactory} entityFactory Entity factory.
  * @param {number} entityId Entity ID.
  * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag} values.
  */
-gf.sim.ServerEntity = function(simulator, entityType, entityId, entityFlags) {
-  goog.base(this, simulator, entityType, entityId, entityFlags);
+gf.sim.ServerEntity = function(simulator, entityFactory, entityId,
+    entityFlags) {
+  goog.base(this, simulator, entityFactory, entityId, entityFlags);
 
   /**
    * Owning user, if any.
@@ -57,7 +58,7 @@ gf.sim.ServerEntity = function(simulator, entityType, entityId, entityFlags) {
    * @protected
    * @type {!gf.sim.EntityState}
    */
-  this.state = entityType.allocateState(this);
+  this.state = entityFactory.allocateState(this);
 };
 goog.inherits(gf.sim.ServerEntity, gf.sim.Entity);
 
@@ -67,7 +68,7 @@ goog.inherits(gf.sim.ServerEntity, gf.sim.Entity);
  */
 gf.sim.ServerEntity.prototype.disposeInternal = function() {
   // Return entity states back to the pool
-  this.entityType.releaseState(this.state);
+  this.factory.releaseState(this.state);
 
   goog.base(this, 'disposeInternal');
 };

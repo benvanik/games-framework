@@ -32,10 +32,10 @@ goog.require('gf.sim.commands.CommandType');
  *
  * @constructor
  * @extends {gf.sim.Command}
- * @param {!gf.sim.CommandType} commandType Command type.
+ * @param {!gf.sim.CommandFactory} commandFactory Command factory.
  */
-gf.sim.commands.ReparentCommand = function(commandType) {
-  goog.base(this, commandType);
+gf.sim.commands.ReparentCommand = function(commandFactory) {
+  goog.base(this, commandFactory);
 
   /**
    * New parent entity ID.

@@ -23,7 +23,7 @@ Scheduler:
 
 Simulator:
   entityTypes{}: ID -> class
-  registerEntityType(typeId, type)
+  registerEntityFactory(typeId, type)
 
   ServerSimulator:
     netService

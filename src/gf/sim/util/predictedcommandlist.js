@@ -114,7 +114,7 @@ gf.sim.util.PredictedCommandList.prototype.confirmSequence = function(
     // All commands confirmed - release all
     for (var n = 0; n < unconfirmedCount; n++) {
       var command = unconfirmedList[n];
-      command.commandType.release(command);
+      command.factory.release(command);
     }
     this.unconfirmedPredictedCount_ = 0;
   } else {
@@ -130,7 +130,7 @@ gf.sim.util.PredictedCommandList.prototype.confirmSequence = function(
       }
 
       // Release to pool
-      command.commandType.release(command);
+      command.factory.release(command);
     }
 
     // Remove confirmed commands
@@ -183,7 +183,7 @@ gf.sim.util.PredictedCommandList.prototype.write = function(writer) {
     this.outgoingArray_[n] = null;
 
     // Add command to packet
-    writer.writeVarInt(command.commandType.typeId);
+    writer.writeVarInt(command.factory.typeId);
     command.write(writer);
 
     // Cleanup command
@@ -194,7 +194,7 @@ gf.sim.util.PredictedCommandList.prototype.write = function(writer) {
           command;
     } else {
       // Unpredicted - just release now, as it doesn't matter
-      command.commandType.release(command);
+      command.factory.release(command);
     }
   }
 

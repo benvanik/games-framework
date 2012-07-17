@@ -220,7 +220,7 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function() {
     this.commands_[n] = null; // prevent leaks
 
     // Write command ID and contents
-    writer.writeVarInt(command.commandType.typeId);
+    writer.writeVarInt(command.factory.typeId);
     command.write(writer);
 
     gf.log.write('-> command');

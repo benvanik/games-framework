@@ -18,6 +18,8 @@ goog.provide('gf.vec.Viewport');
 
 goog.require('gf.vec.Containment');
 goog.require('gf.vec.Ray');
+/** @suppress {extraRequire} */
+goog.require('goog.math.Size');
 goog.require('goog.vec.Mat4');
 goog.require('goog.vec.Vec3');
 goog.require('goog.vec.Vec4');

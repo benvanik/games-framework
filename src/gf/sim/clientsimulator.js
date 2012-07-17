@@ -359,15 +359,15 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     var entityFlags = reader.readVarInt();
 
     // Get entity type factory
-    var entityType = this.simulator_.getEntityType(entityTypeId);
-    if (!entityType) {
+    var entityFactory = this.simulator_.getEntityFactory(entityTypeId);
+    if (!entityFactory) {
       // Invalid entity type
       gf.log.debug('Invalid entity type ' + entityTypeId + ' from server');
       return false;
     }
 
     // Create entity
-    var entity = entityType.createEntity(
+    var entity = entityFactory.createEntity(
         this.simulator_, entityId, entityFlags);
 
     // Load initial values
@@ -422,15 +422,15 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
   for (var n = 0; n < commandCount; n++) {
     // Read command type
     var commandTypeId = reader.readVarInt();
-    var commandType = this.simulator_.getCommandType(commandTypeId);
-    if (!commandType) {
+    var commandFactory = this.simulator_.getCommandFactory(commandTypeId);
+    if (!commandFactory) {
       // Invalid command
       gf.log.debug('Invalid command type ' + commandTypeId + ' from server');
       return false;
     }
 
     // Read command data
-    var command = commandType.allocate();
+    var command = commandFactory.allocate();
     command.read(reader);
 
     // Queue for processing

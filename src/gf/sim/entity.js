@@ -53,11 +53,11 @@ goog.require('goog.asserts');
  * @constructor
  * @extends {goog.Disposable}
  * @param {!gf.sim.Simulator} simulator Owning simulator.
- * @param {!gf.sim.EntityType} entityType Entity type.
+ * @param {!gf.sim.EntityFactory} entityFactory Entity factory.
  * @param {number} entityId Entity ID.
  * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag} values.
  */
-gf.sim.Entity = function(simulator, entityType, entityId, entityFlags) {
+gf.sim.Entity = function(simulator, entityFactory, entityId, entityFlags) {
   goog.base(this);
 
   goog.asserts.assert(entityId != gf.sim.NO_ENTITY_ID);
@@ -70,11 +70,11 @@ gf.sim.Entity = function(simulator, entityType, entityId, entityFlags) {
   this.simulator = simulator;
 
   /**
-   * Entity type.
+   * Entity type factory.
    * @protected
-   * @type {!gf.sim.EntityType}
+   * @type {!gf.sim.EntityFactory}
    */
-  this.entityType = entityType;
+  this.factory = entityFactory;
 
   /**
    * Session-unique entity ID.
@@ -116,7 +116,7 @@ goog.inherits(gf.sim.Entity, goog.Disposable);
  * @return {number} Entity type ID.
  */
 gf.sim.Entity.prototype.getTypeId = function() {
-  return this.entityType.typeId;
+  return this.factory.typeId;
 };
 
 
@@ -177,9 +177,9 @@ gf.sim.Entity.prototype.parentChanged = goog.nullFunction;
  * @return {!gf.sim.Command} New command.
  */
 gf.sim.Entity.prototype.createCommand = function(typeId) {
-  var commandType = this.simulator.getCommandType(typeId);
-  goog.asserts.assert(commandType);
-  var command = commandType.allocate();
+  var commandFactory = this.simulator.getCommandFactory(typeId);
+  goog.asserts.assert(commandFactory);
+  var command = commandFactory.allocate();
   command.targetEntityId = this.entityId_;
   return command;
 };

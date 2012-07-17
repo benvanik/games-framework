@@ -19,14 +19,14 @@
  */
 
 goog.provide('gf.sim.EntityCtor');
+goog.provide('gf.sim.EntityFactory');
 goog.provide('gf.sim.EntityStateCtor');
-goog.provide('gf.sim.EntityType');
 
 
 /**
  * {@see gf.sim.Entity} constructor.
- * @typedef {function(new:gf.sim.Entity, !gf.sim.Simulator, !gf.sim.EntityType,
- *     number, number)}
+ * @typedef {function(new:gf.sim.Entity, !gf.sim.Simulator,
+ *     !gf.sim.EntityFactory, number, number)}
  */
 gf.sim.EntityCtor;
 
@@ -48,7 +48,7 @@ gf.sim.EntityStateCtor;
  * @param {!function(new:gf.sim.EntityState, !gf.sim.Entity)} stateCtor Entity
  *     state constructor.
  */
-gf.sim.EntityType = function(typeId, entityCtor, stateCtor) {
+gf.sim.EntityFactory = function(typeId, entityCtor, stateCtor) {
   /**
    * Entity type ID.
    * @type {number}
@@ -78,7 +78,7 @@ gf.sim.EntityType = function(typeId, entityCtor, stateCtor) {
  * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag}.
  * @return {!gf.sim.Entity} A new entity.
  */
-gf.sim.EntityType.prototype.createEntity = function(
+gf.sim.EntityFactory.prototype.createEntity = function(
     simulator, entityId, entityFlags) {
   return new this.entityCtor_(simulator, this, entityId, entityFlags);
 };
@@ -89,7 +89,7 @@ gf.sim.EntityType.prototype.createEntity = function(
  * @param {!gf.sim.Entity} entity Entity to allocate the state for.
  * @return {!gf.sim.EntityState} New or recycled entity state.
  */
-gf.sim.EntityType.prototype.allocateState = function(entity) {
+gf.sim.EntityFactory.prototype.allocateState = function(entity) {
   // TODO(benvanik): pooling of entity state
   return new this.stateCtor_(entity);
 };
@@ -99,6 +99,6 @@ gf.sim.EntityType.prototype.allocateState = function(entity) {
  * Releases entity state back to the pool.
  * @param {!gf.sim.EntityState} entityState Entity state that can be released.
  */
-gf.sim.EntityType.prototype.releaseState = function(entityState) {
+gf.sim.EntityFactory.prototype.releaseState = function(entityState) {
   // TODO(benvanik): pooling of entity state
 };

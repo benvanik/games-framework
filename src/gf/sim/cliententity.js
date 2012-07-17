@@ -34,12 +34,13 @@ goog.require('goog.asserts');
  * @constructor
  * @extends {gf.sim.Entity}
  * @param {!gf.sim.ClientSimulator} simulator Owning client simulator.
- * @param {!gf.sim.EntityType} entityType Entity type.
+ * @param {!gf.sim.EntityFactory} entityFactory Entity factory.
  * @param {number} entityId Entity ID.
  * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag} values.
  */
-gf.sim.ClientEntity = function(simulator, entityType, entityId, entityFlags) {
-  goog.base(this, simulator, entityType, entityId, entityFlags);
+gf.sim.ClientEntity = function(simulator, entityFactory, entityId,
+    entityFlags) {
+  goog.base(this, simulator, entityFactory, entityId, entityFlags);
 
   /**
    * Server state snapshot.
@@ -49,7 +50,7 @@ gf.sim.ClientEntity = function(simulator, entityType, entityId, entityFlags) {
    * @protected
    * @type {!gf.sim.EntityState}
    */
-  this.networkState = entityType.allocateState(this);
+  this.networkState = entityFactory.allocateState(this);
 
   /**
    * Entity state history.
@@ -72,7 +73,7 @@ gf.sim.ClientEntity = function(simulator, entityType, entityId, entityFlags) {
    */
   this.state = (entityFlags & (
       gf.sim.EntityFlag.INTERPOLATED | gf.sim.EntityFlag.PREDICTED)) ?
-      entityType.allocateState(this) : this.networkState;
+      entityFactory.allocateState(this) : this.networkState;
 };
 goog.inherits(gf.sim.ClientEntity, gf.sim.Entity);
 
@@ -82,13 +83,13 @@ goog.inherits(gf.sim.ClientEntity, gf.sim.Entity);
  */
 gf.sim.ClientEntity.prototype.disposeInternal = function() {
   // Release entity states back to the pool
-  this.entityType.releaseState(this.networkState);
+  this.factory.releaseState(this.networkState);
   for (var n = 0; n < this.previousStates.length; n++) {
-    this.entityType.releaseState(this.previousStates[n]);
+    this.factory.releaseState(this.previousStates[n]);
   }
   if (this.getFlags() & (
       gf.sim.EntityFlag.INTERPOLATED | gf.sim.EntityFlag.PREDICTED)) {
-    this.entityType.releaseState(this.state);
+    this.factory.releaseState(this.state);
   }
 
   goog.base(this, 'disposeInternal');
@@ -199,7 +200,7 @@ gf.sim.ClientEntity.prototype.interpolate_ = function(time) {
   // // Remove past state only if we go over it
   // if (t >= 1) {
   //   this.previousStates.splice(0, n - 1);
-  //   this.entityType.releaseState(pastState);
+  //   this.factory.releaseState(pastState);
   // }
 
   // // Interpolate between the chosen states

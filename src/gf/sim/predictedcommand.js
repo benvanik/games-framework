@@ -37,10 +37,10 @@ goog.require('gf.sim.Command');
  *
  * @constructor
  * @extends {gf.sim.Command}
- * @param {!gf.sim.CommandType} commandType Command type.
+ * @param {!gf.sim.CommandFactory} commandFactory Command factory.
  */
-gf.sim.PredictedCommand = function(commandType) {
-  goog.base(this, commandType);
+gf.sim.PredictedCommand = function(commandFactory) {
+  goog.base(this, commandFactory);
 
   /**
    * Sequence identifier.

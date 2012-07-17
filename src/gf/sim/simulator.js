@@ -60,18 +60,18 @@ gf.sim.Simulator = function(runtime, baseEntityId) {
   this.registerDisposable(this.scheduler_);
 
   /**
-   * Command type descriptors mapped by type ID.
+   * Command type factories mapped by type ID.
    * @private
-   * @type {!Object.<number, !gf.sim.CommandType>}
+   * @type {!Object.<number, !gf.sim.CommandFactory>}
    */
-  this.commandTypes_ = {};
+  this.commandFactories_ = {};
 
   /**
-   * Entity type descriptors mapped by type ID.
+   * Entity type factories mapped by type ID.
    * @private
-   * @type {!Object.<number, !gf.sim.EntityType>}
+   * @type {!Object.<number, !gf.sim.EntityFactory>}
    */
-  this.entityTypes_ = {};
+  this.entityFactories_ = {};
 
   /**
    * Next entity ID to give out to requesters.
@@ -124,44 +124,44 @@ gf.sim.Simulator.prototype.getScheduler = function() {
 
 
 /**
- * Registers an command type descriptor with the simulator.
+ * Registers an command type factory with the simulator.
  * This should be done on startup to ensure all commands are properly found.
- * @param {!gf.sim.CommandType} commandType An command type descriptor.
+ * @param {!gf.sim.CommandFactory} commandFactory An command type factory.
  */
-gf.sim.Simulator.prototype.registerCommandType = function(commandType) {
-  goog.asserts.assert(!this.commandTypes_[commandType.typeId]);
-  this.commandTypes_[commandType.typeId] = commandType;
+gf.sim.Simulator.prototype.registerCommandFactory = function(commandFactory) {
+  goog.asserts.assert(!this.commandFactories_[commandFactory.typeId]);
+  this.commandFactories_[commandFactory.typeId] = commandFactory;
 };
 
 
 /**
- * Gets the command type descriptor with the given type ID, if it is found.
+ * Gets the command type factory with the given type ID, if it is found.
  * @param {number} typeId Command type ID.
- * @return {gf.sim.CommandType} An command type descriptor with the given ID.
+ * @return {gf.sim.CommandFactory} An command type factory with the given ID.
  */
-gf.sim.Simulator.prototype.getCommandType = function(typeId) {
-  return this.commandTypes_[typeId] || null;
+gf.sim.Simulator.prototype.getCommandFactory = function(typeId) {
+  return this.commandFactories_[typeId] || null;
 };
 
 
 /**
- * Registers an entity type descriptor with the simulator.
+ * Registers an entity type factory with the simulator.
  * This should be done on startup to ensure all entities are properly found.
- * @param {!gf.sim.EntityType} entityType An entity type descriptor.
+ * @param {!gf.sim.EntityFactory} entityFactory An entity type factory.
  */
-gf.sim.Simulator.prototype.registerEntityType = function(entityType) {
-  goog.asserts.assert(!this.entityTypes_[entityType.typeId]);
-  this.entityTypes_[entityType.typeId] = entityType;
+gf.sim.Simulator.prototype.registerEntityFactory = function(entityFactory) {
+  goog.asserts.assert(!this.entityFactories_[entityFactory.typeId]);
+  this.entityFactories_[entityFactory.typeId] = entityFactory;
 };
 
 
 /**
- * Gets the entity type descriptor with the given type ID, if it is found.
+ * Gets the entity type factory with the given type ID, if it is found.
  * @param {number} typeId Entity type ID.
- * @return {gf.sim.EntityType} An entity type descriptor with the given ID.
+ * @return {gf.sim.EntityFactory} An entity type factory with the given ID.
  */
-gf.sim.Simulator.prototype.getEntityType = function(typeId) {
-  return this.entityTypes_[typeId] || null;
+gf.sim.Simulator.prototype.getEntityFactory = function(typeId) {
+  return this.entityFactories_[typeId] || null;
 };
 
 
@@ -187,9 +187,9 @@ gf.sim.Simulator.prototype.allocateEntityId = function() {
  * @return {!gf.sim.Entity} A new entity.
  */
 gf.sim.Simulator.prototype.createEntity = function(typeId, entityFlags) {
-  var entityType = this.entityTypes_[typeId];
-  goog.asserts.assert(entityType);
-  return entityType.createEntity(this, this.allocateEntityId(), entityFlags);
+  var entityFactory = this.entityFactories_[typeId];
+  goog.asserts.assert(entityFactory);
+  return entityFactory.createEntity(this, this.allocateEntityId(), entityFlags);
 };
 
 

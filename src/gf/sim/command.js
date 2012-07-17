@@ -32,14 +32,14 @@ goog.require('gf.sim');
  * Commands are heavily pooled and should always reset completely.
  *
  * @constructor
- * @param {!gf.sim.CommandType} commandType Command type.
+ * @param {!gf.sim.CommandFactory} commandFactory Command factory.
  */
-gf.sim.Command = function(commandType) {
+gf.sim.Command = function(commandFactory) {
   /**
-   * Command type.
-   * @type {!gf.sim.CommandType}
+   * Command type factory.
+   * @type {!gf.sim.CommandFactory}
    */
-  this.commandType = commandType;
+  this.factory = commandFactory;
 
   /**
    * Game simulation time the command was generated, in seconds.
@@ -82,5 +82,5 @@ gf.sim.Command.prototype.write = function(writer) {
  * Releases the command back to its parent pool.
  */
 gf.sim.Command.prototype.release = function() {
-  this.commandType.release(this);
+  this.factory.release(this);
 };

@@ -89,7 +89,7 @@ gf.sim.util.CommandList.prototype.addCommand = function(command) {
 gf.sim.util.CommandList.prototype.releaseAllCommands = function() {
   for (var n = 0; n < this.count_; n++) {
     var command = this.array_[n];
-    command.commandType.release(command);
+    command.factory.release(command);
   }
   this.count_ = 0;
 };

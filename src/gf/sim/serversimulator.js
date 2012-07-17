@@ -24,6 +24,8 @@ goog.require('gf.log');
 goog.require('gf.net.NetworkService');
 goog.require('gf.sim');
 goog.require('gf.sim.EntityFlag');
+/** @suppress {extraRequire} */
+goog.require('gf.sim.Observer');
 goog.require('gf.sim.Simulator');
 goog.require('gf.sim.packets.ExecCommands');
 goog.require('gf.sim.util.CommandList');
@@ -407,8 +409,8 @@ gf.sim.ServerSimulator.NetService_.prototype.handleExecCommands_ =
   for (var n = 0; n < commandCount; n++) {
     // Read command type
     var commandTypeId = reader.readVarInt();
-    var commandType = this.simulator_.getCommandType(commandTypeId);
-    if (!commandType) {
+    var commandFactory = this.simulator_.getCommandFactory(commandTypeId);
+    if (!commandFactory) {
       // Invalid command
       gf.log.debug('Invalid command type ' + commandTypeId + ' from client');
       // TODO(benvanik): kill connection, as cannot parse the rest
@@ -416,7 +418,7 @@ gf.sim.ServerSimulator.NetService_.prototype.handleExecCommands_ =
     }
 
     // Read command data
-    var command = commandType.allocate();
+    var command = commandFactory.allocate();
     command.read(reader);
 
     // Limit command execution to entities owned by the user only

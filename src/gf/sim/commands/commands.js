@@ -20,7 +20,7 @@
 
 goog.provide('gf.sim.commands');
 
-goog.require('gf.sim.CommandType');
+goog.require('gf.sim.CommandFactory');
 goog.require('gf.sim.commands.ReparentCommand');
 
 
@@ -29,7 +29,7 @@ goog.require('gf.sim.commands.ReparentCommand');
  * @param {!gf.sim.Simulator} simulator Simulator.
  */
 gf.sim.commands.registerCommands = function(simulator) {
-  simulator.registerCommandType(new gf.sim.CommandType(
+  simulator.registerCommandFactory(new gf.sim.CommandFactory(
       gf.sim.commands.ReparentCommand.ID,
       gf.sim.commands.ReparentCommand));
 };
