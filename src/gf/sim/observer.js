@@ -33,7 +33,8 @@ goog.require('goog.asserts');
 
 /**
  * Constructor function for {@see gf.sim.Observer} types.
- * @typedef {function(new:gf.sim.Observer, !gf.net.ServerSession, !gf.net.User)}
+ * @typedef {function(new:gf.sim.Observer, !gf.sim.ServerSimulator,
+ *     !gf.net.ServerSession, !gf.net.User)}
  */
 gf.sim.ObserverCtor;
 
@@ -49,11 +50,19 @@ gf.sim.ObserverCtor;
  *
  * @constructor
  * @extends {goog.Disposable}
+ * @param {!gf.sim.ServerSimulator} simulator Server simulator.
  * @param {!gf.net.ServerSession} session Network session.
  * @param {!gf.net.User} user User this observer is representing.
  */
-gf.sim.Observer = function(session, user) {
+gf.sim.Observer = function(simulator, session, user) {
   goog.base(this);
+
+  /**
+   * Server simulator.
+   * @private
+   * @type {!gf.sim.ServerSimulator}
+   */
+  this.simulator_ = simulator;
 
   /**
    * Network session.
@@ -110,7 +119,7 @@ gf.sim.Observer = function(session, user) {
    * was last flushed. This allows for accumulation of multiple ticks worth of
    * change events before flushing.
    * @private
-   * @type {!Object.<number, gf.sim.EntityDirtyFlag>}
+   * @type {!Object.<number, number>}
    */
   this.updatedEntitiesSet_ = {};
 
@@ -172,9 +181,8 @@ gf.sim.Observer.prototype.queueIncomingCommand = function(command) {
 
   // If a predicted command then update the sequence number
   if (command instanceof gf.sim.PredictedCommand) {
-    goog.asserts.assert(sequence > this.confirmedSequence_);
-    observer.confirmSequence(command.sequence);
-    this.confirmedSequence_ = sequence;
+    goog.asserts.assert(command.sequence > this.confirmedSequence_);
+    this.confirmedSequence_ = command.sequence;
   }
 };
 
@@ -284,11 +292,11 @@ gf.sim.Observer.prototype.flush = function(time) {
   writer.begin(this.confirmedSequence_);
 
   // Commands
-  var pendingCommands = this.outgoingCommandList_.getArray();
-  var pendingCommandCount = this.outgoingCommandList_.getCount();
-  if (pendingCommandCount) {
-    for (var n = 0; n < pendingCommandCount; n++) {
-      var command = commands[n];
+  var outgoingCommands = this.outgoingCommandList_.getArray();
+  var outgoingCommandCount = this.outgoingCommandList_.getCount();
+  if (outgoingCommandCount) {
+    for (var n = 0; n < outgoingCommandCount; n++) {
+      var command = outgoingCommands[n];
 
       // Check if the command targets an irrelevant entity
       if (command.targetEntityId != gf.sim.NO_ENTITY_ID) {

@@ -406,7 +406,7 @@ gf.net.PacketWriter.prototype.writeString = function(value) {
 /**
  * Shared packet writer singleton.
  * @private
- * @type {!gf.net.PacketWriter}
+ * @type {gf.net.PacketWriter}
  */
 gf.net.PacketWriter.sharedWriter_ = null;
 

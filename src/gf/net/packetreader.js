@@ -398,7 +398,7 @@ gf.net.PacketReader.prototype.readString = function() {
 /**
  * Shared packet reader singleton.
  * @private
- * @type {!gf.net.PacketReader}
+ * @type {gf.net.PacketReader}
  */
 gf.net.PacketReader.sharedReader_ = null;
 

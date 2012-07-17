@@ -31,7 +31,8 @@ goog.require('gf.sim');
  *
  * @constructor
  * @param {number} typeId Command type ID.
- * @param {!function(new:gf.sim.Command)} commandCtor Command constructor.
+ * @param {!function(new:gf.sim.Command, !gf.sim.CommandType)} commandCtor
+ *     Command constructor.
  */
 gf.sim.CommandType = function(typeId, commandCtor) {
   /**
@@ -43,7 +44,7 @@ gf.sim.CommandType = function(typeId, commandCtor) {
   /**
    * Constructor for the command type.
    * @private
-   * @type {!function(new:gf.sim.Command)}
+   * @type {!function(new:gf.sim.Command, !gf.sim.CommandType)}
    */
   this.commandCtor_ = commandCtor;
 
@@ -68,7 +69,7 @@ gf.sim.CommandType.prototype.allocate = function() {
     command.targetEntityId = gf.sim.NO_ENTITY_ID;
     return command;
   } else {
-    return new this.commandCtor_();
+    return new this.commandCtor_(this);
   }
 };
 

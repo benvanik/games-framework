@@ -81,7 +81,7 @@ gf.sim.Variable.prototype.write = goog.abstractMethod;
 /**
  * Copies the value from one object to another.
  * @param {!Object} source Source object.
- * @param {!Target} target Target object.
+ * @param {!Object} target Target object.
  */
 gf.sim.Variable.prototype.copy = goog.abstractMethod;
 
@@ -104,9 +104,9 @@ gf.sim.Variable.prototype.interpolate = goog.abstractMethod;
  * @return {number} Comparison <0, 0, >0.
  */
 gf.sim.Variable.sortByPriority = function(a, b) {
-  var frequentA = a & gf.sim.VariableFlag.UPDATED_FREQUENTLY;
-  var frequentB = b & gf.sim.VariableFlag.UPDATED_FREQUENTLY;
-  return (frequentA - frequentB) || (a.ordinal - b.ordinal);
+  var frequentA = a.flags & gf.sim.VariableFlag.UPDATED_FREQUENTLY;
+  var frequentB = b.flags & gf.sim.VariableFlag.UPDATED_FREQUENTLY;
+  return (frequentB - frequentA) || (a.ordinal - b.ordinal);
 };
 
 

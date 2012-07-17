@@ -44,7 +44,7 @@ gf.sim.util.PredictedCommandList = function() {
   /**
    * Sent but unconfirmed command array.
    * @private
-   * @type {!gf.sim.PredictedCommand}
+   * @type {!Array.<gf.sim.PredictedCommand>}
    */
   this.unconfirmedPredictedArray_ = [];
 
@@ -60,7 +60,7 @@ gf.sim.util.PredictedCommandList = function() {
    * The size of this array does not correspond to the number of valid commands
    * inside of it. Use {@see #getCount} for the real count.
    * @private
-   * @type {!gf.sim.Command}
+   * @type {!Array.<gf.sim.Command>}
    */
   this.outgoingArray_ = [];
 
@@ -74,7 +74,7 @@ gf.sim.util.PredictedCommandList = function() {
   /**
    * Unsent predicted command array.
    * @private
-   * @type {!gf.sim.PredictedCommand}
+   * @type {!Array.<gf.sim.PredictedCommand>}
    */
   this.outgoingPredictedArray_ = [];
 
@@ -112,7 +112,7 @@ gf.sim.util.PredictedCommandList.prototype.confirmSequence = function(
   var lastCommand = unconfirmedList[unconfirmedCount - 1];
   if (lastCommand.sequence <= sequence) {
     // All commands confirmed - release all
-    for (var n = 0; n < unconfirmedList; n++) {
+    for (var n = 0; n < unconfirmedCount; n++) {
       var command = unconfirmedList[n];
       command.commandType.release(command);
     }
@@ -142,7 +142,8 @@ gf.sim.util.PredictedCommandList.prototype.confirmSequence = function(
 
 
 /**
- * @override
+ * Adds a command to the list.
+ * @param {!gf.sim.Command} command Command to add.
  */
 gf.sim.util.PredictedCommandList.prototype.addCommand = function(command) {
   this.outgoingArray_[this.outgoingCount_++] = command;
@@ -178,6 +179,8 @@ gf.sim.util.PredictedCommandList.prototype.write = function(writer) {
   // Move all pending commands to the unconfirmed list to use for prediction
   for (var n = 0; n < this.outgoingCount_; n++) {
     var command = this.outgoingArray_[n];
+    goog.asserts.assert(command);
+    this.outgoingArray_[n] = null;
 
     // Add command to packet
     writer.writeVarInt(command.commandType.typeId);

@@ -23,7 +23,6 @@ goog.provide('gf.sim.SchedulerCallback');
 goog.provide('gf.sim.SchedulingPriority');
 
 goog.require('gf');
-goog.require('gf.sim.SchedulingPriority');
 goog.require('goog.Disposable');
 
 
@@ -113,7 +112,7 @@ gf.sim.Scheduler.prototype.scheduleEvent = function(
 /**
  * Inserts the given event into the list at the correct location.
  * @private
- * @param {!Array.<!gf.sim.Scheduler.Event_} list List of events.
+ * @param {!Array.<!gf.sim.Scheduler.Event_>} list List of events.
  * @param {!gf.sim.Scheduler.Event_} e Event to insert.
  */
 gf.sim.Scheduler.prototype.insertEvent_ = function(list, e) {
@@ -124,7 +123,7 @@ gf.sim.Scheduler.prototype.insertEvent_ = function(list, e) {
   var found;
   while (left < right) {
     var middle = (left + right) >> 1;
-    var compareResult = list[middle] - e.targetTime;
+    var compareResult = list[middle].targetTime - e.targetTime;
     if (compareResult > 0) {
       left = middle + 1;
     } else {
@@ -227,7 +226,7 @@ gf.sim.Scheduler.Event_ = function() {
 
   /**
    * Callback to issue.
-   * @type {gf.sim.SchedulerCallback}
+   * @type {?gf.sim.SchedulerCallback}
    */
   this.callback = null;
 

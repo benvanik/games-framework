@@ -26,6 +26,7 @@ goog.require('gf.sim');
 goog.require('gf.sim.EntityDirtyFlag');
 goog.require('gf.sim.PredictedCommand');
 goog.require('gf.sim.Scheduler');
+goog.require('gf.sim.commands');
 goog.require('goog.asserts');
 
 
@@ -97,7 +98,7 @@ gf.sim.Simulator = function(runtime, baseEntityId) {
    * The list is not reallocated each frame and the length should not be
    * trusted - instead, use {@see dirtyEntitiesLength_}.
    * @private
-   * @type {!Array.<!gf.sim.Entity>}
+   * @type {!Array.<gf.sim.Entity>}
    */
   this.dirtyEntities_ = new Array(128);
 
@@ -107,6 +108,8 @@ gf.sim.Simulator = function(runtime, baseEntityId) {
    * @type {number}
    */
   this.dirtyEntitiesLength_ = 0;
+
+  gf.sim.commands.registerCommands(this);
 };
 goog.inherits(gf.sim.Simulator, gf.Component);
 
@@ -228,7 +231,7 @@ gf.sim.Simulator.prototype.getEntity = function(entityId) {
  */
 gf.sim.Simulator.prototype.forEachEntity = function(callback, opt_scope) {
   for (var entityId in this.entities_) {
-    var entity = this.entities_[entityId];
+    var entity = this.entities_[Number(entityId)];
     callback.call(opt_scope || goog.global, entity);
   }
 };
@@ -278,7 +281,7 @@ gf.sim.Simulator.prototype.update = goog.abstractMethod;
 
 /**
  * Executes incoming or pending commands.
- * @param {!Arrray.<!gf.sim.Command>} commands Commands to execute.
+ * @param {!Array.<!gf.sim.Command>} commands Commands to execute.
  * @param {number} commandCount Count of commands to execute.
  */
 gf.sim.Simulator.prototype.executeCommands = function(commands, commandCount) {
@@ -334,6 +337,7 @@ gf.sim.Simulator.prototype.executeCommand = goog.nullFunction;
 gf.sim.Simulator.prototype.postTickUpdateEntities = function(frame) {
   for (var n = 0; n < this.dirtyEntitiesLength_; n++) {
     var entity = this.dirtyEntities_[n];
+    goog.asserts.assert(entity);
 
     // Run per-frame change entity logic
     entity.postTickUpdate(frame);
@@ -366,6 +370,7 @@ gf.sim.Simulator.prototype.postUpdate = function(frame) {
   // Clean up the dirty entity list and reset state
   for (var n = 0; n < this.dirtyEntitiesLength_; n++) {
     var entity = this.dirtyEntities_[n];
+    goog.asserts.assert(entity);
     this.dirtyEntities_[n] = null;
 
     // Reset entity state

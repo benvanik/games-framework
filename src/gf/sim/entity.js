@@ -23,7 +23,6 @@ goog.provide('gf.sim.EntityDirtyFlag');
 goog.provide('gf.sim.EntityFlag');
 
 goog.require('gf.sim');
-goog.require('gf.sim.EntityDirtyFlag');
 goog.require('goog.Disposable');
 goog.require('goog.asserts');
 
@@ -217,7 +216,7 @@ gf.sim.Entity.prototype.update = goog.abstractMethod;
  * @param {number} targetTime Target time to execute the update.
  */
 gf.sim.Entity.prototype.scheduleUpdate = function(priority, targetTime) {
-  this.simulator_.getScheduler().scheduleEvent(
+  this.simulator.getScheduler().scheduleEvent(
       priority,
       targetTime,
       this.update, this);
@@ -250,7 +249,7 @@ gf.sim.Entity.prototype.invalidate = function() {
   var wasDirty = !!this.dirtyFlags;
   this.dirtyFlags |= gf.sim.EntityDirtyFlag.UPDATED;
   if (!wasDirty) {
-    this.simulator_.invalidateEntity(this);
+    this.simulator.invalidateEntity(this);
   }
 };
 

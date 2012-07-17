@@ -41,7 +41,7 @@ goog.require('goog.array');
  * @constructor
  * @extends {gf.sim.Simulator}
  * @param {!gf.Runtime} runtime Runtime instance.
- * @param {!gf.net.ServerSession} session Network session.
+ * @param {!gf.net.ClientSession} session Network session.
  */
 gf.sim.ClientSimulator = function(runtime, session) {
   goog.base(this, runtime, 1);
@@ -85,7 +85,7 @@ gf.sim.ClientSimulator = function(runtime, session) {
    * those waiting to be sent
    * ({@see gf.sim.util.PredictedCommandList#getOutgoingPredictedArray}).
    * @private
-   * @type {!gf.sim.util.CommandList}
+   * @type {!gf.sim.util.PredictedCommandList}
    */
   this.outgoingCommandList_ = new gf.sim.util.PredictedCommandList();
 
@@ -176,7 +176,7 @@ gf.sim.ClientSimulator.prototype.update = function(frame) {
   this.postUpdate(frame);
 
   // Compact, if needed - this prevents memory leaks from caches
-  this.compact_();
+  this.compact_(frame);
 };
 
 
@@ -269,8 +269,9 @@ gf.sim.ClientSimulator.COMPACT_INTERVAL_ = 15;
 /**
  * Cleans up cached data that is no longer relevant.
  * @private
+ * @param {!gf.UpdateFrame} frame Current update frame.
  */
-gf.sim.ClientSimulator.prototype.compact_ = function() {
+gf.sim.ClientSimulator.prototype.compact_ = function(frame) {
   if (frame.time - this.lastCompactTime_ <
       gf.sim.ClientSimulator.COMPACT_INTERVAL_) {
     return;
@@ -366,7 +367,7 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     }
 
     // Create entity
-    var entity = entityType.createClientEntity(
+    var entity = entityType.createEntity(
         this.simulator_, entityId, entityFlags);
 
     // Load initial values
@@ -384,7 +385,8 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     var entityId = reader.readVarInt() << 1;
 
     // Find entity
-    var entity = this.simulator_.getEntity(entityId);
+    var entity = /** @type {gf.sim.ClientEntity} */ (
+        this.simulator_.getEntity(entityId));
     if (!entity) {
       // Entity not found
       gf.log.debug('Target entity of server update not found ' + entityId);

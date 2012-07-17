@@ -22,10 +22,10 @@ goog.provide('gf.sim.ServerSimulator');
 
 goog.require('gf.log');
 goog.require('gf.net.NetworkService');
-goog.require('gf.net.packets.ExecCommands');
 goog.require('gf.sim');
 goog.require('gf.sim.EntityFlag');
 goog.require('gf.sim.Simulator');
+goog.require('gf.sim.packets.ExecCommands');
 goog.require('gf.sim.util.CommandList');
 goog.require('goog.array');
 goog.require('goog.asserts');
@@ -58,7 +58,7 @@ gf.sim.ServerSimulator = function(runtime, session, observerCtor) {
    * @private
    * @type {!gf.sim.ObserverCtor}
    */
-  this.observerCtor_ = observerCtor_;
+  this.observerCtor_ = observerCtor;
 
   /**
    * Simulator network service.
@@ -121,7 +121,7 @@ gf.sim.ServerSimulator.prototype.addObserver = function(observer) {
   this.observers_.push(observer);
 
   // Track in the user->observer map
-  var user = observer.user;
+  var user = observer.getUser();
   if (user) {
     this.userObservers_[user.sessionId] = observer;
   }
@@ -146,7 +146,7 @@ gf.sim.ServerSimulator.prototype.getObserverForUser = function(user) {
  */
 gf.sim.ServerSimulator.prototype.removeObserver = function(observer) {
   // Untrack in the user->observer map
-  var user = observer.user;
+  var user = observer.getUser();
   if (user) {
     delete this.userObservers_[user.sessionId];
   }
@@ -178,7 +178,7 @@ gf.sim.ServerSimulator.prototype.update = function(frame) {
   this.postUpdate(frame);
 
   // Compact, if needed - this prevents memory leaks from caches
-  this.compact_();
+  this.compact_(frame);
 };
 
 
@@ -200,7 +200,7 @@ gf.sim.ServerSimulator.prototype.broadcastCommand = function(
   // Queue on each observer
   for (var n = 0; n < this.observers_.length; n++) {
     var observer = this.observers_[n];
-    if (opt_excludeUser && observer.user == opt_excludeUser) {
+    if (opt_excludeUser && observer.getUser() == opt_excludeUser) {
       // Skipped due to exclusion
       continue;
     }
@@ -266,7 +266,7 @@ gf.sim.ServerSimulator.prototype.postUpdate = function(frame) {
   }
 
   // Cleanup any outstanding release requests
-  this.cleanupCommandList_.releaseAllCommands(this);
+  this.cleanupCommandList_.releaseAllCommands();
 
   goog.base(this, 'postUpdate', frame);
 };
@@ -286,8 +286,9 @@ gf.sim.ServerSimulator.COMPACT_INTERVAL_ = 15;
 /**
  * Cleans up cached data that is no longer relevant.
  * @private
+ * @param {!gf.UpdateFrame} frame Current update frame.
  */
-gf.sim.ServerSimulator.prototype.compact_ = function() {
+gf.sim.ServerSimulator.prototype.compact_ = function(frame) {
   if (frame.time - this.lastCompactTime_ <
       gf.sim.ServerSimulator.COMPACT_INTERVAL_) {
     return;
@@ -343,7 +344,7 @@ goog.inherits(gf.sim.ServerSimulator.NetService_, gf.net.NetworkService);
 gf.sim.ServerSimulator.NetService_.prototype.setupSwitch =
     function(packetSwitch) {
   packetSwitch.register(
-      gf.net.packets.ExecCommands.ID,
+      gf.sim.packets.ExecCommands.ID,
       this.handleExecCommands_, this);
 };
 
@@ -359,7 +360,8 @@ gf.sim.ServerSimulator.NetService_.prototype.userConnected = function(user) {
   }
 
   // Create the observer and add to the simulator
-  observer = new this.simulator_.observerCtor_(this.session_, user);
+  observer = new this.simulator_.observerCtor_(
+      this.simulator_, this.session_, user);
   this.simulator_.addObserver(observer);
 };
 

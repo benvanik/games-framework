@@ -20,6 +20,7 @@
 
 goog.provide('gf.sim.ClientEntity');
 
+goog.require('gf.sim');
 goog.require('gf.sim.Entity');
 goog.require('gf.sim.EntityFlag');
 goog.require('gf.sim.commands.ReparentCommand');
@@ -38,7 +39,7 @@ goog.require('goog.asserts');
  * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag} values.
  */
 gf.sim.ClientEntity = function(simulator, entityType, entityId, entityFlags) {
-  goog.base(this, simulator, entityType, entityId, entityFlags, stateType);
+  goog.base(this, simulator, entityType, entityId, entityFlags);
 
   /**
    * Server state snapshot.
@@ -48,7 +49,7 @@ gf.sim.ClientEntity = function(simulator, entityType, entityId, entityFlags) {
    * @protected
    * @type {!gf.sim.EntityState}
    */
-  this.networkState = entityType.allocateState();
+  this.networkState = entityType.allocateState(this);
 
   /**
    * Entity state history.
@@ -71,7 +72,7 @@ gf.sim.ClientEntity = function(simulator, entityType, entityId, entityFlags) {
    */
   this.state = (entityFlags & (
       gf.sim.EntityFlag.INTERPOLATED | gf.sim.EntityFlag.PREDICTED)) ?
-      entityType.allocateState() : this.networkState;
+      entityType.allocateState(this) : this.networkState;
 };
 goog.inherits(gf.sim.ClientEntity, gf.sim.Entity);
 
@@ -85,7 +86,7 @@ gf.sim.ClientEntity.prototype.disposeInternal = function() {
   for (var n = 0; n < this.previousStates.length; n++) {
     this.entityType.releaseState(this.previousStates[n]);
   }
-  if (entityFlags & (
+  if (this.getFlags() & (
       gf.sim.EntityFlag.INTERPOLATED | gf.sim.EntityFlag.PREDICTED)) {
     this.entityType.releaseState(this.state);
   }
@@ -99,7 +100,7 @@ gf.sim.ClientEntity.prototype.disposeInternal = function() {
  * @return {!gf.sim.ClientSimulator} Simulator.
  */
 gf.sim.ClientEntity.prototype.getSimulator = function() {
-  return this.simulator;
+  return /** @type {!gf.sim.ClientSimulator} */ (this.simulator);
 };
 
 
@@ -211,7 +212,13 @@ gf.sim.ClientEntity.prototype.interpolate_ = function(time) {
  */
 gf.sim.ClientEntity.prototype.executeCommand = function(command) {
   if (command instanceof gf.sim.commands.ReparentCommand) {
-    this.setParent(command.parentId);
+    if (command.parentId == gf.sim.NO_ENTITY_ID) {
+      this.setParent(null);
+    } else {
+      var parentEntity = this.simulator.getEntity(command.parentId);
+      goog.asserts.assert(parentEntity);
+      this.setParent(parentEntity);
+    }
   }
 };
 

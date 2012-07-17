@@ -18,7 +18,24 @@
  * @author benvanik@google.com (Ben Vanik)
  */
 
+goog.provide('gf.sim.EntityCtor');
+goog.provide('gf.sim.EntityStateCtor');
 goog.provide('gf.sim.EntityType');
+
+
+/**
+ * {@see gf.sim.Entity} constructor.
+ * @typedef {function(new:gf.sim.Entity, !gf.sim.Simulator, !gf.sim.EntityType,
+ *     number, number)}
+ */
+gf.sim.EntityCtor;
+
+
+/**
+ * {@see gf.sim.EntityState} constructor.
+ * @typedef {function(new:gf.sim.EntityState, !gf.sim.Entity)}
+ */
+gf.sim.EntityStateCtor;
 
 
 
@@ -27,8 +44,7 @@ goog.provide('gf.sim.EntityType');
  *
  * @constructor
  * @param {number} typeId Entity type ID.
- * @param {!function(new:gf.sim.Entity, !gf.sim.Simulator, !gf.sim.EntityType,
- *     number, number)} entityCtor Entity constructor.
+ * @param {!gf.sim.EntityCtor} entityCtor Entity constructor.
  * @param {!function(new:gf.sim.EntityState, !gf.sim.Entity)} stateCtor Entity
  *     state constructor.
  */
@@ -42,14 +58,14 @@ gf.sim.EntityType = function(typeId, entityCtor, stateCtor) {
   /**
    * Constructor for the entity type.
    * @private
-   * @type {!function(new:gf.sim.Entity)}
+   * @type {!gf.sim.EntityCtor}
    */
   this.entityCtor_ = entityCtor;
 
   /**
    * Constructor for the entity state type.
    * @private
-   * @type {!function(new:gf.sim.EntityState, !gf.sim.Entity)}
+   * @type {!gf.sim.EntityStateCtor}
    */
   this.stateCtor_ = stateCtor;
 };

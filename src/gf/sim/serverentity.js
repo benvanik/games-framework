@@ -32,7 +32,7 @@ goog.require('gf.sim.commands.ReparentCommand');
  *
  * @constructor
  * @extends {gf.sim.Entity}
- * @param {!gf.sim.ClientSimulator} simulator Owning server simulator.
+ * @param {!gf.sim.ServerSimulator} simulator Owning server simulator.
  * @param {!gf.sim.EntityType} entityType Entity type.
  * @param {number} entityId Entity ID.
  * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag} values.
@@ -57,7 +57,7 @@ gf.sim.ServerEntity = function(simulator, entityType, entityId, entityFlags) {
    * @protected
    * @type {!gf.sim.EntityState}
    */
-  this.state = entityType.allocateState();
+  this.state = entityType.allocateState(this);
 };
 goog.inherits(gf.sim.ServerEntity, gf.sim.Entity);
 
@@ -78,7 +78,7 @@ gf.sim.ServerEntity.prototype.disposeInternal = function() {
  * @return {!gf.sim.ServerSimulator} Simulator.
  */
 gf.sim.ServerEntity.prototype.getSimulator = function() {
-  return this.simulator;
+  return /** @type {!gf.sim.ServerSimulator} */ (this.simulator);
 };
 
 

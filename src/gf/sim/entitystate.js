@@ -264,8 +264,8 @@ gf.sim.EntityState.prototype.copyPredictedVariables = function(targetState) {
  * All values with {@see gf.sim.VariableFlag#INTERPOLATED} set will be
  * interpolated between the source and target by the given time. The result
  * will be stored in this state.
- * @param {!gf.sim.EntityState} source Interpolation source object.
- * @param {!gf.sim.EntityState} target Interpolation target object.
+ * @param {!gf.sim.EntityState} sourceState Interpolation source object.
+ * @param {!gf.sim.EntityState} targetState Interpolation target object.
  * @param {number} t Interpolation coefficient, [0-1].
  */
 gf.sim.EntityState.prototype.interpolate = function(sourceState, targetState,
