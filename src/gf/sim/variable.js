@@ -21,7 +21,6 @@
 goog.provide('gf.sim.Variable');
 goog.provide('gf.sim.VariableFlag');
 
-goog.require('goog.math');
 goog.require('goog.vec.Quaternion');
 goog.require('goog.vec.Vec3');
 
@@ -244,8 +243,9 @@ gf.sim.Variable.Float.prototype.copy = function(source, target) {
  */
 gf.sim.Variable.Float.prototype.interpolate = function(source, target, t,
     result) {
-  this.setter_.call(result, goog.math.lerp(
-      this.getter_.call(source), this.getter_.call(target), t));
+  var sourceValue = this.getter_.call(source);
+  var targetValue = this.getter_.call(target);
+  this.setter_.call(result, sourceValue + t * (targetValue - sourceValue));
 };
 
 
@@ -448,6 +448,94 @@ gf.sim.Variable.Quaternion.prototype.interpolate = function(source, target, t,
  * @type {!goog.vec.Quaternion.Float32}
  */
 gf.sim.Variable.Quaternion.tmp_ = goog.vec.Quaternion.createFloat32();
+
+
+
+/**
+ * Variable containing an ARGB color.
+ *
+ * @constructor
+ * @extends {gf.sim.Variable}
+ * @param {number} tag Tag, from {@see gf.sim.Variable#getUniqueTag}.
+ * @param {number} flags Bitmask of {@see gf.sim.VariableFlag} values.
+ * @param {!function():number} getter Prototype function that gets the value.
+ * @param {!function(number)} setter Prototype function that sets the value.
+ */
+gf.sim.Variable.Color = function(tag, flags, getter, setter) {
+  goog.base(this, tag, flags);
+
+  /**
+   * @private
+   * @type {!function():number}
+   */
+  this.getter_ = getter;
+
+  /**
+   * @private
+   * @type {!function(number)}
+   */
+  this.setter_ = setter;
+};
+goog.inherits(gf.sim.Variable.Color, gf.sim.Variable);
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.Color.prototype.clone = function() {
+  return new gf.sim.Variable.Color(this.tag, this.flags,
+      this.getter_, this.setter_);
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.Color.prototype.read = function(target, reader) {
+  this.setter_.call(target, reader.readFloat32());
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.Color.prototype.write = function(target, writer) {
+  writer.writeFloat32(this.getter_.call(target));
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.Color.prototype.copy = function(source, target) {
+  this.setter_.call(target, this.getter_.call(source));
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.Color.prototype.interpolate = function(source, target, t,
+    result) {
+  // There has got to be a better way...
+  // Knowing that t = [0,1], I'm sure it's possible to do this in two mults
+  var sourceValue = this.getter_.call(source);
+  var sourceA = (sourceValue >> 24) & 0xFF;
+  var sourceB = (sourceValue >> 16) & 0xFF;
+  var sourceG = (sourceValue >> 8) & 0xFF;
+  var sourceR = sourceValue & 0xFF;
+  var targetValue = this.getter_.call(target);
+  var targetA = (sourceValue >> 24) & 0xFF;
+  var targetB = (sourceValue >> 16) & 0xFF;
+  var targetG = (sourceValue >> 8) & 0xFF;
+  var targetR = sourceValue & 0xFF;
+  var value =
+      ((sourceA + t * (targetA - sourceA)) & 0xFF) << 24 |
+      ((sourceB + t * (targetB - sourceB)) & 0xFF) << 16 |
+      ((sourceG + t * (targetG - sourceG)) & 0xFF) << 8 |
+      ((sourceR + t * (targetR - sourceR)) & 0xFF);
+  this.setter_.call(result, value);
+};
 
 
 
