@@ -350,7 +350,7 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
   this.simulator_.outgoingCommandList_.confirmSequence(confirmedSequence);
 
   // TODO(benvanik): cached parenting list
-  var parentingRequired = null;;
+  var parentingRequired = null;
 
   // Create entities
   for (var n = 0; n < createEntityCount; n++) {
