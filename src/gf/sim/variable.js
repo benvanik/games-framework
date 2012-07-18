@@ -178,6 +178,81 @@ gf.sim.VariableFlag = {
 
 
 /**
+ * Variable containing a 32-bit integer.
+ * Serialized on the network as a varint.
+ *
+ * @constructor
+ * @extends {gf.sim.Variable}
+ * @param {number} tag Tag, from {@see gf.sim.Variable#getUniqueTag}.
+ * @param {number} flags Bitmask of {@see gf.sim.VariableFlag} values.
+ * @param {!function():number} getter Prototype function that gets the value.
+ * @param {!function(number)} setter Prototype function that sets the value.
+ */
+gf.sim.Variable.Integer = function(tag, flags, getter, setter) {
+  goog.base(this, tag, flags);
+
+  /**
+   * @private
+   * @type {!function():number}
+   */
+  this.getter_ = getter;
+
+  /**
+   * @private
+   * @type {!function(number)}
+   */
+  this.setter_ = setter;
+};
+goog.inherits(gf.sim.Variable.Float, gf.sim.Variable);
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.Integer.prototype.clone = function() {
+  return new gf.sim.Variable.Integer(this.tag, this.flags,
+      this.getter_, this.setter_);
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.Integer.prototype.read = function(target, reader) {
+  this.setter_.call(target, reader.readVarInt());
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.Integer.prototype.write = function(target, writer) {
+  writer.writeVarInt(this.getter_.call(target) | 0);
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.Integer.prototype.copy = function(source, target) {
+  this.setter_.call(target, this.getter_.call(source) | 0);
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.Integer.prototype.interpolate = function(source, target, t,
+    result) {
+  var sourceValue = this.getter_.call(source) | 0;
+  var targetValue = this.getter_.call(target) | 0;
+  this.setter_.call(result,
+      (sourceValue + t * (targetValue - sourceValue)) | 0);
+};
+
+
+
+/**
  * Variable containing a floating-point number.
  *
  * @constructor
