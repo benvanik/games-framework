@@ -448,3 +448,147 @@ gf.sim.Variable.Quaternion.prototype.interpolate = function(source, target, t,
  * @type {!goog.vec.Quaternion.Float32}
  */
 gf.sim.Variable.Quaternion.tmp_ = goog.vec.Quaternion.createFloat32();
+
+
+
+/**
+ * Variable containing a string.
+ *
+ * @constructor
+ * @extends {gf.sim.Variable}
+ * @param {number} tag Tag, from {@see gf.sim.Variable#getUniqueTag}.
+ * @param {number} flags Bitmask of {@see gf.sim.VariableFlag} values.
+ * @param {!function():string} getter Prototype function that gets the value.
+ * @param {!function(string)} setter Prototype function that sets the value.
+ */
+gf.sim.Variable.String = function(tag, flags, getter, setter) {
+  goog.base(this, tag, flags);
+
+  /**
+   * @private
+   * @type {!function():string}
+   */
+  this.getter_ = getter;
+
+  /**
+   * @private
+   * @type {!function(string)}
+   */
+  this.setter_ = setter;
+};
+goog.inherits(gf.sim.Variable.String, gf.sim.Variable);
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.String.prototype.clone = function() {
+  return new gf.sim.Variable.String(this.tag, this.flags,
+      this.getter_, this.setter_);
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.String.prototype.read = function(target, reader) {
+  this.setter_.call(target, reader.readString());
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.String.prototype.write = function(target, writer) {
+  writer.writeString(this.getter_.call(target));
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.String.prototype.copy = function(source, target) {
+  this.setter_.call(target, this.getter_.call(source));
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.String.prototype.interpolate = function(source, target, t,
+    result) {
+  // Instantaneous to target
+  this.setter_.call(result, this.getter_.call(target));
+};
+
+
+
+/**
+ * Variable containing an entity ID.
+ *
+ * @constructor
+ * @extends {gf.sim.Variable}
+ * @param {number} tag Tag, from {@see gf.sim.Variable#getUniqueTag}.
+ * @param {number} flags Bitmask of {@see gf.sim.VariableFlag} values.
+ * @param {!function():number} getter Prototype function that gets the value.
+ * @param {!function(number)} setter Prototype function that sets the value.
+ */
+gf.sim.Variable.EntityID = function(tag, flags, getter, setter) {
+  goog.base(this, tag, flags);
+
+  /**
+   * @private
+   * @type {!function():number}
+   */
+  this.getter_ = getter;
+
+  /**
+   * @private
+   * @type {!function(number)}
+   */
+  this.setter_ = setter;
+};
+goog.inherits(gf.sim.Variable.EntityID, gf.sim.Variable);
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.EntityID.prototype.clone = function() {
+  return new gf.sim.Variable.EntityID(this.tag, this.flags,
+      this.getter_, this.setter_);
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.EntityID.prototype.read = function(target, reader) {
+  this.setter_.call(target, reader.readVarInt());
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.EntityID.prototype.write = function(target, writer) {
+  writer.writeVarInt(this.getter_.call(target));
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.EntityID.prototype.copy = function(source, target) {
+  this.setter_.call(target, this.getter_.call(source));
+};
+
+
+/**
+ * @override
+ */
+gf.sim.Variable.EntityID.prototype.interpolate = function(source, target, t,
+    result) {
+  // Instantaneous to target
+  this.setter_.call(result, this.getter_.call(target));
+};
