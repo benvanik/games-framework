@@ -258,9 +258,11 @@ gf.sim.Variable.Float.prototype.interpolate = function(source, target, t,
  * @param {number} tag Tag, from {@see gf.sim.Variable#getUniqueTag}.
  * @param {number} flags Bitmask of {@see gf.sim.VariableFlag} values.
  * @param {!function():!goog.vec.Vec3.Float32} getter Function that returns the
- *    value directly (no copy).
+ *     value directly (no copy).
+ * @param {!function(!goog.vec.Vec3.Float32)} setter Prototype function that
+ *     sets the value.
  */
-gf.sim.Variable.Vec3 = function(tag, flags, getter) {
+gf.sim.Variable.Vec3 = function(tag, flags, getter, setter) {
   goog.base(this, tag, flags);
 
   /**
@@ -268,6 +270,12 @@ gf.sim.Variable.Vec3 = function(tag, flags, getter) {
    * @type {!function():!goog.vec.Vec3.Float32}
    */
   this.getter_ = getter;
+
+  /**
+   * @private
+   * @type {!function(!goog.vec.Vec3.Float32)}
+   */
+  this.setter_ = setter;
 };
 goog.inherits(gf.sim.Variable.Vec3, gf.sim.Variable);
 
@@ -277,7 +285,7 @@ goog.inherits(gf.sim.Variable.Vec3, gf.sim.Variable);
  */
 gf.sim.Variable.Vec3.prototype.clone = function() {
   return new gf.sim.Variable.Vec3(this.tag, this.flags,
-      this.getter_);
+      this.getter_, this.setter_);
 };
 
 
@@ -285,7 +293,9 @@ gf.sim.Variable.Vec3.prototype.clone = function() {
  * @override
  */
 gf.sim.Variable.Vec3.prototype.read = function(target, reader) {
-  reader.readVec3(this.getter_.call(target));
+  var v = gf.sim.Variable.Vec3.tmp_;
+  reader.readVec3(v);
+  this.setter_.call(target, v);
 };
 
 
@@ -301,9 +311,7 @@ gf.sim.Variable.Vec3.prototype.write = function(target, writer) {
  * @override
  */
 gf.sim.Variable.Vec3.prototype.copy = function(source, target) {
-  goog.vec.Vec3.setFromArray(
-      this.getter_.call(target),
-      this.getter_.call(source));
+  this.setter_.call(target, this.getter_.call(source));
 };
 
 
@@ -312,12 +320,22 @@ gf.sim.Variable.Vec3.prototype.copy = function(source, target) {
  */
 gf.sim.Variable.Vec3.prototype.interpolate = function(source, target, t,
     result) {
+  var v = gf.sim.Variable.Vec3.tmp_;
   goog.vec.Vec3.lerp(
       this.getter_.call(source),
       this.getter_.call(target),
       t,
-      this.getter_.call(result));
+      v);
+  this.setter_.call(result, v);
 };
+
+
+/**
+ * Scratch Vec3 for math.
+ * @private
+ * @type {!goog.vec.Vec3.Float32}
+ */
+gf.sim.Variable.Vec3.tmp_ = goog.vec.Vec3.createFloat32();
 
 
 
@@ -329,10 +347,12 @@ gf.sim.Variable.Vec3.prototype.interpolate = function(source, target, t,
  * @param {number} tag Tag, from {@see gf.sim.Variable#getUniqueTag}.
  * @param {number} flags Bitmask of {@see gf.sim.VariableFlag} values.
  * @param {!function():!goog.vec.Quaternion.Float32} getter Function that
- *    returns the value directly (no copy).
+ *     returns the value directly (no copy).
+ * @param {!function(!goog.vec.Quaternion.Float32)} setter Prototype function
+ *     that sets the value.
  * @param {boolean} normalized True if the quaternion is normalized.
  */
-gf.sim.Variable.Quaternion = function(tag, flags, getter, normalized) {
+gf.sim.Variable.Quaternion = function(tag, flags, getter, setter, normalized) {
   goog.base(this, tag, flags);
 
   /**
@@ -340,6 +360,12 @@ gf.sim.Variable.Quaternion = function(tag, flags, getter, normalized) {
    * @type {!function():!goog.vec.Quaternion.Float32}
    */
   this.getter_ = getter;
+
+  /**
+   * @private
+   * @type {!function(!goog.vec.Quaternion.Float32)}
+   */
+  this.setter_ = setter;
 
   /**
    * True if the quaternion values are normalized.
@@ -358,7 +384,7 @@ goog.inherits(gf.sim.Variable.Quaternion, gf.sim.Variable);
  */
 gf.sim.Variable.Quaternion.prototype.clone = function() {
   return new gf.sim.Variable.Quaternion(this.tag, this.flags,
-      this.getter_, this.normalized_);
+      this.getter_, this.setter_, this.normalized_);
 };
 
 
@@ -366,16 +392,17 @@ gf.sim.Variable.Quaternion.prototype.clone = function() {
  * @override
  */
 gf.sim.Variable.Quaternion.prototype.read = function(target, reader) {
+  var q = gf.sim.Variable.Quaternion.tmp_;
   if (this.normalized_) {
     // Reconstruct w
-    var q = this.getter_.call(target);
     reader.readVec3(q);
     // Trick is from http://www.gamedev.net/topic/461253-compressed-quaternions/
     // Known to have issues - may not be worth it
     q[3] = Math.sqrt(1 - q[0] * q[0] + q[1] * q[1] + q[2] * q[2]);
   } else {
-    reader.readVec4(this.getter_.call(target));
+    reader.readVec4(q);
   }
+  this.setter_.call(target, q);
 };
 
 
@@ -396,9 +423,7 @@ gf.sim.Variable.Quaternion.prototype.write = function(target, writer) {
  * @override
  */
 gf.sim.Variable.Quaternion.prototype.copy = function(source, target) {
-  goog.vec.Quaternion.setFromArray(
-      this.getter_.call(target),
-      this.getter_.call(source));
+  this.setter_.call(target, this.getter_.call(source));
 };
 
 
@@ -407,9 +432,19 @@ gf.sim.Variable.Quaternion.prototype.copy = function(source, target) {
  */
 gf.sim.Variable.Quaternion.prototype.interpolate = function(source, target, t,
     result) {
+  var q = gf.sim.Variable.Quaternion.tmp_;
   goog.vec.Quaternion.slerp(
       this.getter_.call(source),
       this.getter_.call(target),
       t,
-      this.getter_.call(result));
+      q);
+  this.setter_.call(result, q);
 };
+
+
+/**
+ * Scratch Quaternion for math.
+ * @private
+ * @type {!goog.vec.Quaternion.Float32}
+ */
+gf.sim.Variable.Quaternion.tmp_ = goog.vec.Quaternion.createFloat32();

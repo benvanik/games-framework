@@ -80,26 +80,28 @@ gf.sim.EntityState = function(entity, variableTable) {
 
 /**
  * Gets the shared variable table for {@see gf.sim.EntityState} types.
- * @param {!Function} type Entity state type.
+ * @param {!function(!Array.<!gf.sim.Variable>)} declarationFunction
+ *     Entity state variable declaration function.
  * @return {!gf.sim.VariableTable} A shared variable table.
  */
-gf.sim.EntityState.getVariableTable = function(type) {
-  if (!type.variableTable_) {
+gf.sim.EntityState.getVariableTable = function(declarationFunction) {
+  if (!declarationFunction.variableTable_) {
     var variableList = [];
-    type.declareVariables(variableList);
-    type.variableTable_ = new gf.sim.VariableTable(variableList);
+    declarationFunction(variableList);
+    declarationFunction.variableTable_ = new gf.sim.VariableTable(variableList);
   }
-  return type.variableTable_;
+  return declarationFunction.variableTable_;
 };
 
 
 /**
  * Adds all variables of this type and its parents.
  * Order is not important.
+ * @protected
  * @param {!Array.<!gf.sim.Variable>} variableList A list of variables to add
  *     this types variables to.
  */
-gf.sim.EntityState.declareVariables = goog.abstractMethod;
+gf.sim.EntityState.declareVariables = goog.nullFunction;
 
 
 /**
