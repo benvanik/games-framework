@@ -26,6 +26,8 @@ goog.require('goog.Disposable');
 goog.require('goog.asserts');
 goog.require('goog.events');
 goog.require('goog.history.EventType');
+/** @suppress {extraRequire} */
+goog.require('goog.history.Html5History');
 
 
 
