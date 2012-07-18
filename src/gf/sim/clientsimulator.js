@@ -349,6 +349,9 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
   // sent or unsent and not yet confirmed
   this.simulator_.outgoingCommandList_.confirmSequence(confirmedSequence);
 
+  // TODO(benvanik): cached parenting list
+  var parentingRequired = null;;
+
   // Create entities
   for (var n = 0; n < createEntityCount; n++) {
     // Read entity ID, uncompress into full ID
@@ -357,6 +360,7 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     // Read entity info
     var entityTypeId = reader.readVarInt();
     var entityFlags = reader.readVarInt();
+    var entityParentId = reader.readVarInt();
 
     // Get entity type factory
     var entityFactory = this.simulator_.getEntityFactory(entityTypeId);
@@ -375,6 +379,16 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
 
     // Add to simulation
     this.simulator_.addEntity(entity);
+
+    // Queue for parenting
+    // We have to do this after the adds as we are not sorted and the parent
+    // may be the next entity in the packet
+    if (entityParentId) {
+      if (!parentingRequired) {
+        parentingRequired = [];
+      }
+      parentingRequired.push([entity, entityParentId]);
+    }
 
     gf.log.write('<- create entity', entityId);
   }
@@ -416,6 +430,21 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     this.simulator_.removeEntity(entity);
 
     gf.log.write('<- delete entity', entityId);
+  }
+
+  // For each entity created we need to set parents
+  if (parentingRequired) {
+    for (var n = 0; n < parentingRequired.length; n++) {
+      var entity = parentingRequired[n][0];
+      var parentEntityId = parentingRequired[n][1];
+      var parentEntity = this.simulator_.getEntity(parentEntityId);
+      if (!parentEntity) {
+        // Entity not found
+        gf.log.debug('Parent entity ' + parentEntityId + ' not found');
+        return false;
+      }
+      entity.setParent(parentEntity);
+    }
   }
 
   // Commands

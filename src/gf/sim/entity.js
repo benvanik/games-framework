@@ -24,6 +24,7 @@ goog.provide('gf.sim.EntityFlag');
 
 goog.require('gf.sim');
 goog.require('goog.Disposable');
+goog.require('goog.array');
 goog.require('goog.asserts');
 
 
@@ -101,6 +102,15 @@ gf.sim.Entity = function(simulator, entityFactory, entityId, entityFlags) {
   this.parent_ = null;
 
   /**
+   * Child entities.
+   * Not replicated over the network, but inferred from the parenting
+   * relationships.
+   * @private
+   * @type {!Array.<!gf.sim.Entity>}
+   */
+  this.children_ = [];
+
+  /**
    * A bitmask of {@see gf.sim.EntityDirtyFlag} indicating the dirty state
    * of the entity.
    * This value is tracked per tick and will be reset.
@@ -157,6 +167,49 @@ gf.sim.Entity.prototype.setParent = function(value) {
     var oldParent = this.parent_;
     this.parent_ = value;
     this.parentChanged(oldParent, value);
+    if (oldParent) {
+      oldParent.removeChild_(this);
+    }
+    if (value) {
+      value.addChild_(this);
+    }
+  }
+};
+
+
+/**
+ * Adds a child to this entity.
+ * This is an internal method called by {@see #setParent}.
+ * @private
+ * @param {!gf.sim.Entity} entity Child to add.
+ */
+gf.sim.Entity.prototype.addChild_ = function(entity) {
+  this.children_.push(entity);
+  this.childAdded(entity);
+};
+
+
+/**
+ * Removes a child from this entity.
+ * This is an internal method called by {@see #setParent}.
+ * @private
+ * @param {!gf.sim.Entity} entity Child to remove.
+ */
+gf.sim.Entity.prototype.removeChild_ = function(entity) {
+  goog.array.remove(this.children_, entity);
+  this.childRemoved(entity);
+};
+
+
+/**
+ * Enumerates the list of child entities calling a function for each present.
+ * @param {!function(!gf.sim.Entity):undefined} callback Callback function
+ *     that is called once per entity.
+ * @param {Object=} opt_scope Scope to call the function in.
+ */
+gf.sim.Entity.prototype.forEachChild = function(callback, opt_scope) {
+  for (var n = 0; n < this.children_.length; n++) {
+    callback.call(opt_scope || goog.global, this.children_[n]);
   }
 };
 
@@ -168,6 +221,22 @@ gf.sim.Entity.prototype.setParent = function(value) {
  * @param {gf.sim.Entity} newEntity New parent entity, if any.
  */
 gf.sim.Entity.prototype.parentChanged = goog.nullFunction;
+
+
+/**
+ * Handles a child being added.
+ * @protected
+ * @param {!gf.sim.Entity} entity New child.
+ */
+gf.sim.Entity.prototype.childAdded = goog.nullFunction;
+
+
+/**
+ * Handles a child being removed.
+ * @protected
+ * @param {!gf.sim.Entity} entity Old child.
+ */
+gf.sim.Entity.prototype.childRemoved = goog.nullFunction;
 
 
 /**

@@ -26,6 +26,10 @@ goog.require('gf.sim.commands.CommandType');
 
 
 
+// TODO(benvanik): find a way to prevent commands from being sent - for example,
+//     this reparent command will get sent on updates (fine) but also on
+//     creates (duplication) - would be nice to prevent the send if the entity
+//     is also being created in the same sync packet
 /**
  * Simulation command to reparent entities.
  * Reparent commands must target entities and will reassign their parents.

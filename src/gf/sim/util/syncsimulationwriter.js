@@ -190,6 +190,8 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function() {
     // Write entity info
     writer.writeVarInt(entity.getTypeId());
     writer.writeVarInt(entity.getFlags());
+    var parent = entity.getParent();
+    writer.writeVarInt(parent ? parent.getId() : gf.sim.NO_ENTITY_ID);
 
     // Write entire entity
     entity.write(writer);
