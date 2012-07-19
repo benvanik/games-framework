@@ -89,7 +89,9 @@ gf.sim.search.ListDatabase.prototype.forEachInViewport = function(
   for (var n = 0; n < this.entities_.length; n++) {
     var entity = this.entities_[n];
     // TODO(benvanik): test viewport
-    if (callback.call(opt_scope || goog.global, this.entities_[n]) === false) {
+    var distance = 0;
+    if (callback.call(opt_scope || goog.global, this.entities_[n], distance) ===
+        false) {
       break;
     }
   }

@@ -87,8 +87,9 @@ gf.sim.search.SpatialDatabase.prototype.removeEntity = goog.abstractMethod;
 
 /**
  * Enumerates all entities in the database.
- * @param {!function(!gf.sim.entities.SpatialEntity):boolean|undefined} callback
- *     Function to call for each entity. Return false to cancel the enumeration.
+ * @param {!function(!gf.sim.entities.SpatialEntity):(boolean|undefined)}
+ *     callback Function to call for each entity. Return false to cancel the
+ *     enumeration.
  * @param {Object=} opt_scope Scope to call the function in.
  */
 gf.sim.search.SpatialDatabase.prototype.forEach = goog.abstractMethod;
@@ -97,8 +98,10 @@ gf.sim.search.SpatialDatabase.prototype.forEach = goog.abstractMethod;
 /**
  * Enumerates all entities in the database that intersect the given viewport.
  * @param {!gf.vec.Viewport} viewport Viewport.
- * @param {!function(!gf.sim.entities.SpatialEntity):boolean|undefined} callback
- *     Function to call for each entity. Return false to cancel the enumeration.
+ * @param {!function(!gf.sim.entities.SpatialEntity, number):
+ *     (boolean|undefined)} callback Function to call for each entity. Also
+ *     contains the distance from the viewport eye point to the entity. Return
+ *     false to cancel the enumeration.
  * @param {Object=} opt_scope Scope to call the function in.
  */
 gf.sim.search.SpatialDatabase.prototype.forEachInViewport = goog.abstractMethod;
@@ -109,8 +112,9 @@ gf.sim.search.SpatialDatabase.prototype.forEachInViewport = goog.abstractMethod;
  * bounding sphere.
  * @param {!gf.sim.entities.SpatialEntity|!goog.vec.Vec4.Float32}
  *     entityOrSphere An entity or bounding sphere to test intersection against.
- * @param {!function(!gf.sim.entities.SpatialEntity):boolean|undefined} callback
- *     Function to call for each entity. Return false to cancel the enumeration.
+ * @param {!function(!gf.sim.entities.SpatialEntity):(boolean|undefined)}
+ *     callback Function to call for each entity. Return false to cancel the
+ *     enumeration.
  * @param {Object=} opt_scope Scope to call the function in.
  */
 gf.sim.search.SpatialDatabase.prototype.forEachIntersecting =
