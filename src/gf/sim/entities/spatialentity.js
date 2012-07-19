@@ -25,7 +25,6 @@ goog.require('gf.sim.Entity');
 goog.require('gf.sim.EntityState');
 goog.require('gf.sim.Variable');
 goog.require('gf.sim.VariableFlag');
-goog.require('gf.sim.entities.SceneEntity');
 goog.require('gf.vec.Mat4');
 goog.require('goog.vec.Mat4');
 goog.require('goog.vec.Quaternion');
@@ -48,13 +47,6 @@ goog.require('goog.vec.Vec4');
 gf.sim.entities.SpatialEntity = function(
     simulator, entityFactory, entityId, entityFlags) {
   goog.base(this, simulator, entityFactory, entityId, entityFlags);
-
-  /**
-   * Ancestor scene entity, if it exists.
-   * @private
-   * @type {gf.sim.entities.SceneEntity}
-   */
-  this.scene_ = null;
 
   /**
    * Dirty flag signaling that the transform is dirty and must be regenerated.
@@ -81,35 +73,6 @@ gf.sim.entities.SpatialEntity = function(
   this.transform_ = goog.vec.Mat4.createFloat32();
 };
 goog.inherits(gf.sim.entities.SpatialEntity, gf.sim.Entity);
-
-
-/**
- * @override
- */
-gf.sim.entities.SpatialEntity.prototype.parentChanged = function(
-    oldParent, newParent) {
-  goog.base(this, 'parentChanged', oldParent, newParent);
-
-  // Search up the new chain
-  this.scene_ = null;
-  var ancestor = newParent;
-  while (ancestor) {
-    if (ancestor instanceof gf.sim.entities.SceneEntity) {
-      this.scene_ = ancestor;
-      break;
-    }
-    ancestor = ancestor.getParent();
-  }
-};
-
-
-/**
- * Gets the ancestor scene entity, if any.
- * @return {gf.sim.entities.SceneEntity} Scene entity.
- */
-gf.sim.entities.SpatialEntity.prototype.getScene = function() {
-  return this.scene_;
-};
 
 
 /**
@@ -159,8 +122,11 @@ gf.sim.entities.SpatialEntity.prototype.updateTransform = function() {
   gf.vec.Mat4.multTranslationPre(
       position[0], position[1], position[2], transform, transform);
 
-  if (this.scene_) {
-    this.scene_.childTransformed(this);
+  // Notify parent scene that this transform changed
+  // TODO(benvanik): something cleaner, perhaps an interface
+  var parent = this.getParent();
+  if (parent && parent.childTransformed) {
+    parent.childTransformed(this);
   }
 };
 
