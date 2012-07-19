@@ -236,7 +236,7 @@ gf.sim.entities.SpatialEntity.State = function(entity, variableTable) {
    * @type {number}
    */
   this.positionOrdinal_ = variableTable.getOrdinal(
-      gf.sim.entities.SpatialEntity.State.positionTag_);
+      gf.sim.entities.SpatialEntity.State.tags_.position);
 
   /**
    * Rotation quaternion.
@@ -250,7 +250,7 @@ gf.sim.entities.SpatialEntity.State = function(entity, variableTable) {
    * @type {number}
    */
   this.rotationOrdinal_ = variableTable.getOrdinal(
-      gf.sim.entities.SpatialEntity.State.rotationTag_);
+      gf.sim.entities.SpatialEntity.State.tags_.rotation);
 
   /**
    * Scaling vector.
@@ -264,7 +264,7 @@ gf.sim.entities.SpatialEntity.State = function(entity, variableTable) {
    * @type {number}
    */
   this.scaleOrdinal_ = variableTable.getOrdinal(
-      gf.sim.entities.SpatialEntity.State.scaleTag_);
+      gf.sim.entities.SpatialEntity.State.tags_.scale);
 
   /**
    * Bounding radius.
@@ -279,41 +279,21 @@ gf.sim.entities.SpatialEntity.State = function(entity, variableTable) {
    * @type {number}
    */
   this.boundingRadiusOrdinal_ = variableTable.getOrdinal(
-      gf.sim.entities.SpatialEntity.State.boundingRadiusTag_);
+      gf.sim.entities.SpatialEntity.State.tags_.boundingRadius);
 };
 goog.inherits(gf.sim.entities.SpatialEntity.State, gf.sim.EntityState);
 
 
 /**
  * @private
- * @type {number}
+ * @type {!Object.<number>}
  */
-gf.sim.entities.SpatialEntity.State.positionTag_ =
-    gf.sim.Variable.getUniqueTag();
-
-
-/**
- * @private
- * @type {number}
- */
-gf.sim.entities.SpatialEntity.State.rotationTag_ =
-    gf.sim.Variable.getUniqueTag();
-
-
-/**
- * @private
- * @type {number}
- */
-gf.sim.entities.SpatialEntity.State.scaleTag_ =
-    gf.sim.Variable.getUniqueTag();
-
-
-/**
- * @private
- * @type {number}
- */
-gf.sim.entities.SpatialEntity.State.boundingRadiusTag_ =
-    gf.sim.Variable.getUniqueTag();
+gf.sim.entities.SpatialEntity.State.tags_ = {
+  position: gf.sim.Variable.getUniqueTag(),
+  rotation: gf.sim.Variable.getUniqueTag(),
+  scale: gf.sim.Variable.getUniqueTag(),
+  boundingRadius: gf.sim.Variable.getUniqueTag()
+};
 
 
 /**
@@ -413,23 +393,23 @@ gf.sim.entities.SpatialEntity.State.prototype.setBoundingRadius =
 gf.sim.entities.SpatialEntity.State.declareVariables = function(variableList) {
   gf.sim.EntityState.declareVariables(variableList);
   variableList.push(new gf.sim.Variable.Vec3(
-      gf.sim.entities.SpatialEntity.State.positionTag_,
+      gf.sim.entities.SpatialEntity.State.tags_.position,
       gf.sim.VariableFlag.UPDATED_FREQUENTLY | gf.sim.VariableFlag.INTERPOLATED,
       gf.sim.entities.SpatialEntity.State.prototype.getPosition,
       gf.sim.entities.SpatialEntity.State.prototype.setPosition));
   variableList.push(new gf.sim.Variable.Quaternion(
-      gf.sim.entities.SpatialEntity.State.rotationTag_,
+      gf.sim.entities.SpatialEntity.State.tags_.rotation,
       gf.sim.VariableFlag.UPDATED_FREQUENTLY | gf.sim.VariableFlag.INTERPOLATED,
       gf.sim.entities.SpatialEntity.State.prototype.getRotation,
       gf.sim.entities.SpatialEntity.State.prototype.setRotation,
       true));
   variableList.push(new gf.sim.Variable.Vec3(
-      gf.sim.entities.SpatialEntity.State.scaleTag_,
+      gf.sim.entities.SpatialEntity.State.tags_.scale,
       gf.sim.VariableFlag.UPDATED_FREQUENTLY | gf.sim.VariableFlag.INTERPOLATED,
       gf.sim.entities.SpatialEntity.State.prototype.getScale,
       gf.sim.entities.SpatialEntity.State.prototype.setScale));
   variableList.push(new gf.sim.Variable.Float(
-      gf.sim.entities.SpatialEntity.State.boundingRadiusTag_,
+      gf.sim.entities.SpatialEntity.State.tags_.boundingRadius,
       gf.sim.VariableFlag.UPDATED_FREQUENTLY | gf.sim.VariableFlag.INTERPOLATED,
       gf.sim.entities.SpatialEntity.State.prototype.getBoundingRadius,
       gf.sim.entities.SpatialEntity.State.prototype.setBoundingRadius));
