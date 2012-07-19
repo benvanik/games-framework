@@ -252,6 +252,16 @@ gf.sim.EntityState.prototype.copy = function(targetState) {
 
 
 /**
+ * Copies all unpredicted/uninterpolated values of this state to the target
+ * state.
+ * @param {!gf.sim.EntityState} targetState Target state.
+ */
+gf.sim.EntityState.prototype.copyImmediateVariables = function(targetState) {
+  this.variableTable_.copyImmediateVariables(this, targetState);
+};
+
+
+/**
  * Copies values of all predicted variables to the target state.
  * All values in the target state with their
  * {@see gf.sim.VariableFlag#PREDICTED} bit set will get overwritten with this

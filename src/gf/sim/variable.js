@@ -195,7 +195,7 @@ gf.sim.Variable.Integer = function(tag, flags, getter, setter) {
    */
   this.setter_ = setter;
 };
-goog.inherits(gf.sim.Variable.Float, gf.sim.Variable);
+goog.inherits(gf.sim.Variable.Integer, gf.sim.Variable);
 
 
 /**

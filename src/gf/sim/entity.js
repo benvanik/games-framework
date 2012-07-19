@@ -141,15 +141,19 @@ gf.sim.Entity = function(simulator, entityFactory, entityId, entityFlags) {
   this.state_ = entityFactory.allocateState(this);
 
   if (gf.CLIENT) {
+    // Whether we need a seperate client state
+    var splitState = entityFlags & (
+        gf.sim.EntityFlag.INTERPOLATED | gf.sim.EntityFlag.PREDICTED);
+
     /**
      * Client interpolated/predicted state.
      * Represents the state of the entity on the client, factoring in either
      * interpolation or prediction. If neither feature is enabled then this is
      * identical to {@see #networkState}.
      * @private
-     * @type {!gf.sim.EntityState}
+     * @type {gf.sim.EntityState}
      */
-    this.clientState_ = entityFactory.allocateState(this);
+    this.clientState_ = splitState ? entityFactory.allocateState(this) : null;
   }
 
   // TODO(benvanik): also use for lag compensation history rewinding on server
@@ -173,7 +177,7 @@ goog.inherits(gf.sim.Entity, goog.Disposable);
 gf.sim.Entity.prototype.disposeInternal = function() {
   // Return entity states back to the pool
   this.factory.releaseState(this.state_);
-  if (gf.CLIENT) {
+  if (gf.CLIENT && this.clientState_) {
     this.factory.releaseState(this.clientState_);
   }
   for (var n = 0; n < this.previousStates_.length; n++) {
@@ -348,7 +352,7 @@ gf.sim.Entity.prototype.childRemoved = goog.nullFunction;
  * @return {!gf.sim.EntityState} Entity state.
  */
 gf.sim.Entity.prototype.getState = function() {
-  return gf.CLIENT ? this.clientState_ : this.state_;
+  return gf.CLIENT ? (this.clientState_ || this.state_) : this.state_;
 };
 
 
@@ -407,6 +411,17 @@ gf.sim.Entity.prototype.writeDelta = function(writer) {
 gf.sim.Entity.prototype.interpolate = gf.CLIENT ? function(time) {
   var flags = this.getFlags();
 
+  // Skip if nothing to do
+  if (!this.clientState_) {
+    return;
+  }
+
+  // Copy uninterpolated variables to stay consistent
+  // TODO(benvanik): find a way to avoid this copy - perhaps double read on
+  //     the network
+  // TODO(benvanik): only those marked dirty on state
+  this.state_.copyImmediateVariables(this.clientState_);
+
   // Interpolate all interpolated vars
   if (flags & gf.sim.EntityFlag.INTERPOLATED) {
     this.interpolate_(time);
@@ -414,6 +429,7 @@ gf.sim.Entity.prototype.interpolate = gf.CLIENT ? function(time) {
 
   // Reset predicted vars to confirmed in preparation for the predicted commands
   if (flags & gf.sim.EntityFlag.PREDICTED) {
+    goog.asserts.assert(this.clientState_);
     this.state_.copyPredictedVariables(this.clientState_);
   }
 } : goog.nullFunction;
@@ -428,17 +444,20 @@ gf.sim.Entity.prototype.interpolate = gf.CLIENT ? function(time) {
 gf.sim.Entity.prototype.interpolate_ = gf.CLIENT ? function(time) {
   goog.asserts.assert(this.getFlags() & gf.sim.EntityFlag.INTERPOLATED);
 
+  var clientState = this.clientState_;
+  goog.asserts.assert(clientState);
+
   // TODO(benvanik): sanity check that all this time stuff is actually required
-  this.clientState_.interpolate(this.state_, this.state_, 0);
+  clientState.interpolate(this.state_, this.state_, 0);
 
   // // Need at least two states to interpolate
   // if (!this.previousStates_.length) {
   //   return;
   // } else if (this.previousStates_.length == 1) {
   //   // Only one state - just copy the variables
-  //   this.clientState_.interpolate(
+  //   clientState.interpolate(
   //       this.previousStates_[0], this.previousStates_[0], 0);
-  //   this.clientState_.time = time;
+  //   clientState.time = time;
   //   return;
   // }
 
@@ -452,8 +471,8 @@ gf.sim.Entity.prototype.interpolate_ = gf.CLIENT ? function(time) {
   // }
   // if (!futureState) {
   //   var lastState = this.previousStates_[0];
-  //   this.clientState_.interpolate(lastState, lastState, 0);
-  //   this.clientState_.time = time;
+  //   clientState.interpolate(lastState, lastState, 0);
+  //   clientState.time = time;
   //   return;
   // }
   // var pastState = this.previousStates_[n - 1];
@@ -471,7 +490,7 @@ gf.sim.Entity.prototype.interpolate_ = gf.CLIENT ? function(time) {
   // }
 
   // // Interpolate between the chosen states
-  // this.clientState_.interpolate(pastState, futureState, t);
+  // clientState.interpolate(pastState, futureState, t);
 } : goog.nullFunction;
 
 
@@ -593,7 +612,7 @@ gf.sim.Entity.prototype.resetDirtyState = function() {
 
   // When this is called we've already flushed deltas, so reset the bits
   this.state_.resetDirtyState();
-  if (gf.CLIENT) {
+  if (gf.CLIENT && this.clientState_) {
     this.clientState_.resetDirtyState();
   }
 };

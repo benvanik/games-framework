@@ -103,7 +103,7 @@ gf.sim.search.ListDatabase.prototype.forEachIntersecting = function(
     entityOrSphere, callback, opt_scope) {
   var sphere = gf.sim.search.ListDatabase.tmpVec4_;
   if (entityOrSphere instanceof gf.sim.entities.SpatialEntity) {
-    entity.getBoundingSphere(sphere);
+    entityOrSphere.getBoundingSphere(sphere);
   } else {
     sphere = /** @type {!goog.vec.Vec4.Float32} */ (entityOrSphere);
   }

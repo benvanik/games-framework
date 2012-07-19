@@ -115,8 +115,7 @@ gf.sim.entities.SpatialEntity.prototype.updateTransform = function() {
 
   // Transform
   var transform = this.transform_;
-  goog.vec.Quaternion.toRotationMatrix4(
-      state.rotation, transform);
+  goog.vec.Quaternion.toRotationMatrix4(rotation, transform);
   gf.vec.Mat4.multScalePost(
       transform, scale[0], scale[1], scale[2], transform);
   gf.vec.Mat4.multTranslationPre(
@@ -236,7 +235,7 @@ gf.sim.entities.SpatialEntity.State = function(entity, variableTable) {
    * Bounding radius.
    * Used as the radius in a bounding sphere centered at the current position.
    * @private
-   * @type {!goog.vec.Quaternion.Float32}
+   * @type {number}
    */
   this.boundingRadius_ = 0;
 

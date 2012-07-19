@@ -73,7 +73,7 @@ gf.sim.search.SpatialDatabase.prototype.updateEntity = goog.abstractMethod;
 gf.sim.search.SpatialDatabase.prototype.updateEntities = function(entities) {
   // Subclasses that can do this more efficiently really should...
   for (var n = 0; n < entities.length; n++) {
-    this.updateEntity(entities);
+    this.updateEntity(entities[n]);
   }
 };
 

@@ -50,11 +50,6 @@ gf.vec.Mat4.multScalePost = function(mat, x, y, z, resultMat) {
   var a02 = mat[8], a12 = mat[9], a22 = mat[10], a32 = mat[11];
   var a03 = mat[12], a13 = mat[13], a23 = mat[14], a33 = mat[15];
 
-  var b00 = mat1[0];
-  var b11 = mat1[5];
-  var b22 = mat1[10];
-  var b33 = mat1[15];
-
   resultMat[0] = a00 * x;
   resultMat[1] = a10 * x;
   resultMat[2] = a20 * x;

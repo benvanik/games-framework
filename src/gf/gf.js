@@ -78,6 +78,7 @@ if (!COMPILED && goog.global['gfdefines']) {
   var gfd = goog.global['gfdefines'];
   var gfr = goog.global['gf'];
   gfr['SERVER'] = goog.isDef(gfd['SERVER']) ? gfd['SERVER'] : gf.SERVER;
+  gfr['CLIENT'] = !gfr['SERVER'];
   gfr['NODE'] = goog.isDef(gfd['NODE']) ? gfd['NODE'] : gf.NODE;
   gfr['BIN_PATH'] = goog.isDef(gfd['BIN_PATH']) ? gfd['BIN_PATH'] : gf.BIN_PATH;
   gfr['BUILD_CLIENT'] = goog.isDef(gfd['BUILD_CLIENT']) ?

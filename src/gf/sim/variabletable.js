@@ -54,6 +54,13 @@ gf.sim.VariableTable = function(variableList) {
   this.ordinalLookup_ = {};
 
   /**
+   * Variables that are neither interpolated or predicted.
+   * @private
+   * @type {!Array.<!gf.sim.Variable>}
+   */
+  this.immediateVariables_ = [];
+
+  /**
    * Variables that have their {@see gf.sim.VariableFlag#PREDICTED} bit set.
    * @private
    * @type {!Array.<!gf.sim.Variable>}
@@ -83,6 +90,10 @@ gf.sim.VariableTable = function(variableList) {
     v.ordinal = n;
 
     // Add to fast access arrays
+    if (!(v.flags & (
+        gf.sim.VariableFlag.PREDICTED | gf.sim.VariableFlag.INTERPOLATED))) {
+      this.immediateVariables_.push(v);
+    }
     if (v.flags & gf.sim.VariableFlag.PREDICTED) {
       this.predictedVariables_.push(v);
     }
@@ -177,6 +188,21 @@ gf.sim.VariableTable.prototype.writeAllVariables = function(target, writer) {
 gf.sim.VariableTable.prototype.copyVariables = function(source, target) {
   for (var n = 0; n < this.variables_.length; n++) {
     var v = this.variables_[n];
+    v.copy(source, target);
+  }
+};
+
+
+/**
+ * Copies all immediate variables from one object to another (those variables
+ * that are not predicted/interpolated).
+ * @param {!Object} source Source object.
+ * @param {!Object} target Target object.
+ */
+gf.sim.VariableTable.prototype.copyImmediateVariables = function(
+    source, target) {
+  for (var n = 0; n < this.immediateVariables_.length; n++) {
+    var v = this.immediateVariables_[n];
     v.copy(source, target);
   }
 };
