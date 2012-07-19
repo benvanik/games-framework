@@ -388,6 +388,9 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
         parentingRequired = [];
       }
       parentingRequired.push([entity, entityParentId]);
+    } else {
+      // Notify now
+      entity.postNetworkUpdate();
     }
 
     gf.log.write('<- create entity', entityId);
@@ -408,6 +411,9 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
 
     // Load delta values
     entity.readDelta(reader);
+
+    // Notify
+    entity.postNetworkUpdate();
 
     gf.log.write('<- update entity', entityId);
   }
@@ -443,6 +449,9 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
         return false;
       }
       entity.setParent(parentEntity);
+
+      // Notify
+      entity.postNetworkUpdate();
     }
   }
 

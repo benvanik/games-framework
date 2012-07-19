@@ -41,10 +41,10 @@ gf.sim.EntityState = function(entity, variableTable) {
   /**
    * Entity that this object stores state for.
    * The target entity will be invalidated when the state changes.
-   * @private
+   * @protected
    * @type {!gf.sim.Entity}
    */
-  this.entity_ = entity;
+  this.entity = entity;
 
   /**
    * Table for variable handling.
@@ -118,7 +118,7 @@ gf.sim.EntityState.prototype.setVariableDirty = function(ordinal) {
     this.dirtyBits32_63_ |= 1 << (ordinal - 32);
   }
   if (!wasDirty) {
-    this.entity_.invalidate();
+    this.entity.invalidate();
   }
 };
 

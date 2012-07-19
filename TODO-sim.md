@@ -208,20 +208,13 @@ gf.sim.entities.SpatialEntity:
 - position
 - orientation
 - boundingRadius
+- getScene()
 
 
 gf.sim.entities.SceneEntity:
-- spatialChildren_
 - spatialDatabase_
-- thunks to spatial database:
-  - forEachChildInViewport(viewport)
-  - forEachChildInNear(e | point, maxDistance)
-  - forEachChildIntersecting(e | point)
-  - forEachChildIntersected(ray, maxDistance)
-  - findClosestChild(e | point, maxDistance)
-  - trace(ray, start, end)
 
-gf.sim.db.ISpatialDatabase:
+gf.sim.search.SpatialDatabase
 - addEntity(e)
 - updateEntity(e)
 - updateEntities(e[])

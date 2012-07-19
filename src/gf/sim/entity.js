@@ -146,7 +146,7 @@ gf.sim.Entity = function(simulator, entityFactory, entityId, entityFlags) {
      * Represents the state of the entity on the client, factoring in either
      * interpolation or prediction. If neither feature is enabled then this is
      * identical to {@see #networkState}.
-     * @protected
+     * @private
      * @type {!gf.sim.EntityState}
      */
     this.clientState_ = entityFactory.allocateState(this);
@@ -307,8 +307,8 @@ gf.sim.Entity.prototype.forEachChild = function(callback, opt_scope) {
 /**
  * Handles parent entity changes.
  * @protected
- * @param {gf.sim.Entity} oldEntity Old parent entity, if any.
- * @param {gf.sim.Entity} newEntity New parent entity, if any.
+ * @param {gf.sim.Entity} oldParent Old parent entity, if any.
+ * @param {gf.sim.Entity} newParent New parent entity, if any.
  */
 gf.sim.Entity.prototype.parentChanged = function(oldParent, newParent) {
   if (gf.SERVER) {
@@ -401,6 +401,7 @@ gf.sim.Entity.prototype.writeDelta = function(writer) {
  * and before the scheduler, as well as once per render frame before physics.
  * When an entity is predicted the pending commands will be executed immediately
  * after this function returns.
+ * @this {gf.sim.Entity}
  * @param {number} time Current time.
  */
 gf.sim.Entity.prototype.interpolate = gf.CLIENT ? function(time) {
@@ -420,6 +421,7 @@ gf.sim.Entity.prototype.interpolate = gf.CLIENT ? function(time) {
 
 /**
  * Performs actual interpolation between historical states.
+ * @this {gf.sim.Entity}
  * @private
  * @param {number} time Current time.
  */
@@ -538,6 +540,17 @@ gf.sim.Entity.prototype.scheduleUpdate = function(priority, opt_targetTime) {
       opt_targetTime || 0,
       this.update, this);
 };
+
+
+/**
+ * Handles post-network change logic.
+ * This is called only once per tick when the entity state receives changes
+ * from the network.
+ *
+ * On the client this is called immediately after network processing and before
+ * scheduling.
+ */
+gf.sim.Entity.prototype.postNetworkUpdate = goog.nullFunction;
 
 
 /**
