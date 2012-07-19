@@ -65,7 +65,7 @@ gf.sim.ClientSimulator = function(runtime, session) {
   /**
    * A list of entities needing prediction/interpolation.
    * @private
-   * @type {!Array.<!gf.sim.ClientEntity>}
+   * @type {!Array.<!gf.sim.Entity>}
    */
   this.interpolatedEntities_ = [];
 
@@ -399,8 +399,7 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     var entityId = reader.readVarInt() << 1;
 
     // Find entity
-    var entity = /** @type {gf.sim.ClientEntity} */ (
-        this.simulator_.getEntity(entityId));
+    var entity = this.simulator_.getEntity(entityId);
     if (!entity) {
       // Entity not found
       gf.log.debug('Target entity of server update not found ' + entityId);

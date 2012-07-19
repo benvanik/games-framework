@@ -60,7 +60,7 @@ gf.sim.util.SyncSimulationWriter = function() {
    * A list of create entity actions.
    * Length is defined by {@see #createEntityCount_}.
    * @private
-   * @type {!Array.<gf.sim.ServerEntity>}
+   * @type {!Array.<gf.sim.Entity>}
    */
   this.createEntities_ = [];
 
@@ -75,7 +75,7 @@ gf.sim.util.SyncSimulationWriter = function() {
    * A list of update entity actions.
    * Length is defined by {@see #updateEntityCount_}.
    * @private
-   * @type {!Array.<gf.sim.ServerEntity>}
+   * @type {!Array.<gf.sim.Entity>}
    */
   this.updateEntities_ = [];
 
@@ -90,7 +90,7 @@ gf.sim.util.SyncSimulationWriter = function() {
    * A list of delete entity actions.
    * Length is defined by {@see #deleteEntityCount_}.
    * @private
-   * @type {!Array.<gf.sim.ServerEntity>}
+   * @type {!Array.<gf.sim.Entity>}
    */
   this.deleteEntities_ = [];
 
@@ -136,7 +136,7 @@ gf.sim.util.SyncSimulationWriter.prototype.addCommand = function(command) {
 
 /**
  * Adds a create entity action to the packet.
- * @param {!gf.sim.ServerEntity} entity Entity.
+ * @param {!gf.sim.Entity} entity Entity.
  */
 gf.sim.util.SyncSimulationWriter.prototype.addCreateEntity = function(entity) {
   this.createEntities_[this.createEntityCount_++] = entity;
@@ -145,7 +145,7 @@ gf.sim.util.SyncSimulationWriter.prototype.addCreateEntity = function(entity) {
 
 /**
  * Adds an update entity action to the packet.
- * @param {!gf.sim.ServerEntity} entity Entity.
+ * @param {!gf.sim.Entity} entity Entity.
  */
 gf.sim.util.SyncSimulationWriter.prototype.addUpdateEntity = function(entity) {
   this.updateEntities_[this.updateEntityCount_++] = entity;
@@ -154,7 +154,7 @@ gf.sim.util.SyncSimulationWriter.prototype.addUpdateEntity = function(entity) {
 
 /**
  * Adds a delete entity action to the packet.
- * @param {!gf.sim.ServerEntity} entity Entity.
+ * @param {!gf.sim.Entity} entity Entity.
  */
 gf.sim.util.SyncSimulationWriter.prototype.addDeleteEntity = function(entity) {
   this.deleteEntities_[this.deleteEntityCount_++] = entity;

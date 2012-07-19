@@ -134,11 +134,11 @@ gf.sim.Observer = function(simulator, session, user) {
   /**
    * A list matching the set of entities in {@see #updatedEntitiesSet_}, kept
    * for fast iteration.
-   * Check {@see gf.sim.ServerEntity#dirtyFlags} to see whether the entity was
+   * Check {@see gf.sim.Entity#dirtyFlags} to see whether the entity was
    * created, updated, and/or deleted this tick.
    * This list is cleared after every tick.
    * @private
-   * @type {!Array.<!gf.sim.ServerEntity>}
+   * @type {!Array.<!gf.sim.Entity>}
    */
   this.updatedEntitiesList_ = [];
 
@@ -225,7 +225,7 @@ gf.sim.Observer.prototype.queueOutgoingCommand = function(command) {
  * the observer.
  * For example, if the entity is outside the visual range of the observer it
  * may still be relevant when created/deleted, but not when updated.
- * @param {!gf.sim.ServerEntity} entity Entity to check.
+ * @param {!gf.sim.Entity} entity Entity to check.
  * @return {boolean} True if the entity is relevant.
  */
 gf.sim.Observer.prototype.isEntityChangeRelevant = function(entity) {
@@ -238,7 +238,7 @@ gf.sim.Observer.prototype.isEntityChangeRelevant = function(entity) {
  * Notifies this observer that the given entity has been changed this tick.
  * This will only be called once per tick after the entity has been fully
  * updated.
- * @param {!gf.sim.ServerEntity} entity Entity that changed this tick.
+ * @param {!gf.sim.Entity} entity Entity that changed this tick.
  */
 gf.sim.Observer.prototype.notifyEntityChange = function(entity) {
   // Don't replicate entities that aren't replicated

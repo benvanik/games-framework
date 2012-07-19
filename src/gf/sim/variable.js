@@ -144,19 +144,11 @@ gf.sim.Variable.sortByPriority = function(a, b) {
  */
 gf.sim.VariableFlag = {
   /**
-   * Variable is never replicated.
-   * Values that exist on both client and server but can be inferred on the
-   * client should set this bit.
-   * Examples: sky color (inferred from weather).
-   */
-  NOT_REPLICATED: 1 << 0,
-
-  /**
    * Variable will update frequently (perhaps every tick) and should get
    * optimized placement in the lookup table.
    * Examples: actor position.
    */
-  UPDATED_FREQUENTLY: 1 << 1,
+  UPDATED_FREQUENTLY: 1 << 0,
 
   /**
    * Variable is predicted on the client.
@@ -164,7 +156,7 @@ gf.sim.VariableFlag = {
    * Entities must also have prediction enabled on them.
    * Examples: local player position.
    */
-  PREDICTED: 1 << 2,
+  PREDICTED: 1 << 1,
 
   /**
    * Variable is interpolated on the client.
@@ -172,7 +164,7 @@ gf.sim.VariableFlag = {
    * set this bit.
    * Examples: remote/AI actor position, animation state.
    */
-  INTERPOLATED: 1 << 3
+  INTERPOLATED: 1 << 2
 };
 
 

@@ -22,7 +22,9 @@ goog.provide('gf.sim.Entity');
 goog.provide('gf.sim.EntityDirtyFlag');
 goog.provide('gf.sim.EntityFlag');
 
+goog.require('gf');
 goog.require('gf.sim');
+goog.require('gf.sim.commands.ReparentCommand');
 goog.require('goog.Disposable');
 goog.require('goog.array');
 goog.require('goog.asserts');
@@ -78,6 +80,16 @@ gf.sim.Entity = function(simulator, entityFactory, entityId, entityFlags) {
   this.factory = entityFactory;
 
   /**
+   * Owning user, if any.
+   * An owning user generally has more permission to modify an entity than
+   * others. For example, an owning user can issue kill commands on themselves
+   * but not on anyone else.
+   * @private
+   * @type {gf.net.User}
+   */
+  this.owner_ = null;
+
+  /**
    * Session-unique entity ID.
    * The LSB of the entity ID denotes whether it is replicated (0) or
    * client-only (1), ensuring no mixups with client-side IDs.
@@ -117,8 +129,68 @@ gf.sim.Entity = function(simulator, entityFactory, entityId, entityFlags) {
    * @type {number}
    */
   this.dirtyFlags = 0;
+
+  /**
+   * Current entity state.
+   * This is the authoritative state that is replicated to all observers.
+   * It is kept consistent each server tick. On clients, it is the last received
+   * state from the server. For prediction this is the last confirmed state.
+   * @private
+   * @type {!gf.sim.EntityState}
+   */
+  this.state_ = entityFactory.allocateState(this);
+
+  if (gf.CLIENT) {
+    /**
+     * Client interpolated/predicted state.
+     * Represents the state of the entity on the client, factoring in either
+     * interpolation or prediction. If neither feature is enabled then this is
+     * identical to {@see #networkState}.
+     * @protected
+     * @type {!gf.sim.EntityState}
+     */
+    this.clientState_ = entityFactory.allocateState(this);
+  }
+
+  // TODO(benvanik): also use for lag compensation history rewinding on server
+  /**
+   * Entity state history.
+   * Used for interpolation, this history tracks state from the server at each
+   * snapshot. It is used to update the state with the values as interpolated
+   * on the server. Only valid if the entity has
+   * {@see gf.sim.EntityFlag#INTERPOLATED} set.
+   * @private
+   * @type {!Array.<!gf.sim.EntityState>}
+   */
+  this.previousStates_ = [];
 };
 goog.inherits(gf.sim.Entity, goog.Disposable);
+
+
+/**
+ * @override
+ */
+gf.sim.Entity.prototype.disposeInternal = function() {
+  // Return entity states back to the pool
+  this.factory.releaseState(this.state_);
+  if (gf.CLIENT) {
+    this.factory.releaseState(this.clientState_);
+  }
+  for (var n = 0; n < this.previousStates_.length; n++) {
+    this.factory.releaseState(this.previousStates_[n]);
+  }
+
+  goog.base(this, 'disposeInternal');
+};
+
+
+/**
+ * Gets the simulator that owns this entity.
+ * @return {!gf.sim.Simulator} Simulator.
+ */
+gf.sim.Entity.prototype.getSimulator = function() {
+  return this.simulator;
+};
 
 
 /**
@@ -127,6 +199,24 @@ goog.inherits(gf.sim.Entity, goog.Disposable);
  */
 gf.sim.Entity.prototype.getTypeId = function() {
   return this.factory.typeId;
+};
+
+
+/**
+ * Gets the owning user of the entity, if any.
+ * @return {gf.net.User} Owning user.
+ */
+gf.sim.Entity.prototype.getOwner = function() {
+  return this.owner_;
+};
+
+
+/**
+ * Sets the owning user of the entity, if any.
+ * @param {gf.net.User} value New owning user.
+ */
+gf.sim.Entity.prototype.setOwner = function(value) {
+  this.owner_ = value;
 };
 
 
@@ -220,7 +310,19 @@ gf.sim.Entity.prototype.forEachChild = function(callback, opt_scope) {
  * @param {gf.sim.Entity} oldEntity Old parent entity, if any.
  * @param {gf.sim.Entity} newEntity New parent entity, if any.
  */
-gf.sim.Entity.prototype.parentChanged = goog.nullFunction;
+gf.sim.Entity.prototype.parentChanged = function(oldParent, newParent) {
+  if (gf.SERVER) {
+    // Ignore if not replicated
+    if (this.getFlags() & gf.sim.EntityFlag.NOT_REPLICATED) {
+      return;
+    }
+
+    // Send reparent command
+    var command = this.createCommand(gf.sim.commands.ReparentCommand.ID);
+    command.parentId = newParent ? newParent.getId() : gf.sim.NO_ENTITY_ID;
+    this.simulator.broadcastCommand(command);
+  }
+};
 
 
 /**
@@ -237,6 +339,138 @@ gf.sim.Entity.prototype.childAdded = goog.nullFunction;
  * @param {!gf.sim.Entity} entity Old child.
  */
 gf.sim.Entity.prototype.childRemoved = goog.nullFunction;
+
+
+/**
+ * Gets the entities state.
+ * On the server this returns the server-authoritative state.
+ * On the client this returns the client-interpolated state.
+ * @return {!gf.sim.EntityState} Entity state.
+ */
+gf.sim.Entity.prototype.getState = function() {
+  return gf.CLIENT ? this.clientState_ : this.state_;
+};
+
+
+/**
+ * Reads and sets all state from the given reader.
+ * @param {!gf.net.PacketReader} reader Packet reader.
+ */
+gf.sim.Entity.prototype.read = function(reader) {
+  // Update network state
+  this.state_.read(reader);
+
+  // TODO(benvanik): preserve a state history entry if INTERPOLATED?
+};
+
+
+/**
+ * Reads a state delta from the given reader.
+ * @param {!gf.net.PacketReader} reader Packet reader.
+ */
+gf.sim.Entity.prototype.readDelta = function(reader) {
+  // Update network state
+  this.state_.readDelta(reader);
+
+  // TODO(benvanik): preserve a state history entry if INTERPOLATED?
+};
+
+
+/**
+ * Writes all state to the given writer.
+ * @param {!gf.net.PacketWriter} writer Packet writer.
+ */
+gf.sim.Entity.prototype.write = function(writer) {
+  this.state_.write(writer);
+};
+
+
+/**
+ * Writes a state delta to the given writer.
+ * @param {!gf.net.PacketWriter} writer Packet writer.
+ */
+gf.sim.Entity.prototype.writeDelta = function(writer) {
+  this.state_.writeDelta(writer);
+};
+
+
+/**
+ * Interpolates the entity to the given time.
+ * This will only be called if the entity has either its interpolated or
+ * predicted bits set. It will be called immediately after network updates
+ * and before the scheduler, as well as once per render frame before physics.
+ * When an entity is predicted the pending commands will be executed immediately
+ * after this function returns.
+ * @param {number} time Current time.
+ */
+gf.sim.Entity.prototype.interpolate = gf.CLIENT ? function(time) {
+  var flags = this.getFlags();
+
+  // Interpolate all interpolated vars
+  if (flags & gf.sim.EntityFlag.INTERPOLATED) {
+    this.interpolate_(time);
+  }
+
+  // Reset predicted vars to confirmed in preparation for the predicted commands
+  if (flags & gf.sim.EntityFlag.PREDICTED) {
+    this.state_.copyPredictedVariables(this.clientState_);
+  }
+} : goog.nullFunction;
+
+
+/**
+ * Performs actual interpolation between historical states.
+ * @private
+ * @param {number} time Current time.
+ */
+gf.sim.Entity.prototype.interpolate_ = gf.CLIENT ? function(time) {
+  goog.asserts.assert(this.getFlags() & gf.sim.EntityFlag.INTERPOLATED);
+
+  // TODO(benvanik): sanity check that all this time stuff is actually required
+  this.clientState_.interpolate(this.state_, this.state_, 0);
+
+  // // Need at least two states to interpolate
+  // if (!this.previousStates_.length) {
+  //   return;
+  // } else if (this.previousStates_.length == 1) {
+  //   // Only one state - just copy the variables
+  //   this.clientState_.interpolate(
+  //       this.previousStates_[0], this.previousStates_[0], 0);
+  //   this.clientState_.time = time;
+  //   return;
+  // }
+
+  // // Find the two states that straddle the current time
+  // var futureState = null;
+  // for (var n = 1; n < this.previousStates_.length; n++) {
+  //   futureState = this.previousStates_[n];
+  //   if (futureState.time >= time) {
+  //     break;
+  //   }
+  // }
+  // if (!futureState) {
+  //   var lastState = this.previousStates_[0];
+  //   this.clientState_.interpolate(lastState, lastState, 0);
+  //   this.clientState_.time = time;
+  //   return;
+  // }
+  // var pastState = this.previousStates_[n - 1];
+
+  // // Find interpolation factor t
+  // var duration = futureState.time - pastState.time;
+  // var baseTime = time - pastState.time;
+  // var t = baseTime / (futureState.time - pastState.time);
+  // t = goog.math.clamp(t, 0, 1);
+
+  // // Remove past state only if we go over it
+  // if (t >= 1) {
+  //   this.previousStates_.splice(0, n - 1);
+  //   this.factory.releaseState(pastState);
+  // }
+
+  // // Interpolate between the chosen states
+  // this.clientState_.interpolate(pastState, futureState, t);
+} : goog.nullFunction;
 
 
 /**
@@ -266,7 +500,20 @@ gf.sim.Entity.prototype.createCommand = function(typeId) {
  *
  * @param {!gf.sim.Command} command Command to execute.
  */
-gf.sim.Entity.prototype.executeCommand = goog.nullFunction;
+gf.sim.Entity.prototype.executeCommand = function(command) {
+  if (gf.CLIENT) {
+    // Reparent the entity
+    if (command instanceof gf.sim.commands.ReparentCommand) {
+      if (command.parentId == gf.sim.NO_ENTITY_ID) {
+        this.setParent(null);
+      } else {
+        var parentEntity = this.simulator.getEntity(command.parentId);
+        goog.asserts.assert(parentEntity);
+        this.setParent(parentEntity);
+      }
+    }
+  }
+};
 
 
 /**
@@ -330,6 +577,12 @@ gf.sim.Entity.prototype.invalidate = function() {
  */
 gf.sim.Entity.prototype.resetDirtyState = function() {
   this.dirtyFlags = 0;
+
+  // When this is called we've already flushed deltas, so reset the bits
+  this.state_.resetDirtyState();
+  if (gf.CLIENT) {
+    this.clientState_.resetDirtyState();
+  }
 };
 
 

@@ -246,9 +246,7 @@ gf.sim.ServerSimulator.prototype.sendCommand = function(command, user) {
  * @override
  */
 gf.sim.ServerSimulator.prototype.postTickUpdateEntity = function(
-    frame, genericEntity) {
-  var entity = /** @type {!gf.sim.ServerEntity} */ (genericEntity);
-
+    frame, entity) {
   // Ignore if not replicated
   if (entity.getFlags() & gf.sim.EntityFlag.NOT_REPLICATED) {
     return;

@@ -123,6 +123,7 @@ gf.sim.VariableTable.prototype.getOrdinal = function(tag) {
 gf.sim.VariableTable.prototype.readVariable = function(
     ordinal, target, reader) {
   var v = this.variables_[ordinal];
+  // NOTE: must validate here, as clients could send up bogus info
   if (v) {
     v.read(target, reader);
   }
@@ -151,9 +152,7 @@ gf.sim.VariableTable.prototype.readAllVariables = function(target, reader) {
 gf.sim.VariableTable.prototype.writeVariable = function(
     ordinal, target, writer) {
   var v = this.variables_[ordinal];
-  if (v && !(v.flags & gf.sim.VariableFlag.NOT_REPLICATED)) {
-    v.write(target, writer);
-  }
+  v.write(target, writer);
 };
 
 
@@ -165,9 +164,7 @@ gf.sim.VariableTable.prototype.writeVariable = function(
 gf.sim.VariableTable.prototype.writeAllVariables = function(target, writer) {
   for (var n = 0; n < this.variables_.length; n++) {
     var v = this.variables_[n];
-    if (!(v.flags & gf.sim.VariableFlag.NOT_REPLICATED)) {
-      v.write(target, writer);
-    }
+    v.write(target, writer);
   }
 };
 

@@ -41,6 +41,14 @@ gf.SERVER = false;
 
 
 /**
+ * True if the runtime is being compiled in client mode.
+ * @const
+ * @type {boolean}
+ */
+gf.CLIENT = !gf.SERVER;
+
+
+/**
  * @define {boolean} True if running under node. Guard all node code with this
  * define to ensure it does not leak into client/worker code.
  */
