@@ -19,6 +19,7 @@
  */
 
 goog.provide('gf.sim.Command');
+goog.provide('gf.sim.PredictedCommand');
 
 goog.require('gf.sim');
 
@@ -83,4 +84,71 @@ gf.sim.Command.prototype.write = function(writer) {
  */
 gf.sim.Command.prototype.release = function() {
   this.factory.release(this);
+};
+
+
+
+/**
+ * Simulation command supporting prediction.
+ * Predicted commands are replayed on the client each render frame from the last
+ * confirmed predicted command from the server. This process is not cheap, and
+ * as such prediction should only be used when required.
+ *
+ * When executing predicted commands clients should always check the
+ * {@see #hasPredicted} flag and only create entities/perform actions if it is
+ * false. Continuous actions such as changing velocity, however, should be run
+ * regardless of whether its the first or a subsequent execution.
+ *
+ * @constructor
+ * @extends {gf.sim.Command}
+ * @param {!gf.sim.CommandFactory} commandFactory Command factory.
+ */
+gf.sim.PredictedCommand = function(commandFactory) {
+  goog.base(this, commandFactory);
+
+  /**
+   * Sequence identifier.
+   * Monotonically increasing number used for confirming commands.
+   * @type {number}
+   */
+  this.sequence = 0;
+
+  /**
+   * Amount of time this command covers, in seconds.
+   * @type {number}
+   */
+  this.timeDelta = 0;
+
+  /**
+   * Whether this command has been predicted on the client already.
+   * This will be set to false on the first execution and true on all subsequent
+   * ones. Commands that create entities/etc in response to commands must always
+   * ensure they only do such on the first call.
+   * @type {boolean}
+   */
+  this.hasPredicted = false;
+};
+goog.inherits(gf.sim.PredictedCommand, gf.sim.Command);
+
+
+/**
+ * @override
+ */
+gf.sim.PredictedCommand.prototype.read = function(reader) {
+  goog.base(this, 'read', reader);
+
+  this.sequence = reader.readVarInt();
+  this.timeDelta = reader.readUint32() / 1000;
+};
+
+
+/**
+ * @override
+ */
+gf.sim.PredictedCommand.prototype.write = function(writer) {
+  goog.base(this, 'write', writer);
+
+  writer.writeVarInt(this.sequence);
+  // TODO(benvanik): write compressed time - this could probably fit in 16bits
+  writer.writeUint32((this.timeDelta * 1000) | 0);
 };
