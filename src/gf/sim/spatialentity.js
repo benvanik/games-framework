@@ -275,8 +275,8 @@ gf.sim.SpatialEntity.State.prototype.getPosition = function() {
  * @param {goog.vec.Vec3.Float32} value New value.
  */
 gf.sim.SpatialEntity.State.prototype.setPosition = function(value) {
-  gf.log.write('setPosition:', value[0], value[1], value[2]);
   if (!goog.vec.Vec3.equals(this.position_, value)) {
+    gf.log.write('setPosition:', value[0], value[1], value[2]);
     goog.vec.Vec3.setFromArray(this.position_, value);
     this.setVariableDirty(this.positionOrdinal_);
     this.entity.invalidateTransform();
@@ -298,8 +298,8 @@ gf.sim.SpatialEntity.State.prototype.getRotation = function() {
  * @param {goog.vec.Quaternion.Float32} value New value.
  */
 gf.sim.SpatialEntity.State.prototype.setRotation = function(value) {
-  gf.log.write('setRotation:', value[0], value[1], value[2], value[3]);
   if (!goog.vec.Vec4.equals(this.rotation_, value)) {
+    gf.log.write('setRotation:', value[0], value[1], value[2], value[3]);
     goog.vec.Quaternion.setFromArray(this.rotation_, value);
     this.setVariableDirty(this.rotationOrdinal_);
     this.entity.invalidateTransform();
