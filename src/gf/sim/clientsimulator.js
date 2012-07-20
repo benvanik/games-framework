@@ -21,7 +21,6 @@
 goog.provide('gf.sim.ClientSimulator');
 
 goog.require('gf.log');
-goog.require('gf.net.NetworkService');
 goog.require('gf.net.PacketWriter');
 goog.require('gf.sim.EntityFlag');
 goog.require('gf.sim.Simulator');
@@ -52,14 +51,9 @@ gf.sim.ClientSimulator = function(runtime, session) {
    * @type {!gf.net.ClientSession}
    */
   this.session_ = session;
-
-  /**
-   * Simulator network service.
-   * @private
-   * @type {!gf.sim.ClientSimulator.NetService_}
-   */
-  this.netService_ = new gf.sim.ClientSimulator.NetService_(this, session);
-  this.session_.registerService(this.netService_);
+  session.packetSwitch.register(
+      gf.sim.packets.SyncSimulation.ID,
+      this.handleSyncSimulation_, this);
 
   // TODO(benvanik): slotted list
   /**
@@ -287,46 +281,6 @@ gf.sim.ClientSimulator.prototype.compact_ = function(frame) {
 };
 
 
-
-/**
- * Manages dispatching client simulator packets.
- * @private
- * @constructor
- * @extends {gf.net.NetworkService}
- * @param {!gf.sim.ClientSimulator} simulator Simulator.
- * @param {!gf.net.ClientSession} session Session.
- */
-gf.sim.ClientSimulator.NetService_ = function(simulator, session) {
-  goog.base(this, session);
-
-  /**
-   * Client simulator.
-   * @private
-   * @type {!gf.sim.ClientSimulator}
-   */
-  this.simulator_ = simulator;
-
-  /**
-   * Client session.
-   * @private
-   * @type {!gf.net.ClientSession}
-   */
-  this.session_ = session;
-};
-goog.inherits(gf.sim.ClientSimulator.NetService_, gf.net.NetworkService);
-
-
-/**
- * @override
- */
-gf.sim.ClientSimulator.NetService_.prototype.setupSwitch =
-    function(packetSwitch) {
-  packetSwitch.register(
-      gf.sim.packets.SyncSimulation.ID,
-      this.handleSyncSimulation_, this);
-};
-
-
 /**
  * Handles simulation sync packets.
  * @private
@@ -335,7 +289,7 @@ gf.sim.ClientSimulator.NetService_.prototype.setupSwitch =
  * @param {!gf.net.PacketReader} reader Packet reader.
  * @return {boolean} True if the packet was handled successfully.
  */
-gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
+gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     function(packet, packetType, reader) {
   // Read header
   var confirmedSequence = reader.readVarInt();
@@ -347,7 +301,7 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
   // Confirm prediction sequence number
   // This performs the slicing of the stashed command list to be only those
   // sent or unsent and not yet confirmed
-  this.simulator_.outgoingCommandList_.confirmSequence(confirmedSequence);
+  this.outgoingCommandList_.confirmSequence(confirmedSequence);
 
   // TODO(benvanik): cached parenting list
   var parentingRequired = null;
@@ -363,7 +317,7 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     var entityParentId = reader.readVarInt();
 
     // Get entity type factory
-    var entityFactory = this.simulator_.getEntityFactory(entityTypeId);
+    var entityFactory = this.getEntityFactory(entityTypeId);
     if (!entityFactory) {
       // Invalid entity type
       gf.log.debug('Invalid entity type ' + entityTypeId + ' from server');
@@ -372,13 +326,13 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
 
     // Create entity
     var entity = entityFactory.createEntity(
-        this.simulator_, entityId, entityFlags);
+        this, entityId, entityFlags);
 
     // Load initial values
     entity.read(reader);
 
     // Add to simulation
-    this.simulator_.addEntity(entity);
+    this.addEntity(entity);
 
     // Queue for parenting
     // We have to do this after the adds as we are not sorted and the parent
@@ -402,7 +356,7 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     var entityId = reader.readVarInt() << 1;
 
     // Find entity
-    var entity = this.simulator_.getEntity(entityId);
+    var entity = this.getEntity(entityId);
     if (!entity) {
       // Entity not found
       gf.log.debug('Target entity of server update not found ' + entityId);
@@ -424,7 +378,7 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     var entityId = reader.readVarInt() << 1;
 
     // Find entity
-    var entity = this.simulator_.getEntity(entityId);
+    var entity = this.getEntity(entityId);
     if (!entity) {
       // Entity not found
       gf.log.debug('Target entity of server delete not found ' + entityId);
@@ -432,7 +386,7 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     }
 
     // Remove from simulation
-    this.simulator_.removeEntity(entity);
+    this.removeEntity(entity);
 
     gf.log.write('<- delete entity', entityId);
   }
@@ -442,7 +396,7 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     for (var n = 0; n < parentingRequired.length; n++) {
       var entity = parentingRequired[n][0];
       var parentEntityId = parentingRequired[n][1];
-      var parentEntity = this.simulator_.getEntity(parentEntityId);
+      var parentEntity = this.getEntity(parentEntityId);
       if (!parentEntity) {
         // Entity not found
         gf.log.debug('Parent entity ' + parentEntityId + ' not found');
@@ -459,7 +413,7 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
   for (var n = 0; n < commandCount; n++) {
     // Read command type
     var commandTypeId = reader.readVarInt();
-    var commandFactory = this.simulator_.getCommandFactory(commandTypeId);
+    var commandFactory = this.getCommandFactory(commandTypeId);
     if (!commandFactory) {
       // Invalid command
       gf.log.debug('Invalid command type ' + commandTypeId + ' from server');
@@ -471,7 +425,7 @@ gf.sim.ClientSimulator.NetService_.prototype.handleSyncSimulation_ =
     command.read(reader);
 
     // Queue for processing
-    this.simulator_.incomingCommandList_.addCommand(command);
+    this.incomingCommandList_.addCommand(command);
   }
 
   return true;

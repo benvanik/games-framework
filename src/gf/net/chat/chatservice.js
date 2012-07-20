@@ -16,8 +16,9 @@
 
 goog.provide('gf.net.chat.ChatService');
 
-goog.require('gf.net.NetworkService');
+goog.require('gf.net.INetworkService');
 goog.require('gf.net.chat.Channel');
+goog.require('goog.Disposable');
 goog.require('goog.object');
 
 
@@ -26,11 +27,18 @@ goog.require('goog.object');
  * Manages dispatching chat packets and maintaining channels.
  *
  * @constructor
- * @extends {gf.net.NetworkService}
+ * @extends {goog.Disposable}
+ * @implements {gf.net.INetworkService}
  * @param {!gf.net.Session} session Session.
  */
 gf.net.chat.ChatService = function(session) {
-  goog.base(this, session);
+  goog.base(this);
+
+  /**
+   * Session.
+   * @type {!gf.net.Session}
+   */
+  this.session = session;
 
   /**
    * Channels, mapped by channel ID.
@@ -44,8 +52,10 @@ gf.net.chat.ChatService = function(session) {
    * @type {!Array.<!gf.net.chat.Event>}
    */
   this.newEvents_ = [];
+
+  this.setupSwitch(session.packetSwitch);
 };
-goog.inherits(gf.net.chat.ChatService, gf.net.NetworkService);
+goog.inherits(gf.net.chat.ChatService, goog.Disposable);
 
 
 /**
@@ -57,6 +67,14 @@ gf.net.chat.ChatService.prototype.disposeInternal = function() {
 
   goog.base(this, 'disposeInternal');
 };
+
+
+/**
+ * Sets up the packet switching handlers for the service.
+ * @protected
+ * @param {!gf.net.PacketSwitch} packetSwitch Packet switch.
+ */
+gf.net.chat.ChatService.prototype.setupSwitch = goog.nullFunction;
 
 
 /**
@@ -119,6 +137,30 @@ gf.net.chat.ChatService.prototype.poll = function() {
 /**
  * @override
  */
+gf.net.chat.ChatService.prototype.connected = goog.nullFunction;
+
+
+/**
+ * @override
+ */
+gf.net.chat.ChatService.prototype.disconnected = goog.nullFunction;
+
+
+/**
+ * @override
+ */
+gf.net.chat.ChatService.prototype.userConnected = goog.nullFunction;
+
+
+/**
+ * @override
+ */
 gf.net.chat.ChatService.prototype.userDisconnected = function(user) {
   this.removeUserFromAllChannels(user);
 };
+
+
+/**
+ * @override
+ */
+gf.net.chat.ChatService.prototype.userUpdated = goog.nullFunction;

@@ -14,69 +14,47 @@
  * limitations under the License.
  */
 
-goog.provide('gf.net.NetworkService');
-
-goog.require('goog.Disposable');
+goog.provide('gf.net.INetworkService');
 
 
 
 /**
- * Base type for network services.
- *
- * @constructor
- * @extends {goog.Disposable}
- * @param {!gf.net.Session} session Session.
+ * Interface for network services.
+ * Provides events about network sessions to interested parties. Implement this
+ * interface and call {@see gf.net.Session#registerService} to begin listening.
+ * @interface
  */
-gf.net.NetworkService = function(session) {
-  goog.base(this);
-
-  /**
-   * Session.
-   * @type {!gf.net.Session}
-   */
-  this.session = session;
-
-  this.setupSwitch(session.packetSwitch);
-};
-goog.inherits(gf.net.NetworkService, goog.Disposable);
-
-
-/**
- * Sets up the packet switching handlers for the service.
- * @protected
- * @param {!gf.net.PacketSwitch} packetSwitch Packet switch.
- */
-gf.net.NetworkService.prototype.setupSwitch = goog.nullFunction;
+gf.net.INetworkService = function() {};
 
 
 /**
  * Handles session connection/ready.
  */
-gf.net.NetworkService.prototype.connected = goog.nullFunction;
+gf.net.INetworkService.prototype.connected;
 
 
 /**
  * Handles session disconnected/unready.
  */
-gf.net.NetworkService.prototype.disconnected = goog.nullFunction;
+gf.net.INetworkService.prototype.disconnected;
 
 
 /**
  * Handles user that has connected.
  * @param {!gf.net.User} user User.
  */
-gf.net.NetworkService.prototype.userConnected = goog.nullFunction;
+gf.net.INetworkService.prototype.userConnected;
 
 
 /**
  * Handles users that has disconnected.
  * @param {!gf.net.User} user User.
  */
-gf.net.NetworkService.prototype.userDisconnected = goog.nullFunction;
+gf.net.INetworkService.prototype.userDisconnected;
 
 
 /**
  * Handles users that have updated their information.
  * @param {!gf.net.User} user User.
  */
-gf.net.NetworkService.prototype.userUpdated = goog.nullFunction;
+gf.net.INetworkService.prototype.userUpdated;

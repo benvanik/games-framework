@@ -118,7 +118,7 @@ gf.net.Session = function(sessionId, sessionType, protocolVersion, authToken) {
   /**
    * Registered network services.
    * @protected
-   * @type {!Array.<!gf.net.NetworkService>}
+   * @type {!Array.<!gf.net.INetworkService>}
    */
   this.services = [];
 };
@@ -129,7 +129,6 @@ goog.inherits(gf.net.Session, goog.Disposable);
  * @override
  */
 gf.net.Session.prototype.disposeInternal = function() {
-  goog.disposeAll(this.services);
   this.services.length = 0;
 
   goog.base(this, 'disposeInternal');
@@ -138,7 +137,8 @@ gf.net.Session.prototype.disposeInternal = function() {
 
 /**
  * Registers a new network service.
- * @param {!gf.net.NetworkService} service Service.
+ * Services are not disposed and must be cleaned up by the caller.
+ * @param {!gf.net.INetworkService} service Service.
  */
 gf.net.Session.prototype.registerService = function(service) {
   this.services.push(service);

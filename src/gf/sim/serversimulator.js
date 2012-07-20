@@ -21,7 +21,7 @@
 goog.provide('gf.sim.ServerSimulator');
 
 goog.require('gf.log');
-goog.require('gf.net.NetworkService');
+goog.require('gf.net.INetworkService');
 goog.require('gf.sim');
 goog.require('gf.sim.EntityFlag');
 /** @suppress {extraRequire} */
@@ -41,6 +41,7 @@ goog.require('goog.asserts');
  *
  * @constructor
  * @extends {gf.sim.Simulator}
+ * @implements {gf.net.INetworkService}
  * @param {!gf.Runtime} runtime Runtime instance.
  * @param {!gf.net.ServerSession} session Network session.
  * @param {!gf.sim.ObserverCtor} observerCtor Observer constructor.
@@ -54,6 +55,10 @@ gf.sim.ServerSimulator = function(runtime, session, observerCtor) {
    * @type {!gf.net.ServerSession}
    */
   this.session_ = session;
+  this.session_.registerService(this);
+  this.session_.packetSwitch.register(
+      gf.sim.packets.ExecCommands.ID,
+      this.handleExecCommands_, this);
 
   /**
    * Observer constructor.
@@ -61,14 +66,6 @@ gf.sim.ServerSimulator = function(runtime, session, observerCtor) {
    * @type {!gf.sim.ObserverCtor}
    */
   this.observerCtor_ = observerCtor;
-
-  /**
-   * Simulator network service.
-   * @private
-   * @type {!gf.sim.ServerSimulator.NetService_}
-   */
-  this.netService_ = new gf.sim.ServerSimulator.NetService_(this, session);
-  this.session_.registerService(this.netService_);
 
   /**
    * A list of observers.
@@ -316,76 +313,53 @@ gf.sim.ServerSimulator.prototype.compact_ = function(frame) {
 };
 
 
-
 /**
- * Manages dispatching server simulator packets.
- * @private
- * @constructor
- * @extends {gf.net.NetworkService}
- * @param {!gf.sim.ServerSimulator} simulator Simulator.
- * @param {!gf.net.ServerSession} session Session.
+ * @override
  */
-gf.sim.ServerSimulator.NetService_ = function(simulator, session) {
-  goog.base(this, session);
-
-  /**
-   * Server simulator.
-   * @private
-   * @type {!gf.sim.ServerSimulator}
-   */
-  this.simulator_ = simulator;
-
-  /**
-   * Server session.
-   * @private
-   * @type {!gf.net.ServerSession}
-   */
-  this.session_ = session;
-};
-goog.inherits(gf.sim.ServerSimulator.NetService_, gf.net.NetworkService);
+gf.sim.ServerSimulator.prototype.connected = goog.nullFunction;
 
 
 /**
  * @override
  */
-gf.sim.ServerSimulator.NetService_.prototype.setupSwitch =
-    function(packetSwitch) {
-  packetSwitch.register(
-      gf.sim.packets.ExecCommands.ID,
-      this.handleExecCommands_, this);
-};
+gf.sim.ServerSimulator.prototype.disconnected = goog.nullFunction;
 
 
 /**
  * @override
  */
-gf.sim.ServerSimulator.NetService_.prototype.userConnected = function(user) {
+gf.sim.ServerSimulator.prototype.userConnected = function(user) {
   // Ensure no existing observer - not sure this is possible
-  var observer = this.simulator_.getObserverForUser(user);
+  var observer = this.getObserverForUser(user);
   if (observer) {
     return;
   }
 
   // Create the observer and add to the simulator
-  observer = new this.simulator_.observerCtor_(
-      this.simulator_, this.session_, user);
-  this.simulator_.addObserver(observer);
+  observer = new this.observerCtor_(this, this.session_, user);
+  this.addObserver(observer);
 };
 
 
 /**
  * @override
  */
-gf.sim.ServerSimulator.NetService_.prototype.userDisconnected = function(user) {
+gf.sim.ServerSimulator.prototype.userDisconnected = function(user) {
   // Grab observer
-  var observer = this.simulator_.getObserverForUser(user);
+  var observer = this.getObserverForUser(user);
   if (!observer) {
     return;
   }
 
   // Remove from the simulator (and dispose implicitly)
-  this.simulator_.removeObserver(observer);
+  this.removeObserver(observer);
 };
+
+
+/**
+ * @override
+ */
+gf.sim.ServerSimulator.prototype.userUpdated = goog.nullFunction;
 
 
 /**
@@ -396,13 +370,13 @@ gf.sim.ServerSimulator.NetService_.prototype.userDisconnected = function(user) {
  * @param {!gf.net.PacketReader} reader Packet reader.
  * @return {boolean} True if the packet was handled successfully.
  */
-gf.sim.ServerSimulator.NetService_.prototype.handleExecCommands_ =
+gf.sim.ServerSimulator.prototype.handleExecCommands_ =
     function(packet, packetType, reader) {
   // Verify observer
   if (!packet.user) {
     return false;
   }
-  var observer = this.simulator_.getObserverForUser(packet.user);
+  var observer = this.getObserverForUser(packet.user);
   if (!observer) {
     return false;
   }
@@ -414,7 +388,7 @@ gf.sim.ServerSimulator.NetService_.prototype.handleExecCommands_ =
   for (var n = 0; n < commandCount; n++) {
     // Read command type
     var commandTypeId = reader.readVarInt();
-    var commandFactory = this.simulator_.getCommandFactory(commandTypeId);
+    var commandFactory = this.getCommandFactory(commandTypeId);
     if (!commandFactory) {
       // Invalid command
       gf.log.debug('Invalid command type ' + commandTypeId + ' from client');
@@ -434,7 +408,7 @@ gf.sim.ServerSimulator.NetService_.prototype.handleExecCommands_ =
     // TODO(benvanik): better security around commands
     var invalidTarget = command.targetEntityId == gf.sim.NO_ENTITY_ID;
     if (!invalidTarget) {
-      var entity = this.simulator_.getEntity(command.targetEntityId);
+      var entity = this.getEntity(command.targetEntityId);
       invalidTarget = !entity || entity.getOwner() != packet.user;
     }
     if (invalidTarget) {
