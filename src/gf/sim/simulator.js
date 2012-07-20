@@ -100,7 +100,7 @@ gf.sim.Simulator = function(runtime, baseEntityId) {
    * @private
    * @type {!Array.<gf.sim.Entity>}
    */
-  this.dirtyEntities_ = new Array(128);
+  this.dirtyEntities_ = new Array(256);
 
   /**
    * Current length of the {@see #dirtyEntities_} list.
@@ -112,6 +112,14 @@ gf.sim.Simulator = function(runtime, baseEntityId) {
   gf.sim.commands.registerCommands(this);
 };
 goog.inherits(gf.sim.Simulator, gf.Component);
+
+
+/**
+ * Gets a user with the given session ID.
+ * @param {string} sessionId Session ID.
+ * @return {gf.net.User} User with the given session ID.
+ */
+gf.sim.Simulator.prototype.getUser = goog.abstractMethod;
 
 
 /**
@@ -211,8 +219,11 @@ gf.sim.Simulator.prototype.addEntity = function(entity) {
   this.entities_[id] = entity;
 
   // Add to the dirty tracking list
+  var wasDirty = !!entity.dirtyFlags;
   entity.dirtyFlags |= gf.sim.EntityDirtyFlag.CREATED;
-  this.invalidateEntity(entity);
+  if (!wasDirty) {
+    this.invalidateEntity(entity);
+  }
 };
 
 
@@ -329,6 +340,48 @@ gf.sim.Simulator.prototype.executeCommands = function(commands, commandCount) {
  * @param {!gf.sim.Command} command Command to execute.
  */
 gf.sim.Simulator.prototype.executeCommand = goog.nullFunction;
+
+
+/**
+ * Resets the dirty list before processing client network updates. Enables
+ * proper notification of network changes via {@see #postNetworkUpdateEntities}.
+ * This should only be used on the client.
+ * @protected
+ */
+gf.sim.Simulator.prototype.preNetworkUpdateEntities = function() {
+  // Reset list
+  for (var n = 0; n < this.dirtyEntitiesLength_; n++) {
+    var entity = this.dirtyEntities_[n];
+    goog.asserts.assert(entity);
+    this.dirtyEntities_[n] = null;
+    entity.resetDirtyState();
+  }
+  this.dirtyEntitiesLength_ = 0;
+};
+
+
+/**
+ * Calls {@see gf.sim.Entity#postNetworkUpdate} on all entities that were
+ * updated since the call to {@see #preNetworkUpdateEntities}. This should only
+ * be used on the client.
+ * @protected
+ */
+gf.sim.Simulator.prototype.postNetworkUpdateEntities = function() {
+  for (var n = 0; n < this.dirtyEntitiesLength_; n++) {
+    var entity = this.dirtyEntities_[n];
+    goog.asserts.assert(entity);
+    this.dirtyEntities_[n] = null;
+
+    // Run post-network change entity logic
+    entity.postNetworkUpdate();
+
+    // Reset entity state
+    entity.resetDirtyState();
+  }
+
+  // Reset list
+  this.dirtyEntitiesLength_ = 0;
+};
 
 
 /**

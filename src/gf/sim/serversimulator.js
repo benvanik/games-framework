@@ -108,6 +108,14 @@ gf.sim.ServerSimulator.prototype.disposeInternal = function() {
 
 
 /**
+ * @override
+ */
+gf.sim.ServerSimulator.prototype.getUser = function(sessionId) {
+  return this.session_.getUserBySessionId(sessionId);
+};
+
+
+/**
  * Adds a new observer.
  * The observer will begin receiving entity updates on the next tick.
  * The given observer will transfer ownership to the simulator and be

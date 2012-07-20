@@ -104,6 +104,14 @@ gf.sim.ClientSimulator.prototype.disposeInternal = function() {
 /**
  * @override
  */
+gf.sim.ClientSimulator.prototype.getUser = function(sessionId) {
+  return this.session_.getUserBySessionId(sessionId);
+};
+
+
+/**
+ * @override
+ */
 gf.sim.ClientSimulator.prototype.addEntity = function(entity) {
   goog.base(this, 'addEntity', entity);
 
@@ -303,6 +311,9 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
   // sent or unsent and not yet confirmed
   this.outgoingCommandList_.confirmSequence(confirmedSequence);
 
+  // Prepare tracking of entity changes
+  this.preNetworkUpdateEntities();
+
   // TODO(benvanik): cached parenting list
   var parentingRequired = null;
 
@@ -325,8 +336,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     }
 
     // Create entity
-    var entity = entityFactory.createEntity(
-        this, entityId, entityFlags);
+    var entity = entityFactory.createEntity(this, entityId, entityFlags);
 
     // Load initial values
     entity.read(reader);
@@ -342,9 +352,6 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
         parentingRequired = [];
       }
       parentingRequired.push([entity, entityParentId]);
-    } else {
-      // Notify now
-      entity.postNetworkUpdate();
     }
 
     gf.log.write('<- create entity', entityId);
@@ -365,9 +372,6 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
 
     // Load delta values
     entity.readDelta(reader);
-
-    // Notify
-    entity.postNetworkUpdate();
 
     gf.log.write('<- update entity', entityId);
   }
@@ -403,11 +407,11 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
         return false;
       }
       entity.setParent(parentEntity);
-
-      // Notify
-      entity.postNetworkUpdate();
     }
   }
+
+  // Notify changed entities
+  this.postNetworkUpdateEntities();
 
   // Commands
   for (var n = 0; n < commandCount; n++) {
