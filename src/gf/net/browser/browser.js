@@ -97,6 +97,7 @@ gf.net.browser.query = function(baseUrl) {
  * Parses the query results JSON blob.
  * @private
  * @param {Object} json JSON object, if it could be parsed.
+ * @return {!Array.<!gf.net.browser.QueryResult>} Results.
  */
 gf.net.browser.parseQueryResults_ = function(json) {
   if (!json || !goog.isArray(json)) {
