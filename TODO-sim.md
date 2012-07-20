@@ -233,3 +233,6 @@ gf.sim.db.KdTreeDatabase
 
 MapEntity <- SceneEntity
 - custom spatial database
+
+
+createPredictedEntity

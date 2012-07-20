@@ -110,6 +110,14 @@ gf.sim.ServerSimulator.prototype.disposeInternal = function() {
 /**
  * @override
  */
+gf.sim.ServerSimulator.prototype.getSession = function() {
+  return this.session_;
+};
+
+
+/**
+ * @override
+ */
 gf.sim.ServerSimulator.prototype.getUser = function(sessionId) {
   return this.session_.getUserBySessionId(sessionId);
 };

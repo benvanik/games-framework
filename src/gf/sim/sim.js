@@ -24,6 +24,22 @@ goog.require('goog.asserts');
 
 
 /**
+ * Schedule the update for this tick.
+ * @const
+ * @type {number}
+ */
+gf.sim.THIS_TICK = -1;
+
+
+/**
+ * Schedule the update for the next tick.
+ * @const
+ * @type {number}
+ */
+gf.sim.NEXT_TICK = 0;
+
+
+/**
  * Entity ID used to signal no entity.
  * @const
  * @type {number}

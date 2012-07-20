@@ -125,6 +125,13 @@ goog.inherits(gf.sim.Simulator, gf.Component);
 
 
 /**
+ * Gets the network session.
+ * @return {!gf.net.Session} Network session.
+ */
+gf.sim.Simulator.prototype.getSession = goog.abstractMethod;
+
+
+/**
  * Gets a user with the given session ID.
  * @param {string} sessionId Session ID.
  * @return {gf.net.User} User with the given session ID.
@@ -398,13 +405,20 @@ gf.sim.Simulator.prototype.preNetworkUpdateEntities = function() {
  * @protected
  */
 gf.sim.Simulator.prototype.postNetworkUpdateEntities = function() {
+  // First pass - let entities do their things
+  for (var n = 0; n < this.dirtyEntitiesLength_; n++) {
+    var entity = this.dirtyEntities_[n];
+    goog.asserts.assert(entity);
+
+    // Run post-network change entity logic
+    entity.postNetworkUpdate();
+  }
+
+  // Second pass - notify watchers, cleanup the list
   for (var n = 0; n < this.dirtyEntitiesLength_; n++) {
     var entity = this.dirtyEntities_[n];
     goog.asserts.assert(entity);
     this.dirtyEntities_[n] = null;
-
-    // Run post-network change entity logic
-    entity.postNetworkUpdate();
 
     // Notify watchers
     if (entity.dirtyFlags & gf.sim.EntityDirtyFlag.CREATED) {

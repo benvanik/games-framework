@@ -100,7 +100,15 @@ gf.sim.Scheduler.prototype.scheduleEvent = function(
   var e = this.unusedEventPool_.pop() || new gf.sim.Scheduler.Event_();
   e.priority = priority;
   e.requestTime = this.runtime_.clock.getGameTime();
-  e.targetTime = targetTime;
+  if (targetTime == gf.sim.THIS_TICK) {
+    // Force this tick
+    e.targetTime = 0;
+  } else if (targetTime == gf.sim.NEXT_TICK) {
+    // Force next tick
+    e.targetTime = e.requestTime + (1 / 1000);
+  } else {
+    e.targetTime = targetTime;
+  }
   e.callback = callback;
   e.callbackScope = opt_scope || goog.global;
 

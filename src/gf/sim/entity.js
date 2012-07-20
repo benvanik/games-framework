@@ -556,7 +556,7 @@ gf.sim.Entity.prototype.update = goog.abstractMethod;
 gf.sim.Entity.prototype.scheduleUpdate = function(priority, opt_targetTime) {
   this.simulator.getScheduler().scheduleEvent(
       priority,
-      opt_targetTime || 0,
+      opt_targetTime === undefined ? gf.sim.NEXT_TICK : opt_targetTime,
       this.update, this);
 };
 
