@@ -24,9 +24,12 @@ goog.require('gf.Component');
 goog.require('gf.log');
 goog.require('gf.sim');
 goog.require('gf.sim.EntityDirtyFlag');
+/** @suppress {extraRequire} */
+goog.require('gf.sim.IEntityWatcher');
 goog.require('gf.sim.PredictedCommand');
 goog.require('gf.sim.Scheduler');
 goog.require('gf.sim.commands');
+goog.require('goog.array');
 goog.require('goog.asserts');
 
 
@@ -58,6 +61,13 @@ gf.sim.Simulator = function(runtime, baseEntityId) {
    */
   this.scheduler_ = new gf.sim.Scheduler(runtime);
   this.registerDisposable(this.scheduler_);
+
+  /**
+   * A list of entity watchers.
+   * @private
+   * @type {!Array.<!gf.sim.IEntityWatcher>}
+   */
+  this.watchers_ = [];
 
   /**
    * Command type factories mapped by type ID.
@@ -128,6 +138,27 @@ gf.sim.Simulator.prototype.getUser = goog.abstractMethod;
  */
 gf.sim.Simulator.prototype.getScheduler = function() {
   return this.scheduler_;
+};
+
+
+/**
+ * Adds an entity watcher to the simulator.
+ * The watcher is not disposed and must be cleaned up by the caller.
+ * @param {!gf.sim.IEntityWatcher} watcher Watcher.
+ */
+gf.sim.Simulator.prototype.addWatcher = function(watcher) {
+  goog.asserts.assert(!goog.array.contains(this.watchers_, watcher));
+  this.watchers_.push(watcher);
+};
+
+
+/**
+ * Removes a entity watcher from the simulator.
+ * The watcher is not disposed and must be cleaned up by the caller.
+ * @param {!gf.sim.IEntityWatcher} watcher Watcher.
+ */
+gf.sim.Simulator.prototype.removeWatcher = function(watcher) {
+  goog.array.remove(this.watchers_, watcher);
 };
 
 
@@ -374,6 +405,18 @@ gf.sim.Simulator.prototype.postNetworkUpdateEntities = function() {
 
     // Run post-network change entity logic
     entity.postNetworkUpdate();
+
+    // Notify watchers
+    if (entity.dirtyFlags & gf.sim.EntityDirtyFlag.CREATED) {
+      for (var m = 0; m < this.watchers_.length; m++) {
+        this.watchers_[m].entityAdded(entity);
+      }
+    }
+    if (entity.dirtyFlags & gf.sim.EntityDirtyFlag.DELETED) {
+      for (var m = 0; m < this.watchers_.length; m++) {
+        this.watchers_[m].entityRemoved(entity);
+      }
+    }
 
     // Reset entity state
     entity.resetDirtyState();
