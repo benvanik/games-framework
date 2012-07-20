@@ -79,16 +79,16 @@ gf.log.write = function(var_args) {
 };
 
 
-/**
- * Logs a list of values to the current logger.
- * @param {...} var_args Values to log.
- */
-gf.log.debug = goog.DEBUG ? gf.log.write : goog.nullFunction;
-
-
 // If there is a native console object, use that instead of our wrapper.
 // This enables proper line tracing in the console.
 if (goog.global['console']) {
   var console = goog.global['console'];
   gf.log.write = goog.bind(console.log, console);
 }
+
+
+/**
+ * Logs a list of values to the current logger.
+ * @param {...} var_args Values to log.
+ */
+gf.log.debug = goog.DEBUG ? gf.log.write : goog.nullFunction;
