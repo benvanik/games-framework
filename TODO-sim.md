@@ -204,14 +204,14 @@ ServerEntity:
 
 
 
-gf.sim.entities.SpatialEntity:
+gf.sim.SpatialEntity:
 - position
 - orientation
 - boundingRadius
 - getScene()
 
 
-gf.sim.entities.SceneEntity:
+gf.sim.SceneEntity:
 - spatialDatabase_
 
 gf.sim.search.SpatialDatabase

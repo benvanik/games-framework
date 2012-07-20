@@ -18,12 +18,12 @@
  * @author benvanik@google.com (Ben Vanik)
  */
 
-goog.provide('gf.sim.entities.SceneEntity');
+goog.provide('gf.sim.SceneEntity');
 
 goog.require('gf.log');
 goog.require('gf.sim.Entity');
 goog.require('gf.sim.EntityState');
-goog.require('gf.sim.entities.SpatialEntity');
+goog.require('gf.sim.SpatialEntity');
 
 
 
@@ -40,7 +40,7 @@ goog.require('gf.sim.entities.SpatialEntity');
  * @param {number} entityFlags Bitmask of {@see gf.sim.EntityFlag} values.
  * @param {!gf.sim.search.SpatialDatabase} spatialDatabase Spatial database.
  */
-gf.sim.entities.SceneEntity = function(
+gf.sim.SceneEntity = function(
     simulator, entityFactory, entityId, entityFlags, spatialDatabase) {
   goog.base(this, simulator, entityFactory, entityId, entityFlags);
 
@@ -52,14 +52,14 @@ gf.sim.entities.SceneEntity = function(
    */
   this.spatialDatabase_ = spatialDatabase;
 };
-goog.inherits(gf.sim.entities.SceneEntity, gf.sim.Entity);
+goog.inherits(gf.sim.SceneEntity, gf.sim.Entity);
 
 
 /**
  * Gets the spatial database used for spatial queries.
  * @return {!gf.sim.search.SpatialDatabase} Spatial database.
  */
-gf.sim.entities.SceneEntity.prototype.getSpatialDatabase = function() {
+gf.sim.SceneEntity.prototype.getSpatialDatabase = function() {
   return this.spatialDatabase_;
 };
 
@@ -67,8 +67,8 @@ gf.sim.entities.SceneEntity.prototype.getSpatialDatabase = function() {
 /**
  * @override
  */
-gf.sim.entities.SceneEntity.prototype.childAdded = function(entity) {
-  if (entity instanceof gf.sim.entities.SpatialEntity) {
+gf.sim.SceneEntity.prototype.childAdded = function(entity) {
+  if (entity instanceof gf.sim.SpatialEntity) {
     gf.log.debug('spatial child added: ' + entity.getId());
     this.spatialDatabase_.addEntity(entity);
   }
@@ -78,8 +78,8 @@ gf.sim.entities.SceneEntity.prototype.childAdded = function(entity) {
 /**
  * @override
  */
-gf.sim.entities.SceneEntity.prototype.childRemoved = function(entity) {
-  if (entity instanceof gf.sim.entities.SpatialEntity) {
+gf.sim.SceneEntity.prototype.childRemoved = function(entity) {
+  if (entity instanceof gf.sim.SpatialEntity) {
     gf.log.debug('spatial child removed: ' + entity.getId());
     this.spatialDatabase_.removeEntity(entity);
   }
@@ -88,9 +88,9 @@ gf.sim.entities.SceneEntity.prototype.childRemoved = function(entity) {
 
 /**
  * Handles child spatial entities getting their transforms changed.
- * @param {!gf.sim.entities.SpatialEntity} entity Entity that changed.
+ * @param {!gf.sim.SpatialEntity} entity Entity that changed.
  */
-gf.sim.entities.SceneEntity.prototype.childTransformed = function(entity) {
+gf.sim.SceneEntity.prototype.childTransformed = function(entity) {
   gf.log.debug('spatial child transformed: ' + entity.getId());
   this.spatialDatabase_.updateEntity(entity);
 };
@@ -104,15 +104,15 @@ gf.sim.entities.SceneEntity.prototype.childTransformed = function(entity) {
  * @param {!gf.sim.Entity} entity Entity that this object stores state for.
  * @param {!gf.sim.VariableTable} variableTable A subclass's variable table.
  */
-gf.sim.entities.SceneEntity.State = function(entity, variableTable) {
+gf.sim.SceneEntity.State = function(entity, variableTable) {
   goog.base(this, entity, variableTable);
 };
-goog.inherits(gf.sim.entities.SceneEntity.State, gf.sim.EntityState);
+goog.inherits(gf.sim.SceneEntity.State, gf.sim.EntityState);
 
 
 /**
  * @override
  */
-gf.sim.entities.SceneEntity.State.declareVariables = function(variableList) {
+gf.sim.SceneEntity.State.declareVariables = function(variableList) {
   gf.sim.EntityState.declareVariables(variableList);
 };

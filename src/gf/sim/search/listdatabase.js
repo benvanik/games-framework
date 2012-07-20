@@ -20,7 +20,7 @@
 
 goog.provide('gf.sim.search.ListDatabase');
 
-goog.require('gf.sim.entities.SpatialEntity');
+goog.require('gf.sim.SpatialEntity');
 goog.require('gf.sim.search.SpatialDatabase');
 goog.require('goog.array');
 goog.require('goog.vec.Vec4');
@@ -39,7 +39,7 @@ gf.sim.search.ListDatabase = function() {
   /**
    * List of entities in the database.
    * @private
-   * @type {!Array.<!gf.sim.entities.SpatialEntity>}
+   * @type {!Array.<!gf.sim.SpatialEntity>}
    */
   this.entities_ = [];
 };
@@ -104,7 +104,7 @@ gf.sim.search.ListDatabase.prototype.forEachInViewport = function(
 gf.sim.search.ListDatabase.prototype.forEachIntersecting = function(
     entityOrSphere, callback, opt_scope) {
   var sphere = gf.sim.search.ListDatabase.tmpVec4_;
-  if (entityOrSphere instanceof gf.sim.entities.SpatialEntity) {
+  if (entityOrSphere instanceof gf.sim.SpatialEntity) {
     entityOrSphere.getBoundingSphere(sphere);
   } else {
     sphere = /** @type {!goog.vec.Vec4.Float32} */ (entityOrSphere);

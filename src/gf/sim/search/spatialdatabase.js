@@ -54,21 +54,21 @@ gf.sim.search.SpatialDatabase = function(opt_traceStateCtor) {
 
 /**
  * Adds an entity to the database.
- * @param {!gf.sim.entities.SpatialEntity} entity Entity to add.
+ * @param {!gf.sim.SpatialEntity} entity Entity to add.
  */
 gf.sim.search.SpatialDatabase.prototype.addEntity = goog.abstractMethod;
 
 
 /**
  * Updates an entity in the database when spatial information changes.
- * @param {!gf.sim.entities.SpatialEntity} entity Entity to update.
+ * @param {!gf.sim.SpatialEntity} entity Entity to update.
  */
 gf.sim.search.SpatialDatabase.prototype.updateEntity = goog.abstractMethod;
 
 
 /**
  * Updates a list of entities in the database when spatial information changes.
- * @param {!Array.<!gf.sim.entities.SpatialEntity>} entities Entities to update.
+ * @param {!Array.<!gf.sim.SpatialEntity>} entities Entities to update.
  */
 gf.sim.search.SpatialDatabase.prototype.updateEntities = function(entities) {
   // Subclasses that can do this more efficiently really should...
@@ -80,14 +80,14 @@ gf.sim.search.SpatialDatabase.prototype.updateEntities = function(entities) {
 
 /**
  * Removes an entity from the database.
- * @param {!gf.sim.entities.SpatialEntity} entity Entity to remove.
+ * @param {!gf.sim.SpatialEntity} entity Entity to remove.
  */
 gf.sim.search.SpatialDatabase.prototype.removeEntity = goog.abstractMethod;
 
 
 /**
  * Enumerates all entities in the database.
- * @param {!function(!gf.sim.entities.SpatialEntity):(boolean|undefined)}
+ * @param {!function(!gf.sim.SpatialEntity):(boolean|undefined)}
  *     callback Function to call for each entity. Return false to cancel the
  *     enumeration.
  * @param {Object=} opt_scope Scope to call the function in.
@@ -98,7 +98,7 @@ gf.sim.search.SpatialDatabase.prototype.forEach = goog.abstractMethod;
 /**
  * Enumerates all entities in the database that intersect the given viewport.
  * @param {!gf.vec.Viewport} viewport Viewport.
- * @param {!function(!gf.sim.entities.SpatialEntity, number):
+ * @param {!function(!gf.sim.SpatialEntity, number):
  *     (boolean|undefined)} callback Function to call for each entity. Also
  *     contains the distance from the viewport eye point to the entity. Return
  *     false to cancel the enumeration.
@@ -110,9 +110,9 @@ gf.sim.search.SpatialDatabase.prototype.forEachInViewport = goog.abstractMethod;
 /**
  * Enumerates all entities in the database that intersect the given entity or
  * bounding sphere.
- * @param {!gf.sim.entities.SpatialEntity|!goog.vec.Vec4.Float32}
+ * @param {!gf.sim.SpatialEntity|!goog.vec.Vec4.Float32}
  *     entityOrSphere An entity or bounding sphere to test intersection against.
- * @param {!function(!gf.sim.entities.SpatialEntity):(boolean|undefined)}
+ * @param {!function(!gf.sim.SpatialEntity):(boolean|undefined)}
  *     callback Function to call for each entity. Return false to cancel the
  *     enumeration.
  * @param {Object=} opt_scope Scope to call the function in.
@@ -223,7 +223,7 @@ gf.sim.search.TraceState = function() {
 
   /**
    * Last hit entity, if any.
-   * @type {gf.sim.entities.SpatialEntity}
+   * @type {gf.sim.SpatialEntity}
    */
   this.entity = null;
 
