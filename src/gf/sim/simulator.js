@@ -255,6 +255,11 @@ gf.sim.Simulator.prototype.addEntity = function(entity) {
   if (!wasDirty) {
     this.invalidateEntity(entity);
   }
+
+  // Notify watchers
+  for (var n = 0; n < this.watchers_.length; n++) {
+    this.watchers_[n].entityAdded(entity);
+  }
 };
 
 
@@ -313,6 +318,11 @@ gf.sim.Simulator.prototype.removeEntity = function(entity) {
   entity.dirtyFlags |= gf.sim.EntityDirtyFlag.DELETED;
   if (!wasDirty) {
     this.invalidateEntity(entity);
+  }
+
+  // Notify watchers
+  for (var n = 0; n < this.watchers_.length; n++) {
+    this.watchers_[n].entityRemoved(entity);
   }
 };
 
