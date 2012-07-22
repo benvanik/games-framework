@@ -39,6 +39,7 @@ ${state.name} = function(entity, opt_variableTable) {
    * @type {${var.entity_type}|undefined}
    */
   this.${var.name}Entity_ = undefined;
+
   % endif
   /**
    * @private
@@ -87,7 +88,8 @@ ${state.name}.prototype.get${var.cap_name}Entity = function() {
     if (!this.${var.name}_) {
       this.${var.name}Entity_ = null;
     } else {
-      this.${var.name}Entity_ = this.entity.getSimulator().getEntity(this.${var.name}_);
+      this.${var.name}Entity_ = /** @type {${var.entity_type}} */ (
+          this.entity.getSimulator().getEntity(this.${var.name}_));
     }
   }
   return this.${var.name}Entity_;
