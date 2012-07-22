@@ -460,15 +460,14 @@ gf.sim.Variable.Quaternion.prototype.clone = function() {
  */
 gf.sim.Variable.Quaternion.prototype.read = function(target, reader) {
   var q = gf.sim.Variable.Quaternion.tmp_;
-  if (this.normalized_) {
-    // Reconstruct w
-    reader.readVec3(q);
-    // Trick is from http://www.gamedev.net/topic/461253-compressed-quaternions/
-    // Known to have issues - may not be worth it
-    q[3] = Math.sqrt(1 - q[0] * q[0] + q[1] * q[1] + q[2] * q[2]);
-  } else {
-    reader.readVec4(q);
-  }
+  // if (this.normalized_) {
+  //   // Reconstruct w
+  //   reader.readVec3(q);
+  //   // Trick is from http://www.gamedev.net/topic/461253-compressed-quaternions/
+  //   // Known to have issues - may not be worth it
+  //   q[3] = Math.sqrt(1 - q[0] * q[0] + q[1] * q[1] + q[2] * q[2]);
+  // } else {
+  reader.readVec4(q);
   this.setter_.call(target, q);
 };
 
@@ -477,12 +476,11 @@ gf.sim.Variable.Quaternion.prototype.read = function(target, reader) {
  * @override
  */
 gf.sim.Variable.Quaternion.prototype.write = function(target, writer) {
-  if (this.normalized_) {
-    // Just ignore w
-    writer.writeVec3(this.getter_.call(target));
-  } else {
-    writer.writeVec4(this.getter_.call(target));
-  }
+  // if (this.normalized_) {
+  //   // Just ignore w
+  //   writer.writeVec3(this.getter_.call(target));
+  // } else {
+  writer.writeVec4(this.getter_.call(target));
 };
 
 
