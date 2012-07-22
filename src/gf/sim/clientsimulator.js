@@ -247,7 +247,7 @@ gf.sim.ClientSimulator.prototype.sendPendingCommands_ = function(frame) {
   }
 
   var delta = frame.time - this.lastSendTime_;
-  if (delta >= gf.sim.ClientSimulator.CLIENT_UPDATE_RATE_) {
+  if (delta >= 1 / gf.sim.ClientSimulator.CLIENT_UPDATE_RATE_) {
     this.lastSendTime_ = frame.time;
 
     // Build command packet
