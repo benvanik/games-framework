@@ -104,15 +104,15 @@ gf.sim.SceneEntity.prototype.childTransformed = function(entity) {
  * @param {!gf.sim.Entity} entity Entity that this object stores state for.
  * @param {!gf.sim.VariableTable} variableTable A subclass's variable table.
  */
-gf.sim.SceneEntity.State = function(entity, variableTable) {
+gf.sim.SceneEntityState = function(entity, variableTable) {
   goog.base(this, entity, variableTable);
 };
-goog.inherits(gf.sim.SceneEntity.State, gf.sim.EntityState);
+goog.inherits(gf.sim.SceneEntityState, gf.sim.EntityState);
 
 
 /**
  * @override
  */
-gf.sim.SceneEntity.State.declareVariables = function(variableList) {
+gf.sim.SceneEntityState.declareVariables = function(variableList) {
   gf.sim.EntityState.declareVariables(variableList);
 };

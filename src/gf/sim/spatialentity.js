@@ -178,6 +178,28 @@ gf.sim.SpatialEntity.prototype.getTransform = function(
 };
 
 
+/**
+ * Calculates a viewport from the entities perspective.
+ * @param {!gf.vec.Viewport} viewport Viewport to fill with the results.
+ */
+gf.sim.SpatialEntity.prototype.calculateViewport = function(viewport) {
+  var state = /** @type {!gf.sim.SpatialEntityState} */ (this.getState());
+
+  // Set matrix based on state
+  var vm = viewport.viewMatrix;
+  var position = state.getPosition();
+  var rotation = state.getRotation();
+  // TODO(benvanik): does scale matter?
+  goog.vec.Quaternion.toRotationMatrix4(rotation, vm);
+  goog.vec.Mat4.transpose(vm, vm);
+  goog.vec.Mat4.translate(vm,
+      -position[0], -position[1], -position[2]);
+
+  // Update viewport matrices/etc now that the controller logic has been applied
+  viewport.calculate();
+};
+
+
 
 /**
  * Spatial entity state.
@@ -186,7 +208,7 @@ gf.sim.SpatialEntity.prototype.getTransform = function(
  * @param {!gf.sim.Entity} entity Entity that this object stores state for.
  * @param {!gf.sim.VariableTable} variableTable A subclass's variable table.
  */
-gf.sim.SpatialEntity.State = function(entity, variableTable) {
+gf.sim.SpatialEntityState = function(entity, variableTable) {
   goog.base(this, entity, variableTable);
 
   /**
@@ -201,7 +223,7 @@ gf.sim.SpatialEntity.State = function(entity, variableTable) {
    * @type {number}
    */
   this.positionOrdinal_ = variableTable.getOrdinal(
-      gf.sim.SpatialEntity.State.tags_.position);
+      gf.sim.SpatialEntityState.tags_.position);
 
   /**
    * Rotation quaternion.
@@ -215,7 +237,7 @@ gf.sim.SpatialEntity.State = function(entity, variableTable) {
    * @type {number}
    */
   this.rotationOrdinal_ = variableTable.getOrdinal(
-      gf.sim.SpatialEntity.State.tags_.rotation);
+      gf.sim.SpatialEntityState.tags_.rotation);
 
   /**
    * Scaling vector.
@@ -229,7 +251,7 @@ gf.sim.SpatialEntity.State = function(entity, variableTable) {
    * @type {number}
    */
   this.scaleOrdinal_ = variableTable.getOrdinal(
-      gf.sim.SpatialEntity.State.tags_.scale);
+      gf.sim.SpatialEntityState.tags_.scale);
 
   /**
    * Bounding radius.
@@ -244,16 +266,16 @@ gf.sim.SpatialEntity.State = function(entity, variableTable) {
    * @type {number}
    */
   this.boundingRadiusOrdinal_ = variableTable.getOrdinal(
-      gf.sim.SpatialEntity.State.tags_.boundingRadius);
+      gf.sim.SpatialEntityState.tags_.boundingRadius);
 };
-goog.inherits(gf.sim.SpatialEntity.State, gf.sim.EntityState);
+goog.inherits(gf.sim.SpatialEntityState, gf.sim.EntityState);
 
 
 /**
  * @private
  * @type {!Object.<number>}
  */
-gf.sim.SpatialEntity.State.tags_ = {
+gf.sim.SpatialEntityState.tags_ = {
   position: gf.sim.Variable.getUniqueTag(),
   rotation: gf.sim.Variable.getUniqueTag(),
   scale: gf.sim.Variable.getUniqueTag(),
@@ -265,7 +287,7 @@ gf.sim.SpatialEntity.State.tags_ = {
  * Gets the entity position.
  * @return {!goog.vec.Vec3.Float32} Current value.
  */
-gf.sim.SpatialEntity.State.prototype.getPosition = function() {
+gf.sim.SpatialEntityState.prototype.getPosition = function() {
   return this.position_;
 };
 
@@ -274,7 +296,7 @@ gf.sim.SpatialEntity.State.prototype.getPosition = function() {
  * Sets the entity position.
  * @param {goog.vec.Vec3.Float32} value New value.
  */
-gf.sim.SpatialEntity.State.prototype.setPosition = function(value) {
+gf.sim.SpatialEntityState.prototype.setPosition = function(value) {
   if (!goog.vec.Vec3.equals(this.position_, value)) {
     gf.log.write('setPosition:', value[0], value[1], value[2]);
     goog.vec.Vec3.setFromArray(this.position_, value);
@@ -288,7 +310,7 @@ gf.sim.SpatialEntity.State.prototype.setPosition = function(value) {
  * Gets the entity rotation.
  * @return {!goog.vec.Quaternion.Float32} Current value.
  */
-gf.sim.SpatialEntity.State.prototype.getRotation = function() {
+gf.sim.SpatialEntityState.prototype.getRotation = function() {
   return this.rotation_;
 };
 
@@ -297,7 +319,7 @@ gf.sim.SpatialEntity.State.prototype.getRotation = function() {
  * Sets the entity rotation.
  * @param {goog.vec.Quaternion.Float32} value New value.
  */
-gf.sim.SpatialEntity.State.prototype.setRotation = function(value) {
+gf.sim.SpatialEntityState.prototype.setRotation = function(value) {
   if (!goog.vec.Vec4.equals(this.rotation_, value)) {
     gf.log.write('setRotation:', value[0], value[1], value[2], value[3]);
     goog.vec.Quaternion.setFromArray(this.rotation_, value);
@@ -311,7 +333,7 @@ gf.sim.SpatialEntity.State.prototype.setRotation = function(value) {
  * Gets the entity scale.
  * @return {!goog.vec.Vec3.Float32} Current value.
  */
-gf.sim.SpatialEntity.State.prototype.getScale = function() {
+gf.sim.SpatialEntityState.prototype.getScale = function() {
   return this.scale_;
 };
 
@@ -320,7 +342,7 @@ gf.sim.SpatialEntity.State.prototype.getScale = function() {
  * Sets the entity scale.
  * @param {goog.vec.Vec3.Float32} value New value.
  */
-gf.sim.SpatialEntity.State.prototype.setScale = function(value) {
+gf.sim.SpatialEntityState.prototype.setScale = function(value) {
   if (!goog.vec.Vec3.equals(this.scale_, value)) {
     goog.vec.Vec3.setFromArray(this.scale_, value);
     this.setVariableDirty(this.scaleOrdinal_);
@@ -333,7 +355,7 @@ gf.sim.SpatialEntity.State.prototype.setScale = function(value) {
  * Gets the bounding radius.
  * @return {number} Current value.
  */
-gf.sim.SpatialEntity.State.prototype.getBoundingRadius = function() {
+gf.sim.SpatialEntityState.prototype.getBoundingRadius = function() {
   return this.boundingRadius_;
 };
 
@@ -342,7 +364,7 @@ gf.sim.SpatialEntity.State.prototype.getBoundingRadius = function() {
  * Sets the bounding radius.
  * @param {number} value New value.
  */
-gf.sim.SpatialEntity.State.prototype.setBoundingRadius =
+gf.sim.SpatialEntityState.prototype.setBoundingRadius =
     function(value) {
   if (!this.boundingRadius_ != value) {
     this.boundingRadius_ = value;
@@ -355,27 +377,27 @@ gf.sim.SpatialEntity.State.prototype.setBoundingRadius =
 /**
  * @override
  */
-gf.sim.SpatialEntity.State.declareVariables = function(variableList) {
+gf.sim.SpatialEntityState.declareVariables = function(variableList) {
   gf.sim.EntityState.declareVariables(variableList);
   variableList.push(new gf.sim.Variable.Vec3(
-      gf.sim.SpatialEntity.State.tags_.position,
+      gf.sim.SpatialEntityState.tags_.position,
       gf.sim.VariableFlag.UPDATED_FREQUENTLY | gf.sim.VariableFlag.INTERPOLATED,
-      gf.sim.SpatialEntity.State.prototype.getPosition,
-      gf.sim.SpatialEntity.State.prototype.setPosition));
+      gf.sim.SpatialEntityState.prototype.getPosition,
+      gf.sim.SpatialEntityState.prototype.setPosition));
   variableList.push(new gf.sim.Variable.Quaternion(
-      gf.sim.SpatialEntity.State.tags_.rotation,
+      gf.sim.SpatialEntityState.tags_.rotation,
       gf.sim.VariableFlag.UPDATED_FREQUENTLY | gf.sim.VariableFlag.INTERPOLATED,
-      gf.sim.SpatialEntity.State.prototype.getRotation,
-      gf.sim.SpatialEntity.State.prototype.setRotation,
+      gf.sim.SpatialEntityState.prototype.getRotation,
+      gf.sim.SpatialEntityState.prototype.setRotation,
       true));
   variableList.push(new gf.sim.Variable.Vec3(
-      gf.sim.SpatialEntity.State.tags_.scale,
+      gf.sim.SpatialEntityState.tags_.scale,
       gf.sim.VariableFlag.UPDATED_FREQUENTLY | gf.sim.VariableFlag.INTERPOLATED,
-      gf.sim.SpatialEntity.State.prototype.getScale,
-      gf.sim.SpatialEntity.State.prototype.setScale));
+      gf.sim.SpatialEntityState.prototype.getScale,
+      gf.sim.SpatialEntityState.prototype.setScale));
   variableList.push(new gf.sim.Variable.Float(
-      gf.sim.SpatialEntity.State.tags_.boundingRadius,
+      gf.sim.SpatialEntityState.tags_.boundingRadius,
       gf.sim.VariableFlag.UPDATED_FREQUENTLY | gf.sim.VariableFlag.INTERPOLATED,
-      gf.sim.SpatialEntity.State.prototype.getBoundingRadius,
-      gf.sim.SpatialEntity.State.prototype.setBoundingRadius));
+      gf.sim.SpatialEntityState.prototype.getBoundingRadius,
+      gf.sim.SpatialEntityState.prototype.setBoundingRadius));
 };
