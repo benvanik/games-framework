@@ -1,0 +1,6 @@
+{
+  "name": "gf.sim.SceneEntityState",
+  "super": "gf.sim.EntityState",
+  "vars": [
+  ]
+}

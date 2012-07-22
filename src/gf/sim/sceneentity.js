@@ -22,7 +22,6 @@ goog.provide('gf.sim.SceneEntity');
 
 goog.require('gf.log');
 goog.require('gf.sim.Entity');
-goog.require('gf.sim.EntityState');
 goog.require('gf.sim.SpatialEntity');
 
 
@@ -93,26 +92,4 @@ gf.sim.SceneEntity.prototype.childRemoved = function(entity) {
 gf.sim.SceneEntity.prototype.childTransformed = function(entity) {
   gf.log.debug('spatial child transformed: ' + entity.getId());
   this.spatialDatabase_.updateEntity(entity);
-};
-
-
-
-/**
- * Scene entity state.
- * @constructor
- * @extends {gf.sim.EntityState}
- * @param {!gf.sim.Entity} entity Entity that this object stores state for.
- * @param {!gf.sim.VariableTable} variableTable A subclass's variable table.
- */
-gf.sim.SceneEntityState = function(entity, variableTable) {
-  goog.base(this, entity, variableTable);
-};
-goog.inherits(gf.sim.SceneEntityState, gf.sim.EntityState);
-
-
-/**
- * @override
- */
-gf.sim.SceneEntityState.declareVariables = function(variableList) {
-  gf.sim.EntityState.declareVariables(variableList);
 };

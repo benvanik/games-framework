@@ -72,10 +72,15 @@ compile_msg(
     name='gf_msg',
     srcs=glob('src/**/*.msg'))
 
+compile_simstate(
+    name='gf_simstate',
+    srcs=glob('src/gf/sim/**/*.simstate'))
+
 file_set(
     name='gf_js',
     srcs=[
         ':gf_msg',
+        ':gf_simstate',
         ] + glob('src/**/*.js'))
 
 # All GF JS files, including Closure Library

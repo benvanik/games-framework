@@ -1,0 +1,43 @@
+{
+  "name": "gf.sim.SpatialEntityState",
+  "super": "gf.sim.EntityState",
+  "vars": [
+    {
+      "name": "position",
+      "type": "Vec3",
+      "flags": [
+        "UPDATED_FREQUENTLY",
+        "INTERPOLATED"
+      ],
+      "onchange": "this.entity.invalidateTransform();"
+    },
+    {
+      "name": "rotation",
+      "type": "Quaternion",
+      "normalized": true,
+      "flags": [
+        "UPDATED_FREQUENTLY",
+        "INTERPOLATED"
+      ],
+      "onchange": "this.entity.invalidateTransform();"
+    },
+    {
+      "name": "scale",
+      "type": "Vec3",
+      "flags": [
+        "UPDATED_FREQUENTLY",
+        "INTERPOLATED"
+      ],
+      "onchange": "this.entity.invalidateTransform();"
+    },
+    {
+      "name": "boundingRadius",
+      "type": "Float",
+      "flags": [
+        "UPDATED_FREQUENTLY",
+        "INTERPOLATED"
+      ],
+      "onchange": "this.entity.invalidateTransform();"
+    }
+  ]
+}

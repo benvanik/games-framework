@@ -23,6 +23,7 @@ goog.provide('gf.sim.SchedulerCallback');
 goog.provide('gf.sim.SchedulingPriority');
 
 goog.require('gf');
+goog.require('gf.sim');
 goog.require('goog.Disposable');
 
 
