@@ -236,3 +236,25 @@ MapEntity <- SceneEntity
 
 
 createPredictedEntity
+
+
+EntityID:
+add getter for entity, cache
+this.fooId_ = gf.sim.NO_ENTITY_ID;
+this.fooEntity_ = undefined;
+prototype.getFooId = ...
+prototype.getFooEntity = function() {
+  if (this.fooEntity_ == undefined) {
+    if (fooId_ == NO_ENTITY_ID) {
+      this.fooEntity_ = null;
+    } else {
+      this.fooEntity_ = this.entity.getSimulator().getEntity(fooId_);
+    }
+  }
+  return this.fooEntity_;
+}
+prototype.setFooId = function(value) {
+  if (changed) {
+    this.fooEntity = undefined;
+  }
+}

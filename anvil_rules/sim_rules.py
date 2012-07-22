@@ -76,7 +76,7 @@ SIM_TYPES_ = {
     'name': 'EntityID',
     'is_primitive': True,
     'closure_type': 'number',
-    'default_value': '0',
+    'default_value': 'gf.sim.NO_ENTITY_ID',
   },
 }
 
@@ -97,6 +97,7 @@ class SimVar(object):
     self.name = json['name']
     self.cap_name = self.name[0:1].capitalize() + self.name[1:]
     self.type = SIM_TYPES_[json['type']]
+    self.entity_type = json.get('entity_type', None)
     self.flags = self._parse_flags(json.get('flags', []))
     self.onchange = json.get('onchange', '')
     self.extra_args = ''

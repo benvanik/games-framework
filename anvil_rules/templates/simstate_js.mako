@@ -1,6 +1,7 @@
 goog.provide('${state.name}');
 
 goog.require('gf');
+goog.require('gf.sim');
 goog.require('gf.sim.EntityState');
 goog.require('gf.sim.Variable');
 goog.require('gf.sim.VariableFlag');
@@ -32,6 +33,13 @@ ${state.name} = function(entity, opt_variableTable) {
    */
   this.${var.name}_ = ${var.type['default_value']};
 
+  % if var.entity_type:
+  /**
+   * @private
+   * @type {${var.entity_type}|undefined}
+   */
+  this.${var.name}Entity_ = undefined;
+  % endif
   /**
    * @private
    * @type {number}
@@ -69,6 +77,22 @@ ${state.name}.tags_ = {
 ${state.name}.prototype.get${var.cap_name} = function() {
   return this.${var.name}_;
 };
+% if var.entity_type:
+/**
+ * Gets a cached entity reference for ${var.name}.
+ * @return {${var.entity_type}} Current value.
+ */
+${state.name}.prototype.get${var.cap_name}Entity = function() {
+  if (this.${var.name}Entity_ === undefined) {
+    if (!this.${var.name}_) {
+      this.${var.name}Entity_ = null;
+    } else {
+      this.${var.name}Entity_ = this.entity.getSimulator().getEntity(this.${var.name}_);
+    }
+  }
+  return this.${var.name}Entity_;
+};
+% endif
 
 
 /**
@@ -81,6 +105,9 @@ ${state.name}.prototype.set${var.cap_name} = function(value) {
     this.${var.name}_ = value;
     this.setVariableDirty(this.${var.name}Ordinal_);
     ${var.onchange}
+    % if var.entity_type:
+    this.${var.name}Entity_ = undefined;
+    % endif
   }
   % else:
   if (!${var.type['compare_fn']}(this.${var.name}_, value)) {
