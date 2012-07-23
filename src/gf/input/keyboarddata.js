@@ -178,7 +178,7 @@ gf.input.KeyboardData.prototype.didKeyGoDown = function(keyCode) {
  * @return {boolean} True if the key is up.
  */
 gf.input.KeyboardData.prototype.didKeyGoUp = function(keyCode) {
-  return !(keyCode in this.keysUp_);
+  return keyCode in this.keysUp_;
 };
 
 
@@ -231,8 +231,8 @@ gf.input.KeyboardData.prototype.resetDeltas = function() {
   if (this.keyDeltaCount_) {
     goog.object.clear(this.keysDown_);
     goog.object.clear(this.keysUp_);
+    this.keyDeltaCount_ = 0;
   }
-  this.keyDeltaCount_ = 0;
 };
 
 
@@ -268,15 +268,19 @@ gf.input.KeyboardData.prototype.update = function(e, isDown) {
   // Also track special keys
   // NOTE: cannot use the event values for specials, as they are unreliable
   if (isDown) {
-    this.keys_[keyCode] = true;
-    this.keysDown_[keyCode] = true;
-    this.keyCount_++;
-    this.keyDeltaCount_++;
+    if (!this.keys_[keyCode]) {
+      this.keys_[keyCode] = true;
+      this.keysDown_[keyCode] = true;
+      this.keyCount_++;
+      this.keyDeltaCount_++;
+    }
   } else {
-    delete this.keys_[keyCode];
-    this.keysUp_[keyCode] = true;
-    this.keyCount_--;
-    this.keyDeltaCount_++;
+    if (this.keys_[keyCode]) {
+      delete this.keys_[keyCode];
+      this.keysUp_[keyCode] = true;
+      this.keyCount_--;
+      this.keyDeltaCount_++;
+    }
   }
 
   switch (keyCode) {
