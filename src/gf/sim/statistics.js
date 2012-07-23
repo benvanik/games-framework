@@ -20,10 +20,13 @@
 
 goog.provide('gf.sim.Statistics');
 
+goog.require('gf');
 
 
 /**
  * Basic statistics about the simulation.
+ *
+ * @constructor
  */
 gf.sim.Statistics = function() {
   /**
@@ -142,10 +145,11 @@ gf.sim.Statistics.prototype.update = function(time) {
 
 
 /**
- * Pads a number with zeros.
+ * Pads a number with spaces.
  * @private
  * @param {number} number Input number.
  * @param {number} digits Digits to pad to.
+ * @return {string} Padding number.
  */
 gf.sim.Statistics.pad_ = function(number, digits) {
   var s = String(number);

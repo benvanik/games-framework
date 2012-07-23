@@ -31,5 +31,6 @@ goog.require('gf.sim.commands.ReparentCommand');
 gf.sim.commands.registerCommands = function(simulator) {
   simulator.registerCommandFactory(new gf.sim.CommandFactory(
       gf.sim.commands.ReparentCommand.ID,
-      gf.sim.commands.ReparentCommand));
+      gf.sim.commands.ReparentCommand,
+      gf.sim.commands.ReparentCommand.FLAGS));
 };

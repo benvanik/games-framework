@@ -258,3 +258,10 @@ prototype.setFooId = function(value) {
     this.fooEntity = undefined;
   }
 }
+
+
+ExecCommands:
+- last sequence #
+- time base (uint)
+- commands[]
+  - time delta (varint in ms)

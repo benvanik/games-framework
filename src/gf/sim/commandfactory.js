@@ -33,8 +33,9 @@ goog.require('gf.sim');
  * @param {number} typeId Command type ID.
  * @param {!function(new:gf.sim.Command, !gf.sim.CommandFactory)} commandCtor
  *     Command constructor.
+ * @param {number} flags A bitmask of {@see gf.sim.CommandFlag} values.
  */
-gf.sim.CommandFactory = function(typeId, commandCtor) {
+gf.sim.CommandFactory = function(typeId, commandCtor, flags) {
   /**
    * Command type ID.
    * @type {number}
@@ -47,6 +48,12 @@ gf.sim.CommandFactory = function(typeId, commandCtor) {
    * @type {!function(new:gf.sim.Command, !gf.sim.CommandFactory)}
    */
   this.commandCtor_ = commandCtor;
+
+  /**
+   * A bitmask of {@see gf.sim.CommandFlag} values.
+   * @type {number}
+   */
+  this.flags = flags;
 
   /**
    * Unused command instances.

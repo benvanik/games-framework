@@ -21,6 +21,7 @@
 goog.provide('gf.sim.util.PredictedCommandList');
 
 goog.require('gf.log');
+goog.require('gf.sim.CommandFlag');
 goog.require('gf.sim.PredictedCommand');
 goog.require('goog.asserts');
 
@@ -174,6 +175,20 @@ gf.sim.util.PredictedCommandList.prototype.hasOutgoing = function() {
 gf.sim.util.PredictedCommandList.prototype.write = function(writer) {
   goog.asserts.assert(this.outgoingCount_);
 
+  // Write timebase
+  var timeBase = 0;
+  for (var n = 0; n < this.outgoingCount_; n++) {
+    var command = this.outgoingArray_[n];
+    if (command.factory.flags & gf.sim.CommandFlag.TIME) {
+      timeBase = command.getTime();
+      break;
+    }
+  }
+  writer.writeVarInt((timeBase * 1000) | 0);
+
+  // Write sequence high number
+  writer.writeVarInt(this.nextSequenceId_ - 1);
+
   // Write count
   var writtenCount = this.outgoingCount_;
   writer.writeVarInt(this.outgoingCount_);
@@ -186,7 +201,7 @@ gf.sim.util.PredictedCommandList.prototype.write = function(writer) {
 
     // Add command to packet
     writer.writeVarInt(command.factory.typeId);
-    command.write(writer);
+    command.write(writer, timeBase);
 
     // Cleanup command
     if (command instanceof gf.sim.PredictedCommand) {

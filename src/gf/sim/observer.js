@@ -24,7 +24,6 @@ goog.provide('gf.sim.ObserverCtor');
 goog.require('gf.sim');
 goog.require('gf.sim.EntityDirtyFlag');
 goog.require('gf.sim.EntityFlag');
-goog.require('gf.sim.PredictedCommand');
 goog.require('gf.sim.util.CommandList');
 goog.require('gf.sim.util.SyncSimulationWriter');
 goog.require('goog.Disposable');
@@ -63,13 +62,6 @@ gf.sim.Observer = function(simulator, session, user) {
    * @type {!gf.sim.ServerSimulator}
    */
   this.simulator_ = simulator;
-
-  /**
-   * Statistics for fast access.
-   * @private
-   * @type {!gf.sim.Statistics}
-   */
-  this.statistics_ = simulator.statistics;
 
   /**
    * Network session.
@@ -162,7 +154,7 @@ gf.sim.Observer = function(simulator, session, user) {
    * @private
    * @type {!gf.sim.util.SyncSimulationWriter}
    */
-  this.writer_ = new gf.sim.util.SyncSimulationWriter();
+  this.writer_ = new gf.sim.util.SyncSimulationWriter(simulator.statistics);
 };
 goog.inherits(gf.sim.Observer, goog.Disposable);
 
@@ -193,12 +185,16 @@ gf.sim.Observer.prototype.compact = function() {
 gf.sim.Observer.prototype.queueIncomingCommand = function(command) {
   // Add to the incoming list
   this.incomingCommandList_.addCommand(command);
+};
 
-  // If a predicted command then update the sequence number
-  if (command instanceof gf.sim.PredictedCommand) {
-    goog.asserts.assert(command.sequence > this.confirmedSequence_);
-    this.confirmedSequence_ = command.sequence;
-  }
+
+/**
+ * Sets the highest confirmed sequence number from the client.
+ * @param {number} sequence Sequence number.
+ */
+gf.sim.Observer.prototype.setConfirmedSequence = function(sequence) {
+  goog.asserts.assert(sequence >= this.confirmedSequence_);
+  this.confirmedSequence_ = sequence;
 };
 
 
@@ -302,8 +298,6 @@ gf.sim.Observer.prototype.flush = function(time) {
   this.lastFlushTime_ = time;
   // TODO(benvanik): ignore if not enough time has elapsed
 
-  var startOffset = 0;
-
   // Prepare packet
   var writer = this.writer_;
   writer.begin(this.confirmedSequence_);
@@ -326,10 +320,7 @@ gf.sim.Observer.prototype.flush = function(time) {
       }
 
       // Add command
-      startOffset = writer.offset;
       writer.addCommand(command);
-      this.statistics_.outgoingCommands++;
-      this.statistics_.outgoingCommandSize += writer.offset - startOffset;
     }
     this.outgoingCommandList_.resetList();
   }
@@ -353,19 +344,12 @@ gf.sim.Observer.prototype.flush = function(time) {
     }
 
     // Add create/update/delete based on flags
-    startOffset = writer.offset;
     if (dirtyFlags & gf.sim.EntityDirtyFlag.DELETED) {
       writer.addDeleteEntity(entity);
-      this.statistics_.entityDeletes++;
-      this.statistics_.entityDeleteSize += writer.offset - startOffset;
     } else if (dirtyFlags & gf.sim.EntityDirtyFlag.CREATED) {
       writer.addCreateEntity(entity);
-      this.statistics_.entityCreates++;
-      this.statistics_.entityCreateSize += writer.offset - startOffset;
     } else if (dirtyFlags & gf.sim.EntityDirtyFlag.UPDATED) {
       writer.addUpdateEntity(entity);
-      this.statistics_.entityUpdates++;
-      this.statistics_.entityUpdateSize += writer.offset - startOffset;
     }
   }
 

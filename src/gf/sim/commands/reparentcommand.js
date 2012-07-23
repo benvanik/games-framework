@@ -54,8 +54,8 @@ goog.inherits(gf.sim.commands.ReparentCommand, gf.sim.Command);
 /**
  * @override
  */
-gf.sim.commands.ReparentCommand.prototype.read = function(reader) {
-  goog.base(this, 'read', reader);
+gf.sim.commands.ReparentCommand.prototype.read = function(reader, timeBase) {
+  goog.base(this, 'read', reader, timeBase);
 
   this.parentId = reader.readVarInt();
 };
@@ -64,8 +64,8 @@ gf.sim.commands.ReparentCommand.prototype.read = function(reader) {
 /**
  * @override
  */
-gf.sim.commands.ReparentCommand.prototype.write = function(writer) {
-  goog.base(this, 'write', writer);
+gf.sim.commands.ReparentCommand.prototype.write = function(writer, timeBase) {
+  goog.base(this, 'write', writer, timeBase);
 
   writer.writeVarInt(this.parentId);
 };
@@ -78,3 +78,11 @@ gf.sim.commands.ReparentCommand.prototype.write = function(writer) {
  */
 gf.sim.commands.ReparentCommand.ID = gf.sim.createTypeId(
     gf.sim.GF_MODULE_ID, gf.sim.commands.CommandType.REPARENT);
+
+
+/**
+ * Command flags.
+ * @const
+ * @type {number}
+ */
+gf.sim.commands.ReparentCommand.FLAGS = 0;

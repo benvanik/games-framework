@@ -19,9 +19,30 @@
  */
 
 goog.provide('gf.sim.Command');
+goog.provide('gf.sim.CommandFlag');
 goog.provide('gf.sim.PredictedCommand');
 
+goog.require('gf');
 goog.require('gf.sim');
+goog.require('goog.asserts');
+
+
+/**
+ * Bitmask flags for command types.
+ * @enum {number}
+ */
+gf.sim.CommandFlag = {
+  /**
+   * Command has a time.
+   * If this is not set then times are not serialized.
+   */
+  TIME: 1 << 1,
+
+  /**
+   * Command is global.
+   */
+  GLOBAL: 1 << 2
+};
 
 
 
@@ -44,9 +65,11 @@ gf.sim.Command = function(commandFactory) {
 
   /**
    * Game simulation time the command was generated, in seconds.
+   * Quantized to 1ms.
+   * @private
    * @type {number}
    */
-  this.time = 0;
+  this.time_ = 0;
 
   // We don't have a separate EntityCommand that has this because almost all
   // commands are entity-specific
@@ -60,22 +83,53 @@ gf.sim.Command = function(commandFactory) {
 
 
 /**
+ * Gets the simulation time the command was generated.
+ * @return {number} Simulation time, in seconds.
+ */
+gf.sim.Command.prototype.getTime = function() {
+  return this.time_;
+};
+
+
+/**
+ * Sets the simulation time the command was generated.
+ * @param {number} value Time, in seconds.
+ */
+gf.sim.Command.prototype.setTime = function(value) {
+  goog.asserts.assert(this.factory.flags & gf.sim.CommandFlag.TIME);
+  this.time_ = ((value * 1000) | 0) / 1000;
+};
+
+
+/**
  * Reads the command contents from the given packet reader.
  * @param {!gf.net.PacketReader} reader Packet reader.
+ * @param {number} timeBase Time base of the packet.
  */
-gf.sim.Command.prototype.read = function(reader) {
-  this.time = reader.readVarInt() / 1000;
-  this.targetEntityId = reader.readVarInt();
+gf.sim.Command.prototype.read = function(reader, timeBase) {
+  var flags = this.factory.flags;
+  if (flags & gf.sim.CommandFlag.TIME) {
+    this.time_ = timeBase + reader.readUint8() / 1000;
+  }
+  if (!(flags & gf.sim.CommandFlag.GLOBAL)) {
+    this.targetEntityId = reader.readVarInt();
+  }
 };
 
 
 /**
  * Writes the command to the given packet writer.
  * @param {!gf.net.PacketWriter} writer Packet writer.
+ * @param {number} timeBase Time base of the packet.
  */
-gf.sim.Command.prototype.write = function(writer) {
-  writer.writeVarInt((this.time * 1000) | 0);
-  writer.writeVarInt(this.targetEntityId);
+gf.sim.Command.prototype.write = function(writer, timeBase) {
+  var flags = this.factory.flags;
+  if (flags & gf.sim.CommandFlag.TIME) {
+    writer.writeUint8(((this.time_ - timeBase) * 1000) | 0);
+  }
+  if (!(flags & gf.sim.CommandFlag.GLOBAL)) {
+    writer.writeVarInt(this.targetEntityId);
+  }
 };
 
 
@@ -106,18 +160,15 @@ gf.sim.Command.prototype.release = function() {
 gf.sim.PredictedCommand = function(commandFactory) {
   goog.base(this, commandFactory);
 
-  /**
-   * Sequence identifier.
-   * Monotonically increasing number used for confirming commands.
-   * @type {number}
-   */
-  this.sequence = 0;
-
-  /**
-   * Amount of time this command covers, in seconds.
-   * @type {number}
-   */
-  this.timeDelta = 0;
+  if (gf.CLIENT) {
+    /**
+     * Sequence identifier.
+     * Monotonically increasing number used for confirming commands.
+     * This is only valid on the client
+     * @type {number}
+     */
+    this.sequence = 0;
+  }
 
   /**
    * Whether this command has been predicted on the client already.
@@ -134,21 +185,22 @@ goog.inherits(gf.sim.PredictedCommand, gf.sim.Command);
 /**
  * @override
  */
-gf.sim.PredictedCommand.prototype.read = function(reader) {
-  goog.base(this, 'read', reader);
-
-  this.sequence = reader.readVarInt();
-  this.timeDelta = reader.readVarInt() / 1000;
+gf.sim.PredictedCommand.prototype.read = function(reader, timeBase) {
+  goog.base(this, 'read', reader, timeBase);
 };
 
 
 /**
  * @override
  */
-gf.sim.PredictedCommand.prototype.write = function(writer) {
-  goog.base(this, 'write', writer);
-
-  writer.writeVarInt(this.sequence);
-  // TODO(benvanik): write compressed time - this could probably fit in 16bits
-  writer.writeVarInt((this.timeDelta * 1000) | 0);
+gf.sim.PredictedCommand.prototype.write = function(writer, timeBase) {
+  goog.base(this, 'write', writer, timeBase);
 };
+
+
+/**
+ * Command flags.
+ * @const
+ * @type {number}
+ */
+gf.sim.PredictedCommand.FLAGS = gf.sim.CommandFlag.TIME;

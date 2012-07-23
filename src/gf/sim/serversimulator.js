@@ -398,6 +398,8 @@ gf.sim.ServerSimulator.prototype.handleExecCommands_ =
   }
 
   // Read header
+  var timeBase = reader.readVarInt() / 1000;
+  var highSequenceNumber = reader.readVarInt();
   var commandCount = reader.readVarInt();
 
   // Update stats
@@ -418,7 +420,7 @@ gf.sim.ServerSimulator.prototype.handleExecCommands_ =
 
     // Read command data
     var command = commandFactory.allocate();
-    command.read(reader);
+    command.read(reader, timeBase);
 
     // Limit command execution to entities owned by the user only
     // Basically:
@@ -441,6 +443,9 @@ gf.sim.ServerSimulator.prototype.handleExecCommands_ =
     // Queue on observer for processing
     observer.queueIncomingCommand(command);
   }
+
+  // Mark the highest sequence number as confirmed.
+  observer.setConfirmedSequence(highSequenceNumber);
 
   return true;
 };

@@ -359,7 +359,7 @@ gf.sim.Simulator.prototype.executeCommands = function(commands, commandCount) {
         entity.executeCommand(command);
       } else {
         // TODO(benvanik): error if bad entity ID?
-        gf.log.debug('command ' + command.sequence + ': no entity ' + entityId);
+        gf.log.debug('command has no entity ' + entityId);
       }
     }
 
