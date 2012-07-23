@@ -187,6 +187,9 @@ goog.inherits(gf.sim.PredictedCommand, gf.sim.Command);
  */
 gf.sim.PredictedCommand.prototype.read = function(reader, timeBase) {
   goog.base(this, 'read', reader, timeBase);
+
+  // Always reset
+  this.hasPredicted = false;
 };
 
 
