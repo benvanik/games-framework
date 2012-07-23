@@ -28,6 +28,7 @@ goog.require('gf.sim.EntityDirtyFlag');
 goog.require('gf.sim.IEntityWatcher');
 goog.require('gf.sim.PredictedCommand');
 goog.require('gf.sim.Scheduler');
+goog.require('gf.sim.Statistics');
 goog.require('gf.sim.commands');
 goog.require('goog.array');
 goog.require('goog.asserts');
@@ -53,6 +54,12 @@ goog.require('goog.asserts');
  */
 gf.sim.Simulator = function(runtime, baseEntityId) {
   goog.base(this, runtime);
+
+  /**
+   * Statistics information, refreshed every frame.
+   * @type {!gf.sim.Statistics}
+   */
+  this.statistics = new gf.sim.Statistics();
 
   /**
    * Event scheduler.

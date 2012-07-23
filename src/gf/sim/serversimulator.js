@@ -400,6 +400,10 @@ gf.sim.ServerSimulator.prototype.handleExecCommands_ =
   // Read header
   var commandCount = reader.readVarInt();
 
+  // Update stats
+  this.statistics.incomingCommands += commandCount;
+  this.statistics.incomingCommandSize += packet.data.length;
+
   // Commands
   for (var n = 0; n < commandCount; n++) {
     // Read command type

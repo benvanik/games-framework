@@ -257,7 +257,9 @@ gf.sim.ClientSimulator.prototype.sendPendingCommands_ = function(frame) {
         writer, gf.sim.packets.ExecCommands.writeInstance);
 
     // Write commands
-    this.outgoingCommandList_.write(writer);
+    var writtenCount = this.outgoingCommandList_.write(writer);
+    this.statistics.outgoingCommands += writtenCount;
+    this.statistics.outgoingCommandSize += writer.offset;
 
     // Send
     this.session_.send(writer.finish());
@@ -314,6 +316,11 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
   var deleteEntityCount = reader.readVarInt();
   var commandCount = reader.readVarInt();
 
+  this.statistics.entityCreates += createEntityCount;
+  this.statistics.entityUpdates += updateEntityCount;
+  this.statistics.entityDeletes += deleteEntityCount;
+  this.statistics.incomingCommands += commandCount;
+
   // Confirm prediction sequence number
   // This performs the slicing of the stashed command list to be only those
   // sent or unsent and not yet confirmed
@@ -325,8 +332,12 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
   // TODO(benvanik): cached parenting list
   var parentingRequired = null;
 
+  var startOffset = 0;
+
   // Create entities
   for (var n = 0; n < createEntityCount; n++) {
+    startOffset = reader.offset;
+
     // Read entity ID, uncompress into full ID
     var entityId = reader.readVarInt() << 1;
 
@@ -348,6 +359,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
 
     // Load initial values
     entity.read(reader);
+    this.statistics.entityCreateSize += reader.offset - startOffset;
 
     // Add to simulation
     this.addEntity(entity);
@@ -367,6 +379,8 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
 
   // Update entities
   for (var n = 0; n < updateEntityCount; n++) {
+    startOffset = reader.offset;
+
     // Read entity ID, uncompress into full ID
     var entityId = reader.readVarInt() << 1;
 
@@ -380,14 +394,18 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
 
     // Load delta values
     entity.readDelta(reader);
+    this.statistics.entityUpdateSize += reader.offset - startOffset;
 
     gf.log.write('<- update entity', entityId);
   }
 
   // Delete entities
   for (var n = 0; n < deleteEntityCount; n++) {
+    startOffset = reader.offset;
+
     // Read entity ID, uncompress into full ID
     var entityId = reader.readVarInt() << 1;
+    this.statistics.entityDeleteSize += reader.offset - startOffset;
 
     // Find entity
     var entity = this.getEntity(entityId);
@@ -423,6 +441,8 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
 
   // Commands
   for (var n = 0; n < commandCount; n++) {
+    startOffset = reader.offset;
+
     // Read command type
     var commandTypeId = reader.readVarInt();
     var commandFactory = this.getCommandFactory(commandTypeId);
@@ -435,6 +455,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     // Read command data
     var command = commandFactory.allocate();
     command.read(reader);
+    this.statistics.incomingCommandSize += reader.offset - startOffset;
 
     // Queue for processing
     this.incomingCommandList_.addCommand(command);

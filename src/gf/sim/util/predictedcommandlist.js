@@ -169,11 +169,13 @@ gf.sim.util.PredictedCommandList.prototype.hasOutgoing = function() {
  * Writes the command list to the given packet writer, managing prediction
  * state.
  * @param {!gf.net.PacketWriter} writer Packet writer.
+ * @return {number} Number of commands written.
  */
 gf.sim.util.PredictedCommandList.prototype.write = function(writer) {
   goog.asserts.assert(this.outgoingCount_);
 
   // Write count
+  var writtenCount = this.outgoingCount_;
   writer.writeVarInt(this.outgoingCount_);
 
   // Move all pending commands to the unconfirmed list to use for prediction
@@ -208,6 +210,8 @@ gf.sim.util.PredictedCommandList.prototype.write = function(writer) {
     gf.log.write('massive backup of commands, dying');
     // TODO(benvanik): death flag
   }
+
+  return writtenCount;
 };
 
 

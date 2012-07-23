@@ -65,6 +65,13 @@ gf.sim.Observer = function(simulator, session, user) {
   this.simulator_ = simulator;
 
   /**
+   * Statistics for fast access.
+   * @private
+   * @type {!gf.sim.Statistics}
+   */
+  this.statistics_ = simulator.statistics;
+
+  /**
    * Network session.
    * @private
    * @type {!gf.net.ServerSession}
@@ -295,6 +302,8 @@ gf.sim.Observer.prototype.flush = function(time) {
   this.lastFlushTime_ = time;
   // TODO(benvanik): ignore if not enough time has elapsed
 
+  var startOffset = 0;
+
   // Prepare packet
   var writer = this.writer_;
   writer.begin(this.confirmedSequence_);
@@ -317,7 +326,10 @@ gf.sim.Observer.prototype.flush = function(time) {
       }
 
       // Add command
+      startOffset = writer.offset;
       writer.addCommand(command);
+      this.statistics_.outgoingCommands++;
+      this.statistics_.outgoingCommandSize += writer.offset - startOffset;
     }
     this.outgoingCommandList_.resetList();
   }
@@ -341,12 +353,19 @@ gf.sim.Observer.prototype.flush = function(time) {
     }
 
     // Add create/update/delete based on flags
+    startOffset = writer.offset;
     if (dirtyFlags & gf.sim.EntityDirtyFlag.DELETED) {
       writer.addDeleteEntity(entity);
+      this.statistics_.entityDeletes++;
+      this.statistics_.entityDeleteSize += writer.offset - startOffset;
     } else if (dirtyFlags & gf.sim.EntityDirtyFlag.CREATED) {
       writer.addCreateEntity(entity);
+      this.statistics_.entityCreates++;
+      this.statistics_.entityCreateSize += writer.offset - startOffset;
     } else if (dirtyFlags & gf.sim.EntityDirtyFlag.UPDATED) {
       writer.addUpdateEntity(entity);
+      this.statistics_.entityUpdates++;
+      this.statistics_.entityUpdateSize += writer.offset - startOffset;
     }
   }
 

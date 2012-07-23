@@ -64,7 +64,7 @@ gf.sim.Command = function(commandFactory) {
  * @param {!gf.net.PacketReader} reader Packet reader.
  */
 gf.sim.Command.prototype.read = function(reader) {
-  this.time = reader.readUint32() / 1000;
+  this.time = reader.readVarInt() / 1000;
   this.targetEntityId = reader.readVarInt();
 };
 
@@ -74,7 +74,7 @@ gf.sim.Command.prototype.read = function(reader) {
  * @param {!gf.net.PacketWriter} writer Packet writer.
  */
 gf.sim.Command.prototype.write = function(writer) {
-  writer.writeUint32((this.time * 1000) | 0);
+  writer.writeVarInt((this.time * 1000) | 0);
   writer.writeVarInt(this.targetEntityId);
 };
 
@@ -138,7 +138,7 @@ gf.sim.PredictedCommand.prototype.read = function(reader) {
   goog.base(this, 'read', reader);
 
   this.sequence = reader.readVarInt();
-  this.timeDelta = reader.readUint32() / 1000;
+  this.timeDelta = reader.readVarInt() / 1000;
 };
 
 
@@ -150,5 +150,5 @@ gf.sim.PredictedCommand.prototype.write = function(writer) {
 
   writer.writeVarInt(this.sequence);
   // TODO(benvanik): write compressed time - this could probably fit in 16bits
-  writer.writeUint32((this.timeDelta * 1000) | 0);
+  writer.writeVarInt((this.timeDelta * 1000) | 0);
 };
