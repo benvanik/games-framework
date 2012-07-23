@@ -78,6 +78,12 @@ SIM_TYPES_ = {
     'closure_type': 'number',
     'default_value': 'gf.sim.NO_ENTITY_ID',
   },
+  'UserID': {
+    'name': 'UserID',
+    'is_primitive': True,
+    'closure_type': 'string',
+    'default_value': '\'\'',
+  },
 }
 
 

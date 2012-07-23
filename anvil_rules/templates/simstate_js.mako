@@ -41,6 +41,14 @@ ${state.name} = function(entity, opt_variableTable) {
   this.${var.name}Entity_ = undefined;
 
   % endif
+  % if var.type['name'] == 'UserID':
+  /**
+   * @private
+   * @type {gf.net.User|undefined}
+   */
+  this.${var.name}User_ = undefined;
+
+  % endif
   /**
    * @private
    * @type {number}
@@ -95,6 +103,23 @@ ${state.name}.prototype.get${var.cap_name}Entity = function() {
   return this.${var.name}Entity_;
 };
 % endif
+% if var.type['name'] == 'UserID':
+/**
+ * Gets a cached user reference for ${var.name}.
+ * @return {gf.net.User} Current value.
+ */
+${state.name}.prototype.get${var.cap_name}User = function() {
+  if (this.${var.name}User_ === undefined) {
+    if (!this.${var.name}_) {
+      this.${var.name}User_ = null;
+    } else {
+      this.${var.name}User_ =
+          this.entity.getSimulator().getUser(this.${var.name}_);
+    }
+  }
+  return this.${var.name}User_;
+};
+%endif
 
 
 /**
@@ -109,6 +134,9 @@ ${state.name}.prototype.set${var.cap_name} = function(value) {
     ${var.onchange}
     % if var.entity_type:
     this.${var.name}Entity_ = undefined;
+    % endif
+    % if var.type['name'] == 'UserID':
+    this.${var.name}User_ = undefined;
     % endif
   }
   % else:
