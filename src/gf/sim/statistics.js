@@ -23,6 +23,7 @@ goog.provide('gf.sim.Statistics');
 goog.require('gf');
 
 
+
 /**
  * Basic statistics about the simulation.
  *
