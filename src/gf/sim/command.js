@@ -109,7 +109,7 @@ gf.sim.Command.prototype.setTime = function(value) {
 gf.sim.Command.prototype.read = function(reader, timeBase) {
   var flags = this.factory.flags;
   if (flags & gf.sim.CommandFlag.TIME) {
-    this.time_ = timeBase + reader.readUint8() / 1000;
+    this.time_ = timeBase + reader.readVarInt() / 1000;
   }
   if (!(flags & gf.sim.CommandFlag.GLOBAL)) {
     this.targetEntityId = reader.readVarInt();
@@ -125,7 +125,7 @@ gf.sim.Command.prototype.read = function(reader, timeBase) {
 gf.sim.Command.prototype.write = function(writer, timeBase) {
   var flags = this.factory.flags;
   if (flags & gf.sim.CommandFlag.TIME) {
-    writer.writeUint8(((this.time_ - timeBase) * 1000) | 0);
+    writer.writeVarInt(((this.time_ - timeBase) * 1000) | 0);
   }
   if (!(flags & gf.sim.CommandFlag.GLOBAL)) {
     writer.writeVarInt(this.targetEntityId);
