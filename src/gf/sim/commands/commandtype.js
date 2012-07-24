@@ -28,5 +28,7 @@ goog.provide('gf.sim.commands.CommandType');
  */
 gf.sim.commands.CommandType = {
   /** {@see gf.sim.commands.ReparentCommand} */
-  REPARENT: 0
+  REPARENT: 0,
+  /** {@see gf.sim.commands.SetRootEntityCommand} */
+  SET_ROOT_ENTITY: 1
 };

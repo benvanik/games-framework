@@ -111,6 +111,15 @@ gf.sim.Simulator = function(runtime, baseEntityId) {
   this.entities_ = {};
 
   /**
+   * Root entity.
+   * This is an optional entity that can be used as a look up table for global
+   * entities in the simulation.
+   * @private
+   * @type {gf.sim.Entity}
+   */
+  this.rootEntity_ = null;
+
+  /**
    * Dirty entities list.
    * The list is not reallocated each frame and the length should not be
    * trusted - instead, use {@see dirtyEntitiesLength_}.
@@ -332,10 +341,42 @@ gf.sim.Simulator.prototype.removeEntity = function(entity) {
 
 
 /**
+ * Gets the current root entity.
+ * @return {gf.sim.Entity} Root entity, if any.
+ */
+gf.sim.Simulator.prototype.getRootEntity = function() {
+  return this.rootEntity_;
+};
+
+
+/**
+ * Sets the root entity.
+ * @param {gf.sim.Entity} value New root entity, if any.
+ */
+gf.sim.Simulator.prototype.setRootEntity = function(value) {
+  this.rootEntity_ = value;
+};
+
+
+/**
  * Updates the simulator, processing one host tick.
  * @param {!gf.UpdateFrame} frame Current update frame.
  */
 gf.sim.Simulator.prototype.update = goog.abstractMethod;
+
+
+/**
+ * Creates a global command.
+ * @param {number} typeId Command type ID.
+ * @return {!gf.sim.Command} New command.
+ */
+gf.sim.Simulator.prototype.createCommand = function(typeId) {
+  var commandFactory = this.getCommandFactory(typeId);
+  goog.asserts.assert(commandFactory);
+  var command = commandFactory.allocate();
+  command.targetEntityId = gf.sim.NO_ENTITY_ID;
+  return command;
+};
 
 
 /**

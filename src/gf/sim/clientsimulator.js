@@ -22,8 +22,10 @@ goog.provide('gf.sim.ClientSimulator');
 
 goog.require('gf.log');
 goog.require('gf.net.PacketWriter');
+goog.require('gf.sim');
 goog.require('gf.sim.EntityFlag');
 goog.require('gf.sim.Simulator');
+goog.require('gf.sim.commands.SetRootEntityCommand');
 goog.require('gf.sim.packets.ExecCommands');
 goog.require('gf.sim.packets.SyncSimulation');
 goog.require('gf.sim.util.CommandList');
@@ -221,7 +223,14 @@ gf.sim.ClientSimulator.prototype.interpolateEntities = function(time) {
  * @override
  */
 gf.sim.ClientSimulator.prototype.executeCommand = function(command) {
-  // TODO(benvanik): global commands
+  if (command instanceof gf.sim.commands.SetRootEntityCommand) {
+    if (command.entityId == gf.sim.NO_ENTITY_ID) {
+      this.setRootEntity(null);
+    } else {
+      var entity = this.getEntity(command.entityId);
+      this.setRootEntity(entity);
+    }
+  }
 };
 
 

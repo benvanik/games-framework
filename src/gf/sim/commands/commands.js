@@ -21,6 +21,7 @@
 goog.provide('gf.sim.commands');
 
 goog.require('gf.sim.CommandFactory');
+goog.require('gf.sim.commands.SetRootEntityCommand');
 goog.require('gf.sim.commands.ReparentCommand');
 
 
@@ -29,8 +30,15 @@ goog.require('gf.sim.commands.ReparentCommand');
  * @param {!gf.sim.Simulator} simulator Simulator.
  */
 gf.sim.commands.registerCommands = function(simulator) {
+  // REPARENT
   simulator.registerCommandFactory(new gf.sim.CommandFactory(
       gf.sim.commands.ReparentCommand.ID,
       gf.sim.commands.ReparentCommand,
       gf.sim.commands.ReparentCommand.FLAGS));
+
+  // SET_ROOT_ENTITY
+  simulator.registerCommandFactory(new gf.sim.CommandFactory(
+      gf.sim.commands.SetRootEntityCommand.ID,
+      gf.sim.commands.SetRootEntityCommand,
+      gf.sim.commands.SetRootEntityCommand.FLAGS));
 };
