@@ -21,8 +21,8 @@
 goog.provide('gf.sim.commands');
 
 goog.require('gf.sim.CommandFactory');
-goog.require('gf.sim.commands.SetRootEntityCommand');
 goog.require('gf.sim.commands.ReparentCommand');
+goog.require('gf.sim.commands.SetRootEntityCommand');
 
 
 /**
