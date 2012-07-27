@@ -137,12 +137,13 @@ gf.vec.Viewport.FrustumPlane_ = {
 
 /**
  * Resets the viewport before processing a frame.
- * @param {!goog.math.Size} size New viewport size, in px.
+ * @param {number} width New viewport width, in px.
+ * @param {number} height New viewport height, in px.
  */
-gf.vec.Viewport.prototype.reset = function(size) {
-  if (this.width != size.width || this.height != size.height) {
-    this.width = size.width;
-    this.height = size.height;
+gf.vec.Viewport.prototype.reset = function(width, height) {
+  if (this.width != width || this.height != height) {
+    this.width = width;
+    this.height = height;
 
     var x = 2 / this.width;
     var y = 2 / -this.height;
@@ -321,9 +322,10 @@ gf.vec.Viewport.prototype.containsBoundingBox = function(aabb) {
  * direction of the viewport.
  * @param {number} screenX Screen position X, in px.
  * @param {number} screenY Screen position Y, in px.
- * @return {!gf.vec.Ray.Type} ray cast from the given coordinates.
+ * @param {!gf.vec.Ray.Type} result Resulting ray.
+ * @return {!gf.vec.Ray.Type} Result ray, for chaining.
  */
-gf.vec.Viewport.prototype.getRay = function(screenX, screenY) {
+gf.vec.Viewport.prototype.getRay = function(screenX, screenY, result) {
   // Window to NDC
   var x = (screenX / this.width) * 2 - 1;
   var y = 1 - (screenY / this.height) * 2;
@@ -340,9 +342,11 @@ gf.vec.Viewport.prototype.getRay = function(screenX, screenY) {
   // Find direction
   goog.vec.Vec3.direction(start, end, end);
 
-  return gf.vec.Ray.createFromValues(
+  gf.vec.Ray.setFromValues(
+      result,
       start[0], start[1], start[2],
       end[0], end[1], end[2]);
+  return result;
 };
 
 
