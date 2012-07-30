@@ -18,7 +18,6 @@ goog.provide('gf.vec.Viewport');
 
 goog.require('gf.vec.Containment');
 goog.require('gf.vec.Ray');
-/** @suppress {extraRequire} */
 goog.require('goog.math.Size');
 goog.require('goog.vec.Mat4');
 goog.require('goog.vec.Vec3');
@@ -36,25 +35,44 @@ gf.vec.Viewport = function() {
    * Viewport width, in px.
    * @type {number}
    */
-  this.width = 100;
+  this.width = 1;
 
   /**
    * Viewport height, in px.
    * @type {number}
    */
-  this.height = 100;
+  this.height = 1;
+
+  /**
+   * Aspect ratio.
+   * This may differ from the aspect ratio of width / height, and is used only
+   * in the 3D projection matrices.
+   * @private
+   * @type {number|undefined}
+   */
+  this.aspectRatio_ = undefined;
 
   /**
    * Distance to the near clipping plane.
+   * @private
    * @type {number}
    */
-  this.near = 0.1;
+  this.near_ = 0.1;
 
   /**
    * Distance to the far clipping plane.
+   * @private
    * @type {number}
    */
-  this.far = 100;
+  this.far_ = 100;
+
+  /**
+   * Whether any of the primary viewport parameters (size/near/far/etc)
+   * have changed since the last calculate.
+   * @private
+   * @type {boolean}
+   */
+  this.paramsDirty_ = true;
 
   /**
    * Orthographic projection matrix, useful for 2D.
@@ -136,15 +154,96 @@ gf.vec.Viewport.FrustumPlane_ = {
 
 
 /**
- * Resets the viewport before processing a frame.
- * @param {number} width New viewport width, in px.
- * @param {number} height New viewport height, in px.
- * @param {number=} opt_aspectRatio Override the aspect ratio.
+ * Sets the viewport size.
+ * @param {number|!goog.math.Size} widthOrSize New viewport width, in px.
+ * @param {number=} opt_height New viewport height, in px.
  */
-gf.vec.Viewport.prototype.reset = function(width, height, opt_aspectRatio) {
+gf.vec.Viewport.prototype.setSize = function(widthOrSize, opt_height) {
+  var width;
+  var height;
+  if (widthOrSize instanceof goog.math.Size) {
+    width = widthOrSize.width;
+    height = widthOrSize.height;
+  } else {
+    width = /** @type {number} */ (widthOrSize);
+    height = /** @type {number} */ (opt_height);
+  }
   if (this.width != width || this.height != height) {
     this.width = width;
     this.height = height;
+    this.paramsDirty_ = true;
+  }
+};
+
+
+/**
+ * Gets the viewport aspect ratio.
+ * @return {number} Aspect ratio value.
+ */
+gf.vec.Viewport.prototype.getAspectRatio = function() {
+  return this.aspectRatio_ === undefined ?
+      this.width / this.height : this.aspectRatio_;
+};
+
+
+/**
+ * Sets the viewport aspect ratio.
+ * @param {number} value Aspect ratio value.
+ */
+gf.vec.Viewport.prototype.setAspectRatio = function(value) {
+  this.aspectRatio_ = value;
+};
+
+
+/**
+ * Gets the viewport near plane.
+ * @return {number} Near plane value.
+ */
+gf.vec.Viewport.prototype.getNear = function() {
+  return this.near_;
+};
+
+
+/**
+ * Sets the viewport near plane.
+ * @param {number} value Near plane value.
+ */
+gf.vec.Viewport.prototype.setNear = function(value) {
+  if (this.near_ != value) {
+    this.near_ = value;
+    this.paramsDirty_ = true;
+  }
+};
+
+
+/**
+ * Gets the viewport far plane.
+ * @return {number} Far plane value.
+ */
+gf.vec.Viewport.prototype.getFar = function() {
+  return this.far_;
+};
+
+
+/**
+ * Sets the viewport far plane.
+ * @param {number} value Far plane value.
+ */
+gf.vec.Viewport.prototype.setFar = function(value) {
+  if (this.far_ != value) {
+    this.far_ = value;
+    this.paramsDirty_ = true;
+  }
+};
+
+
+/**
+ * Calculates all dependent values, assuming only the projection and view
+ * matrices are up to date.
+ */
+gf.vec.Viewport.prototype.calculate = function() {
+  if (this.paramsDirty_) {
+    this.paramsDirty_ = false;
 
     var x = 2 / this.width;
     var y = 2 / -this.height;
@@ -155,11 +254,11 @@ gf.vec.Viewport.prototype.reset = function(width, height, opt_aspectRatio) {
         -1, 1, 0, 1);
 
     var fovy = Math.PI / 4;
-    var aspectRatio = opt_aspectRatio || (this.width / this.height);
+    var aspectRatio = this.getAspectRatio();
     goog.vec.Mat4.makePerspective(
         this.projMatrix,
         fovy, aspectRatio,
-        this.near, this.far);
+        this.near_, this.far_);
 
     // TODO(benvanik): remove these - require calculate after reset
     goog.vec.Mat4.multMat(
@@ -168,14 +267,7 @@ gf.vec.Viewport.prototype.reset = function(width, height, opt_aspectRatio) {
         this.viewProjMatrix);
     goog.vec.Mat4.invert(this.viewProjMatrix, this.inverseViewProjMatrix);
   }
-};
 
-
-/**
- * Calculates all dependent values, assuming only the projection and view
- * matrices are up to date.
- */
-gf.vec.Viewport.prototype.calculate = function() {
   // Update matrices
   goog.vec.Mat4.multMat(this.projMatrix, this.viewMatrix, this.viewProjMatrix);
   goog.vec.Mat4.invert(this.viewMatrix, this.inverseViewMatrix);

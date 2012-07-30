@@ -243,8 +243,7 @@ cube.CubeDemo.prototype.render = function(frame) {
   // Update viewport to the latest display size
   // Must be done first as this resets most viewport matrices/etc
   var viewport = this.viewport_;
-  var displaySize = this.display_.getSize();
-  viewport.reset(displaySize.width, displaySize.height);
+  viewport.setSize(this.display_.getSize());
 
   // Grab the latest input data
   // After calling this, inputData will contain all deltas and states until now
