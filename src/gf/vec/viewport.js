@@ -139,8 +139,9 @@ gf.vec.Viewport.FrustumPlane_ = {
  * Resets the viewport before processing a frame.
  * @param {number} width New viewport width, in px.
  * @param {number} height New viewport height, in px.
+ * @param {number=} opt_aspectRatio Override the aspect ratio.
  */
-gf.vec.Viewport.prototype.reset = function(width, height) {
+gf.vec.Viewport.prototype.reset = function(width, height, opt_aspectRatio) {
   if (this.width != width || this.height != height) {
     this.width = width;
     this.height = height;
@@ -154,12 +155,13 @@ gf.vec.Viewport.prototype.reset = function(width, height) {
         -1, 1, 0, 1);
 
     var fovy = Math.PI / 4;
-    var aspect = this.width / this.height;
+    var aspectRatio = opt_aspectRatio || (this.width / this.height);
     goog.vec.Mat4.makePerspective(
         this.projMatrix,
-        fovy, aspect,
+        fovy, aspectRatio,
         this.near, this.far);
 
+    // TODO(benvanik): remove these - require calculate after reset
     goog.vec.Mat4.multMat(
         this.projMatrix,
         this.viewMatrix,
