@@ -194,12 +194,12 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function() {
 
   // Write header data
   // TODO(benvanik): could pack the header very tightly
-  writer.writeVarInt((timeBase * 1000) | 0);
-  writer.writeVarInt(this.confirmedSequence_);
-  writer.writeVarInt(this.createEntityCount_);
-  writer.writeVarInt(this.updateEntityCount_);
-  writer.writeVarInt(this.deleteEntityCount_);
-  writer.writeVarInt(this.commandCount_);
+  writer.writeVarUint((timeBase * 1000) | 0);
+  writer.writeVarUint(this.confirmedSequence_);
+  writer.writeVarUint(this.createEntityCount_);
+  writer.writeVarUint(this.updateEntityCount_);
+  writer.writeVarUint(this.deleteEntityCount_);
+  writer.writeVarUint(this.commandCount_);
 
   // Create entities
   for (var n = 0; n < this.createEntityCount_; n++) {
@@ -210,13 +210,13 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function() {
 
     // Write target entity ID
     // Since only server IDs are being sent we cheat and send shifted by 1
-    writer.writeVarInt(entity.getId() >> 1);
+    writer.writeVarUint(entity.getId() >> 1);
 
     // Write entity info
-    writer.writeVarInt(entity.getTypeId());
-    writer.writeVarInt(entity.getFlags());
+    writer.writeVarUint(entity.getTypeId());
+    writer.writeVarUint(entity.getFlags());
     var parent = entity.getParent();
-    writer.writeVarInt(parent ? parent.getId() : gf.sim.NO_ENTITY_ID);
+    writer.writeVarUint(parent ? parent.getId() : gf.sim.NO_ENTITY_ID);
 
     // Write entire entity
     entity.write(writer);
@@ -237,7 +237,7 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function() {
 
     // Write target entity ID
     // Since only server IDs are being sent we cheat and send shifted by 1
-    writer.writeVarInt(entity.getId() >> 1);
+    writer.writeVarUint(entity.getId() >> 1);
 
     // Write changes
     entity.writeDelta(writer);
@@ -258,7 +258,7 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function() {
 
     // Write target entity ID
     // Since only server IDs are being sent we cheat and send shifted by 1
-    writer.writeVarInt(entity.getId() >> 1);
+    writer.writeVarUint(entity.getId() >> 1);
 
     this.statistics_.entityDeletes++;
     this.statistics_.entityDeleteSize += writer.offset - startOffset;
@@ -275,7 +275,7 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function() {
     startOffset = writer.offset;
 
     // Write command ID and contents
-    writer.writeVarInt(command.factory.typeId);
+    writer.writeVarUint(command.factory.typeId);
     command.write(writer, timeBase);
 
     this.statistics_.outgoingCommands++;

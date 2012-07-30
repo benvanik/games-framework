@@ -137,7 +137,7 @@ gf.sim.util.PredictedCommandList.prototype.confirmSequence = function(
     // Remove confirmed commands
     // TODO(benvanik): don't splice here
     unconfirmedList.splice(0, killCount);
-    this.unconfirmedPredictedCount_ = unconfirmedList.length;
+    this.unconfirmedPredictedCount_ -= killCount;
   }
 };
 
@@ -184,14 +184,14 @@ gf.sim.util.PredictedCommandList.prototype.write = function(writer) {
       break;
     }
   }
-  writer.writeVarInt((timeBase * 1000) | 0);
+  writer.writeVarUint((timeBase * 1000) | 0);
 
   // Write sequence high number
-  writer.writeVarInt(this.nextSequenceId_ - 1);
+  writer.writeVarUint(this.nextSequenceId_ - 1);
 
   // Write count
   var writtenCount = this.outgoingCount_;
-  writer.writeVarInt(this.outgoingCount_);
+  writer.writeVarUint(this.outgoingCount_);
 
   // Move all pending commands to the unconfirmed list to use for prediction
   for (var n = 0; n < this.outgoingCount_; n++) {
@@ -200,7 +200,7 @@ gf.sim.util.PredictedCommandList.prototype.write = function(writer) {
     this.outgoingArray_[n] = null;
 
     // Add command to packet
-    writer.writeVarInt(command.factory.typeId);
+    writer.writeVarUint(command.factory.typeId);
     command.write(writer, timeBase);
 
     // Cleanup command

@@ -57,7 +57,7 @@ goog.inherits(gf.sim.commands.ReparentCommand, gf.sim.Command);
 gf.sim.commands.ReparentCommand.prototype.read = function(reader, timeBase) {
   goog.base(this, 'read', reader, timeBase);
 
-  this.parentId = reader.readVarInt();
+  this.parentId = reader.readVarUint();
 };
 
 
@@ -67,7 +67,7 @@ gf.sim.commands.ReparentCommand.prototype.read = function(reader, timeBase) {
 gf.sim.commands.ReparentCommand.prototype.write = function(writer, timeBase) {
   goog.base(this, 'write', writer, timeBase);
 
-  writer.writeVarInt(this.parentId);
+  writer.writeVarUint(this.parentId);
 };
 
 

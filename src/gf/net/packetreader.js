@@ -186,16 +186,28 @@ gf.net.PacketReader.prototype.readUint32 = function() {
  * Reads a value from the buffer.
  * @return {number} Value read.
  */
-gf.net.PacketReader.prototype.readVarInt = function() {
+gf.net.PacketReader.prototype.readVarUint = function() {
   goog.asserts.assert(this.offset + 1 <= this.buffer.length);
   var result = 0;
   var shift = 0;
-  do {
-    var nextByte = this.buffer[this.offset++] & 0xFF;
-    result += (nextByte & 0x7F) << shift;
+  var nextByte;
+  while ((nextByte = this.buffer[this.offset++] & 0xFF) & 0x80) {
+    result |= (nextByte & 0x7F) << shift;
     shift += 7;
-  } while (nextByte >= 0x80);
-  return result;
+  }
+  return result | (nextByte << shift);
+};
+
+
+/**
+ * Reads a value from the buffer.
+ * @return {number} Value read.
+ */
+gf.net.PacketReader.prototype.readVarInt = function() {
+  // Signed integer zigzag coding:
+  // https://developers.google.com/protocol-buffers/docs/encoding#types
+  var value = this.readVarUint();
+  return ((((value << 31) >> 31) ^ value) >> 1) ^ (value & (1 << 31));
 };
 
 

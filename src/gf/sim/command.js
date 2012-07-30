@@ -109,10 +109,10 @@ gf.sim.Command.prototype.setTime = function(value) {
 gf.sim.Command.prototype.read = function(reader, timeBase) {
   var flags = this.factory.flags;
   if (flags & gf.sim.CommandFlag.TIME) {
-    this.time_ = timeBase + reader.readVarInt() / 1000;
+    this.time_ = timeBase + reader.readVarUint() / 1000;
   }
   if (!(flags & gf.sim.CommandFlag.GLOBAL)) {
-    this.targetEntityId = reader.readVarInt();
+    this.targetEntityId = reader.readVarUint();
   }
 };
 
@@ -125,10 +125,15 @@ gf.sim.Command.prototype.read = function(reader, timeBase) {
 gf.sim.Command.prototype.write = function(writer, timeBase) {
   var flags = this.factory.flags;
   if (flags & gf.sim.CommandFlag.TIME) {
-    writer.writeVarInt(((this.time_ - timeBase) * 1000) | 0);
+    var timeDelta = ((this.time_ - timeBase) * 1000) | 0;
+    goog.asserts.assert(timeDelta >= 0);
+    if (timeDelta < 0) {
+      timeDelta = 0;
+    }
+    writer.writeVarUint(timeDelta);
   }
   if (!(flags & gf.sim.CommandFlag.GLOBAL)) {
-    writer.writeVarInt(this.targetEntityId);
+    writer.writeVarUint(this.targetEntityId);
   }
 };
 

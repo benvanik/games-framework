@@ -54,7 +54,7 @@ gf.sim.commands.SetRootEntityCommand.prototype.read = function(
     reader, timeBase) {
   goog.base(this, 'read', reader, timeBase);
 
-  this.entityId = reader.readVarInt();
+  this.entityId = reader.readVarUint();
 };
 
 
@@ -65,7 +65,7 @@ gf.sim.commands.SetRootEntityCommand.prototype.write = function(
     writer, timeBase) {
   goog.base(this, 'write', writer, timeBase);
 
-  writer.writeVarInt(this.entityId);
+  writer.writeVarUint(this.entityId);
 };
 
 

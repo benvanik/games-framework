@@ -789,7 +789,7 @@ gf.sim.Variable.EntityID.prototype.clone = function() {
  * @override
  */
 gf.sim.Variable.EntityID.prototype.read = function(target, reader) {
-  this.setter_.call(target, reader.readVarInt());
+  this.setter_.call(target, reader.readVarUint());
 };
 
 
@@ -797,7 +797,7 @@ gf.sim.Variable.EntityID.prototype.read = function(target, reader) {
  * @override
  */
 gf.sim.Variable.EntityID.prototype.write = function(target, writer) {
-  writer.writeVarInt(this.getter_.call(target));
+  writer.writeVarUint(this.getter_.call(target));
 };
 
 

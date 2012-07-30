@@ -201,17 +201,25 @@ gf.net.PacketWriter.prototype.writeUint32 = function(value) {
  * Writes a value to the buffer.
  * @param {number} value Value to write.
  */
-gf.net.PacketWriter.prototype.writeVarInt = function(value) {
+gf.net.PacketWriter.prototype.writeVarUint = function(value) {
   this.ensureCapacity(5);
-  var bytesWritten = 0;
-  do {
-    var nextByte = value & 0x7F;
-    if (value >= 0x80) {
-      nextByte |= 0x80;
-    }
-    this.buffer[this.offset++] = nextByte;
+  value &= 0xFFFFFFFF;
+  while (value & 0xFFFFFF80) {
+    this.buffer[this.offset++] = (value & 0x7F) | 0x80;
     value >>>= 7;
-  } while (value);
+  }
+  this.buffer[this.offset++] = value & 0x7F;
+};
+
+
+/**
+ * Writes a value to the buffer.
+ * @param {number} value Value to write.
+ */
+gf.net.PacketWriter.prototype.writeVarInt = function(value) {
+  // Signed integer zigzag coding:
+  // https://developers.google.com/protocol-buffers/docs/encoding#types
+  this.writeVarUint((value << 1) ^ (value >> 31));
 };
 
 

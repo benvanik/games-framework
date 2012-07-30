@@ -423,9 +423,9 @@ gf.sim.ServerSimulator.prototype.handleExecCommands_ =
   }
 
   // Read header
-  var timeBase = reader.readVarInt() / 1000;
-  var highSequenceNumber = reader.readVarInt();
-  var commandCount = reader.readVarInt();
+  var timeBase = reader.readVarUint() / 1000;
+  var highSequenceNumber = reader.readVarUint();
+  var commandCount = reader.readVarUint();
 
   // Update stats
   this.statistics.incomingCommands += commandCount;
@@ -434,7 +434,7 @@ gf.sim.ServerSimulator.prototype.handleExecCommands_ =
   // Commands
   for (var n = 0; n < commandCount; n++) {
     // Read command type
-    var commandTypeId = reader.readVarInt();
+    var commandTypeId = reader.readVarUint();
     var commandFactory = this.getCommandFactory(commandTypeId);
     if (!commandFactory) {
       // Invalid command

@@ -167,7 +167,7 @@ gf.sim.EntityState.prototype.readDelta = function(reader) {
 gf.sim.EntityState.prototype.readDeltaVariables_ = function(
     reader, startingOrdinal) {
   // Read bits indicating which variables are present
-  var presentBits = reader.readVarInt();
+  var presentBits = reader.readVarUint();
 
   // For each bit that is present, read the value
   var ordinal = startingOrdinal;
@@ -227,7 +227,7 @@ gf.sim.EntityState.prototype.writeDelta = function(writer) {
 gf.sim.EntityState.prototype.writeDeltaVariables_ = function(
     writer, presentBits, startingOrdinal) {
   // Write dirty bits
-  writer.writeVarInt(presentBits);
+  writer.writeVarUint(presentBits);
 
   // For each bit that is dirty, write the value
   var ordinal = startingOrdinal;

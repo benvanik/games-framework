@@ -319,12 +319,12 @@ gf.sim.ClientSimulator.prototype.compact_ = function(frame) {
 gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     function(packet, packetType, reader) {
   // Read header
-  var timeBase = reader.readVarInt() / 1000;
-  var confirmedSequence = reader.readVarInt();
-  var createEntityCount = reader.readVarInt();
-  var updateEntityCount = reader.readVarInt();
-  var deleteEntityCount = reader.readVarInt();
-  var commandCount = reader.readVarInt();
+  var timeBase = reader.readVarUint() / 1000;
+  var confirmedSequence = reader.readVarUint();
+  var createEntityCount = reader.readVarUint();
+  var updateEntityCount = reader.readVarUint();
+  var deleteEntityCount = reader.readVarUint();
+  var commandCount = reader.readVarUint();
 
   this.statistics.entityCreates += createEntityCount;
   this.statistics.entityUpdates += updateEntityCount;
@@ -349,12 +349,12 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     startOffset = reader.offset;
 
     // Read entity ID, uncompress into full ID
-    var entityId = reader.readVarInt() << 1;
+    var entityId = reader.readVarUint() << 1;
 
     // Read entity info
-    var entityTypeId = reader.readVarInt();
-    var entityFlags = reader.readVarInt();
-    var entityParentId = reader.readVarInt();
+    var entityTypeId = reader.readVarUint();
+    var entityFlags = reader.readVarUint();
+    var entityParentId = reader.readVarUint();
 
     // Get entity type factory
     var entityFactory = this.getEntityFactory(entityTypeId);
@@ -392,7 +392,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     startOffset = reader.offset;
 
     // Read entity ID, uncompress into full ID
-    var entityId = reader.readVarInt() << 1;
+    var entityId = reader.readVarUint() << 1;
 
     // Find entity
     var entity = this.getEntity(entityId);
@@ -414,7 +414,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     startOffset = reader.offset;
 
     // Read entity ID, uncompress into full ID
-    var entityId = reader.readVarInt() << 1;
+    var entityId = reader.readVarUint() << 1;
     this.statistics.entityDeleteSize += reader.offset - startOffset;
 
     // Find entity
@@ -454,7 +454,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     startOffset = reader.offset;
 
     // Read command type
-    var commandTypeId = reader.readVarInt();
+    var commandTypeId = reader.readVarUint();
     var commandFactory = this.getCommandFactory(commandTypeId);
     if (!commandFactory) {
       // Invalid command
