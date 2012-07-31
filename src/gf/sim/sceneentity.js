@@ -20,7 +20,6 @@
 
 goog.provide('gf.sim.SceneEntity');
 
-goog.require('gf.log');
 goog.require('gf.sim.Entity');
 goog.require('gf.sim.SpatialEntity');
 
@@ -68,7 +67,6 @@ gf.sim.SceneEntity.prototype.getSpatialDatabase = function() {
  */
 gf.sim.SceneEntity.prototype.childAdded = function(entity) {
   if (entity instanceof gf.sim.SpatialEntity) {
-    gf.log.debug('spatial child added: ' + entity.getId());
     this.spatialDatabase_.addEntity(entity);
   }
 };
@@ -79,7 +77,6 @@ gf.sim.SceneEntity.prototype.childAdded = function(entity) {
  */
 gf.sim.SceneEntity.prototype.childRemoved = function(entity) {
   if (entity instanceof gf.sim.SpatialEntity) {
-    gf.log.debug('spatial child removed: ' + entity.getId());
     this.spatialDatabase_.removeEntity(entity);
   }
 };
@@ -90,6 +87,5 @@ gf.sim.SceneEntity.prototype.childRemoved = function(entity) {
  * @param {!gf.sim.SpatialEntity} entity Entity that changed.
  */
 gf.sim.SceneEntity.prototype.childTransformed = function(entity) {
-  gf.log.debug('spatial child transformed: ' + entity.getId());
   this.spatialDatabase_.updateEntity(entity);
 };
