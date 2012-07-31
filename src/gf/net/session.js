@@ -16,6 +16,7 @@
 
 goog.provide('gf.net.Session');
 
+goog.require('gf.log');
 goog.require('gf.net.AuthProvider');
 goog.require('gf.net.PacketSwitch');
 goog.require('gf.net.ServerInfo');

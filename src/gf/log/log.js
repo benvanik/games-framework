@@ -44,9 +44,19 @@ gf.log.installListener = function(port, prefix) {
 
 /**
  * HACK: sets a global port that receives log events.
+ * @private
  * @type {!Array.<!MessagePort>}
  */
-gf.log.activePorts = goog.global.postMessage ? [goog.global] : [];
+gf.log.activePorts_ = goog.global.postMessage ? [goog.global] : [];
+
+
+/**
+ * Attaches a target port for logging messages.
+ * @param {!MessagePort} port Port to receive messages.
+ */
+gf.log.attachPort = function(port) {
+  gf.log.activePorts_.push(port);
+};
 
 
 /**
@@ -59,13 +69,13 @@ gf.log.write = function(var_args) {
   //     thread for display there)
   // TODO(benvanik): option for forking log messages from server to admin
   //     clients to aid debugging
-  for (var n = 0; n < gf.log.activePorts.length; n++) {
+  for (var n = 0; n < gf.log.activePorts_.length; n++) {
     var args = new Array(arguments.length);
     for (var m = 0; m < args.length; m++) {
       args[m] = arguments[m];
     }
     try {
-      gf.log.activePorts[n].postMessage({
+      gf.log.activePorts_[n].postMessage({
         'type': 'gf_log',
         'args': args
       }, null);
