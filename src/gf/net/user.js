@@ -44,10 +44,10 @@ gf.net.User = function(opt_sessionId, opt_wireId, opt_flags, opt_userInfo,
 
   /**
    * Allocated network ID used when transfering packets over the network.
-   * Must be <= {@see gf.net.User#MAX_WIRE_ID}.
+   * Must be > 0 and <= {@see gf.net.User#MAX_WIRE_ID}.
    * @type {number}
    */
-  this.wireId = goog.isDef(opt_wireId) ? opt_wireId : gf.net.User.MAX_WIRE_ID;
+  this.wireId = opt_wireId || gf.net.User.NO_WIRE_ID;
 
   /**
    * User flags bitmask from {@see gf.net.User.Flags}.
@@ -121,11 +121,20 @@ gf.net.User.clone = function(user) {
 
 
 /**
+ * Invalid user wire ID.
+ * This indicates that an ID has not been assigned or a user is not specified.
+ * @const
+ * @type {number}
+ */
+gf.net.User.NO_WIRE_ID = 0;
+
+
+/**
  * Maximum user wire ID value.
  * @const
  * @type {number}
  */
-gf.net.User.MAX_WIRE_ID = 0xFE;
+gf.net.User.MAX_WIRE_ID = 0xFF;
 
 
 /**

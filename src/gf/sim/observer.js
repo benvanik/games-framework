@@ -217,6 +217,17 @@ gf.sim.Observer.prototype.executeIncomingCommands = function() {
  * @param {!gf.sim.Command} command Command to send over the network.
  */
 gf.sim.Observer.prototype.queueOutgoingCommand = function(command) {
+  // Ignore commands that are owner-only and don't match our user
+  // TODO(benvanik): make this check faster - perhaps cache entity on
+  //     command instead of just ID?
+  if (command.targetEntityId != gf.sim.NO_ENTITY_ID) {
+    var entity = this.simulator_.getEntity(command.targetEntityId);
+    if (entity.getFlags() & gf.sim.EntityFlag.OWNER_ONLY &&
+        entity.getOwner() != this.user_) {
+      return;
+    }
+  }
+
   // NOTE: we wait until flush to do the should-we-send logic to ensure
   // that we have a consistent state based on entity updates
   this.outgoingCommandList_.addCommand(command);
@@ -244,8 +255,16 @@ gf.sim.Observer.prototype.isEntityChangeRelevant = function(entity) {
  * @param {!gf.sim.Entity} entity Entity that changed this tick.
  */
 gf.sim.Observer.prototype.notifyEntityChange = function(entity) {
+  var entityFlags = entity.getFlags();
+
   // Don't replicate entities that aren't replicated
-  if (entity.getFlags() & gf.sim.EntityFlag.NOT_REPLICATED) {
+  if (entityFlags & gf.sim.EntityFlag.NOT_REPLICATED) {
+    return;
+  }
+
+  // Don't replicate entities that are owner-only if this is not that user
+  if (entityFlags & gf.sim.EntityFlag.OWNER_ONLY &&
+      entity.getOwner() != this.user_) {
     return;
   }
 

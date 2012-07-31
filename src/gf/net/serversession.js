@@ -91,12 +91,13 @@ gf.net.ServerSession = function(socket, protocolVersion, authToken,
   /**
    * A list of all available wire IDs.
    * If this list is empty we are out.
+   * Note that 0 is not a valid ID.
    * @private
    * @type {!Array.<number>}
    */
-  this.availableWireIds_ = new Array(256);
-  for (var n = 0; n < this.availableWireIds_.length; n++) {
-    this.availableWireIds_[n] = n;
+  this.availableWireIds_ = new Array(255);
+  for (var n = 1; n < this.availableWireIds_.length; n++) {
+    this.availableWireIds_[n - 1] = n;
   }
 };
 goog.inherits(gf.net.ServerSession, gf.net.Session);
@@ -232,9 +233,9 @@ gf.net.ServerSession.prototype.removeUser_ = function(user) {
       user.sessionId, user.disconnectReason));
 
   // Return the wire ID to the pool
-  if (user.wireId != -1) {
+  if (user.wireId != gf.net.User.NO_WIRE_ID) {
     this.availableWireIds_.push(user.wireId);
-    user.wireId = -1;
+    user.wireId = gf.net.User.NO_WIRE_ID;
   }
 };
 

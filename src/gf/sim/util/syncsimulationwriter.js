@@ -215,6 +215,8 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function() {
     // Write entity info
     writer.writeVarUint(entity.getTypeId());
     writer.writeVarUint(entity.getFlags());
+    var owner = entity.getOwner();
+    writer.writeVarUint(owner ? owner.wireId : gf.net.User.NO_WIRE_ID);
     var parent = entity.getParent();
     writer.writeVarUint(parent ? parent.getId() : gf.sim.NO_ENTITY_ID);
 

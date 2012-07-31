@@ -673,7 +673,13 @@ gf.sim.EntityFlag = {
    * detached on the server.
    * Examples: sound effects, particle effects.
    */
-  TRANSIENT: 1 << 5
+  TRANSIENT: 1 << 5,
+
+  /**
+   * Replicate this entity to the owner only.
+   * Examples: player entity controllers, cameras.
+   */
+  OWNER_ONLY: 1 << 6
 };
 
 

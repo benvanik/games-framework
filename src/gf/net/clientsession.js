@@ -82,7 +82,7 @@ gf.net.ClientSession = function(socket, protocolVersion, authToken, userInfo) {
   // Send connect request
   var user = new gf.net.User(
       sessionId,
-      0xFF,
+      gf.net.User.NO_WIRE_ID,
       0 /* flags */,
       userInfo,
       gf.net.UserAgent.detect());

@@ -354,6 +354,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     // Read entity info
     var entityTypeId = reader.readVarUint();
     var entityFlags = reader.readVarUint();
+    var entityOwnerId = reader.readVarUint();
     var entityParentId = reader.readVarUint();
 
     // Get entity type factory
@@ -373,6 +374,11 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
 
     // Add to simulation
     this.addEntity(entity);
+
+    // Set owning user
+    if (entityOwnerId) {
+      entity.setOwner(this.session_.getUserByWireId(entityOwnerId));
+    }
 
     // Queue for parenting
     // We have to do this after the adds as we are not sorted and the parent
