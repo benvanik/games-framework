@@ -224,7 +224,7 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function() {
     this.statistics_.entityCreates++;
     this.statistics_.entityCreateSize += writer.offset - startOffset;
 
-    gf.log.write('-> create entity', entity.getId());
+    gf.log.write('-> create entity', entity.getTypeId(), entity.getId());
   }
   this.createEntityCount_ = 0;
 
@@ -281,7 +281,7 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function() {
     this.statistics_.outgoingCommands++;
     this.statistics_.outgoingCommandSize += writer.offset - startOffset;
 
-    gf.log.write('-> command');
+    gf.log.write('-> command', command.factory.typeId);
   }
   this.commandCount_ = 0;
 

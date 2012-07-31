@@ -168,7 +168,10 @@ gf.net.Session.prototype.addUser = function(user) {
  * @param {!gf.net.User} user User to remove.
  */
 gf.net.Session.prototype.removeUser = function(user) {
-  goog.object.remove(this.usersBySessionId_, user.sessionId);
+  if (!goog.object.remove(this.usersBySessionId_, user.sessionId)) {
+    gf.log.debug('user not found during remove', user.sessionId);
+    return;
+  }
   this.usersByWireId_[user.wireId] = null;
   goog.array.remove(this.users, user);
 

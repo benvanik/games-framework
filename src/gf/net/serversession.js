@@ -160,7 +160,7 @@ gf.net.ServerSession.prototype.unready = function() {
  */
 gf.net.ServerSession.prototype.handleConnect_ = function(socket) {
   if (!gf.NODE) {
-    gf.log.activePort = /** @type {!MessagePort} */ (socket.endpoint);
+    gf.log.activePorts.push(/** @type {!MessagePort} */ (socket.endpoint));
   }
 
   // Place socket in joining pool
@@ -215,8 +215,12 @@ gf.net.ServerSession.prototype.addUser_ = function(user) {
  * @param {!gf.net.User} user User to remove.
  */
 gf.net.ServerSession.prototype.removeUser_ = function(user) {
+  if (!user.socket ||
+      this.getUserBySessionId(user.sessionId) != user) {
+    return;
+  }
+
   // Shutdown the socket
-  goog.asserts.assert(user.socket);
   user.socket.close();
 
   // Remove

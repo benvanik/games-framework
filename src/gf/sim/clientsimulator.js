@@ -384,7 +384,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
       parentingRequired.push([entity, entityParentId]);
     }
 
-    gf.log.write('<- create entity', entityId);
+    gf.log.write('<- create entity', entity.getTypeId(), entityId);
   }
 
   // Update entities

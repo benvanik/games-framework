@@ -179,7 +179,8 @@ gf.sim.Scheduler.prototype.update = function(frame) {
       }
 
       // Event has expired - issue it
-      events.unshift();
+      // TODO(benvanik): faster way - perhaps a linked list?
+      events.shift();
 
       // Pull off properties and return the event to the pool
       // This enables the callback to schedule an event and (ideally) get the
