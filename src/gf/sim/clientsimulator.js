@@ -24,6 +24,7 @@ goog.require('gf.log');
 goog.require('gf.net.PacketWriter');
 goog.require('gf.sim');
 goog.require('gf.sim.EntityFlag');
+goog.require('gf.sim.RemoveEntityMode');
 goog.require('gf.sim.Simulator');
 goog.require('gf.sim.commands.SetRootEntityCommand');
 goog.require('gf.sim.packets.ExecCommands');
@@ -136,8 +137,8 @@ gf.sim.ClientSimulator.prototype.addEntity = function(entity) {
 /**
  * @override
  */
-gf.sim.ClientSimulator.prototype.removeEntity = function(entity) {
-  goog.base(this, 'removeEntity', entity);
+gf.sim.ClientSimulator.prototype.removeEntity = function(entity, opt_mode) {
+  goog.base(this, 'removeEntity', entity, opt_mode);
 
   // Un-track predicted entities
   // TODO(benvanik): faster removal via slotted list
@@ -432,7 +433,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     }
 
     // Remove from simulation
-    this.removeEntity(entity);
+    this.removeEntity(entity, gf.sim.RemoveEntityMode.SHALLOW);
 
     gf.log.write('<- delete entity', entityId);
   }

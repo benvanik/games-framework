@@ -18,6 +18,7 @@
  * @author benvanik@google.com (Ben Vanik)
  */
 
+goog.provide('gf.sim.RemoveEntityMode');
 goog.provide('gf.sim.Simulator');
 
 goog.require('gf.Component');
@@ -322,9 +323,27 @@ gf.sim.Simulator.prototype.invalidateEntity = function(entity) {
  * Removes the given entity from the simulation.
  * Depending on the entity type it will be scheduled for deletion from clients.
  * @param {!gf.sim.Entity} entity Entity to remove.
+ * @param {gf.sim.RemoveEntityMode=} opt_mode Removal mode.
  */
-gf.sim.Simulator.prototype.removeEntity = function(entity) {
-  goog.asserts.assert(!(entity.dirtyFlags & gf.sim.EntityDirtyFlag.DELETED));
+gf.sim.Simulator.prototype.removeEntity = function(entity, opt_mode) {
+  if (entity.dirtyFlags & gf.sim.EntityDirtyFlag.DELETED) {
+    return;
+  }
+
+  // Handle children/etc
+  var mode = opt_mode || gf.sim.RemoveEntityMode.RECURSIVE;
+  switch (mode) {
+    default:
+    case gf.sim.RemoveEntityMode.RECURSIVE:
+      entity.recursivelyRemoveEntities();
+      break;
+    case gf.sim.RemoveEntityMode.DETACH:
+      // TODO(benvanik): don't issue parent changed commands?
+      entity.detachEntities();
+      break;
+    case gf.sim.RemoveEntityMode.SHALLOW:
+      break;
+  }
 
   // Remove from entity set
   var id = entity.getId();
@@ -337,6 +356,8 @@ gf.sim.Simulator.prototype.removeEntity = function(entity) {
   if (!wasDirty) {
     this.invalidateEntity(entity);
   }
+
+  goog.dispose(entity);
 };
 
 
@@ -538,4 +559,28 @@ gf.sim.Simulator.prototype.postUpdate = function(frame) {
     entity.resetDirtyState();
   }
   this.dirtyEntitiesLength_ = 0;
+};
+
+
+
+/**
+ * Entity removal mode.
+ * @enum {number}
+ */
+gf.sim.RemoveEntityMode = {
+  /**
+   * Removes all child entities recursively.
+   */
+  RECURSIVE: 0,
+
+  /**
+   * Detaches all child entities, leaving them alive and replicated.
+   */
+  DETACH: 1,
+
+  /**
+   * Do nothing to the children.
+   * Used internally on the client when processing server delete requests.
+   */
+  SHALLOW: 2
 };

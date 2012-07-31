@@ -191,7 +191,10 @@ gf.vec.Viewport.prototype.getAspectRatio = function() {
  * @param {number} value Aspect ratio value.
  */
 gf.vec.Viewport.prototype.setAspectRatio = function(value) {
-  this.aspectRatio_ = value;
+  if (this.aspectRatio_ !== value) {
+    this.aspectRatio_ = value;
+    this.paramsDirty_ = true;
+  }
 };
 
 

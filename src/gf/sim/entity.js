@@ -255,11 +255,24 @@ gf.sim.Entity.prototype.getParent = function() {
 /**
  * Sets the parent of the entity.
  * @param {gf.sim.Entity} value New parent entity, if any.
+ * @param {boolean=} opt_suppressReplication Don't replicate parent changes on
+ *     the network.
  */
-gf.sim.Entity.prototype.setParent = function(value) {
+gf.sim.Entity.prototype.setParent = function(value, opt_suppressReplication) {
   if (this.parent_ != value) {
     var oldParent = this.parent_;
     this.parent_ = value;
+
+    if (gf.SERVER) {
+      // Ignore if not replicated
+      if (!(this.getFlags() & gf.sim.EntityFlag.NOT_REPLICATED)) {
+        // Send reparent command
+        var command = this.createCommand(gf.sim.commands.ReparentCommand.ID);
+        command.parentId = value ? value.getId() : gf.sim.NO_ENTITY_ID;
+        this.simulator.broadcastCommand(command);
+      }
+    }
+
     this.parentChanged(oldParent, value);
     if (oldParent) {
       oldParent.removeChild_(this);
@@ -314,19 +327,7 @@ gf.sim.Entity.prototype.forEachChild = function(callback, opt_scope) {
  * @param {gf.sim.Entity} oldParent Old parent entity, if any.
  * @param {gf.sim.Entity} newParent New parent entity, if any.
  */
-gf.sim.Entity.prototype.parentChanged = function(oldParent, newParent) {
-  if (gf.SERVER) {
-    // Ignore if not replicated
-    if (this.getFlags() & gf.sim.EntityFlag.NOT_REPLICATED) {
-      return;
-    }
-
-    // Send reparent command
-    var command = this.createCommand(gf.sim.commands.ReparentCommand.ID);
-    command.parentId = newParent ? newParent.getId() : gf.sim.NO_ENTITY_ID;
-    this.simulator.broadcastCommand(command);
-  }
-};
+gf.sim.Entity.prototype.parentChanged = goog.nullFunction;
 
 
 /**
@@ -343,6 +344,60 @@ gf.sim.Entity.prototype.childAdded = goog.nullFunction;
  * @param {!gf.sim.Entity} entity Old child.
  */
 gf.sim.Entity.prototype.childRemoved = goog.nullFunction;
+
+
+/**
+ * Gets a list of entities that are owned by this entity.
+ * This is used when removing or detaching the entity.
+ * @protected
+ * @return {Array.<!gf.sim.Entity>} A list of entities.
+ */
+gf.sim.Entity.prototype.getOwnedEntities = function() {
+  return null;
+};
+
+
+/**
+ * Removes all children from the simulation, recursively.
+ * Subclasses can override this to remove retained entities.
+ */
+gf.sim.Entity.prototype.recursivelyRemoveEntities = function() {
+  for (var n = 0; n < this.children_.length; n++) {
+    var child = this.children_[n];
+    this.childRemoved(child);
+    this.simulator.removeEntity(child);
+  }
+  this.children_.length = 0;
+
+  // Remove custom owned entities
+  var entities = this.getOwnedEntities();
+  if (entities) {
+    for (var n = 0; n < entities.length; n++) {
+      this.simulator.removeEntity(entities[n]);
+    }
+  }
+};
+
+
+/**
+ * Detaches all child entities.
+ * Subclasses can override this to detach retained entities.
+ */
+gf.sim.Entity.prototype.detachEntities = function() {
+  // Detach children and don't broadcast the changes (as the client will clean
+  // itself up when the entity is removed there anyway)
+  for (var n = 0; n < this.children_.length; n++) {
+    this.children_[n].setParent(null, true);
+  }
+
+  // Detach custom owned entities
+  var entities = this.getOwnedEntities();
+  if (entities) {
+    for (var n = 0; n < entities.length; n++) {
+      entities[n].setParent(null, true);
+    }
+  }
+};
 
 
 /**
