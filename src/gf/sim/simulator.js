@@ -562,7 +562,6 @@ gf.sim.Simulator.prototype.postUpdate = function(frame) {
 };
 
 
-
 /**
  * Entity removal mode.
  * @enum {number}

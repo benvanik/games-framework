@@ -194,3 +194,78 @@ Misc
 
 * navigator.connection ('ethernet/wifi/2g/3g/etc')
     * use to select lod in asset loader
+
+Models
+================================================================================
+
+gf.mdl.Mesh:
+- vertex format : XYZ NXYZ UV W0-N
+- vertices/indices
+
+gf.mdl.Material:
+- shader info
+- texture info
+- ?? allow custom?
+
+gf.mdl.Bone:
+- ID
+- parent
+- parent offset (the joint point)
+- children
+- bounding box/sphere (bone only)
+- hittest mesh (or null to use bb)
+- collision mesh (or null to use bb)
+
+gf.mdl.DataModel:
+- bounding box/sphere (global)
+- center of mass, mass
+- skeleton+ (bone tree)
+- animations[]:
+    - ID
+    - data...
+- parts[]:
+    - material
+    - render mesh (ignored on server)
+- attachments[]:
+    - ID
+    - parent bone ID
+    - offset xyz
+    - rotation
+- getAttachmentById()
+
+gf.mdl.DataInstance:
+- model
+- animation state: current animation layers
+- functions for animation playback
+- instant seek/set (used when tracing bullets/etc)
+- update(): update animations
+
+gf.mdl.Library:
+- models{}, by id
+- createInstance() -> instance
+
+gf.mdl.RenderModel: (sub DataModel)
+- vbo/ibo/vao (all parts)
+- renderParts[]:
+    - shader info/etc
+    - buffer start/end
+- render(): interact with model instance?
+
+gf.mdl.RenderModelInstance: (sub DataInstance)
+- render(): set up skinning shaders/etc
+
+
+gen_model(name='human', srcs='human.xxx') ->
+    Model subclasses:
+        client: HumanRenderModel
+        server: HumanDataModel
+    ModelInstance subclasses:
+        client: HumanRenderInstance
+        server: HumanDataInstance
+    assets/models/humandata.js
+    assets/models/humanrender.js
+
+gen_model_library(name='MyModels', srcs=models) ->
+    Library subclasses:
+        client: MyModelsRenderLibrary <- RenderLibrary
+        server: MyModelsDataLibrary <- DataLibrary
