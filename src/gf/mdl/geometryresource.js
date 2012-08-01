@@ -22,6 +22,7 @@ goog.provide('gf.mdl.GeometryResource');
 
 goog.require('gf.graphics.Resource');
 goog.require('gf.graphics.VertexArrayObject');
+goog.require('gf.graphics.VertexAttrib');
 goog.require('goog.asserts');
 goog.require('goog.webgl');
 
@@ -36,8 +37,9 @@ goog.require('goog.webgl');
  * @extends {gf.graphics.Resource}
  * @param {!gf.graphics.GraphicsContext} graphicsContext Graphics context.
  * @param {!gf.mdl.GeometryData} geometryData Geometry data.
+ * @param {string=} opt_name Debugging name.
  */
-gf.mdl.GeometryResource = function(graphicsContext, geometryData) {
+gf.mdl.GeometryResource = function(graphicsContext, geometryData, opt_name) {
   goog.base(this, graphicsContext);
 
   /**
@@ -66,6 +68,13 @@ gf.mdl.GeometryResource = function(graphicsContext, geometryData) {
    * @type {gf.graphics.VertexArrayObject}
    */
   this.vao_ = null;
+
+  /**
+   * Display name, for debugging.
+   * @private
+   * @type {string?}
+   */
+  this.displayName_ = opt_name || null;
 };
 goog.inherits(gf.mdl.GeometryResource, gf.graphics.Resource);
 
@@ -96,9 +105,16 @@ gf.mdl.GeometryResource.prototype.restore = function() {
 
   var gl = this.graphicsContext.gl;
 
-  // Upload attribute array buffer
   goog.asserts.assert(!this.attributeBuffer_);
   this.attributeBuffer_ = gl.createBuffer();
+  goog.asserts.assert(!this.elementBuffer_);
+  this.elementBuffer_ = gl.createBuffer();
+  if (goog.DEBUG && this.displayName_) {
+    this.attributeBuffer_['displayName'] = this.displayName_ + '/A';
+    this.elementBuffer_['displayName'] = this.displayName_ + '/E';
+  }
+
+  // Upload attribute array buffer
   gl.bindBuffer(goog.webgl.ARRAY_BUFFER, this.attributeBuffer_);
   gl.bufferData(
       goog.webgl.ARRAY_BUFFER,
@@ -106,8 +122,6 @@ gf.mdl.GeometryResource.prototype.restore = function() {
       goog.webgl.STATIC_DRAW);
 
   // Upload element array buffer
-  goog.asserts.assert(!this.elementBuffer_);
-  this.elementBuffer_ = gl.createBuffer();
   gl.bindBuffer(goog.webgl.ELEMENT_ARRAY_BUFFER, this.elementBuffer_);
   gl.bufferData(
       goog.webgl.ELEMENT_ARRAY_BUFFER,
@@ -119,17 +133,22 @@ gf.mdl.GeometryResource.prototype.restore = function() {
   var vaoAttributes = [];
   for (var n = 0; n < this.geometryData.attributes.length; n++) {
     var attrib = this.geometryData.attributes[n];
-    var type;
-    switch (attrib.type) {
-      default:
-      case gf.mdl.ComponentType.FLOAT:
-        type = goog.webgl.FLOAT;
-        break;
-    }
     vaoAttributes.push(new gf.graphics.VertexAttrib(
-        n, this.attributeBuffer_, attrib.size, type, attrib.normalized,
+        n, this.attributeBuffer_, attrib.size, attrib.type, attrib.normalized,
         attrib.stride, attrib.offset));
   }
   this.vao_ = new gf.graphics.VertexArrayObject(this.graphicsContext,
       vaoAttributes, this.elementBuffer_);
+};
+
+
+/**
+ * Binds the geometry resource to the graphics context for use.
+ */
+gf.mdl.GeometryResource.prototype.bind = function() {
+  if (!this.vao_) {
+    return;
+  }
+
+  this.graphicsContext.setVertexBinding(this.vao_);
 };

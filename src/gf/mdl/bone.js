@@ -38,7 +38,7 @@ gf.mdl.Bone = function() {
   /**
    * Bone name.
    * Optional; can be used to lookup bones by name for attaching.
-   * @type {string}
+   * @type {string?}
    */
   this.name = null;
 

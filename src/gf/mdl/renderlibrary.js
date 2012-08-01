@@ -25,7 +25,6 @@ goog.require('gf.mdl.Library');
 goog.require('goog.asserts');
 
 
-
 /**
  * An individual model type entry in the library.
  * @private

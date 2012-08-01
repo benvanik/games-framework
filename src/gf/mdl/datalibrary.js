@@ -59,7 +59,7 @@ gf.mdl.DataLibrary = function(assetManager) {
 
   /**
    * Registered model types, mapped by model ID.
-   * @type {!Object.<!gf.mdl.LibraryEntry_>}
+   * @type {!Object.<!gf.mdl.DataLibraryEntry_>}
    */
   this.modelTypes_ = {};
 };

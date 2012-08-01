@@ -57,7 +57,7 @@ gf.ui.ScreenManager = function(dom) {
   /**
    * HTML5 history manager, used for navigation.
    * @private
-   * @type {!goog.history.Html5History}
+   * @type {goog.history.Html5History}
    */
   this.history_ = null;
   // TODO(benvanik): need to figure out issues with duplicate events/etc

@@ -64,16 +64,10 @@ gf.mdl.MAX_WEIGHTS_PER_VERTEX = 4;
  */
 gf.mdl.PrimitiveType = {
   /**
-   * Triangle set.
+   * Triangle list.
    * Represents {@see goog.webgl#TRIANGLES}.
    */
-  TRIANGLES: 0,
-
-  /**
-   * Triangle list.
-   * Represents {@see goog.webgl#TRIANGLE_LIST}.
-   */
-  TRIANGLE_LIST: 1
+  TRIANGLES: 0x0004
 };
 
 
@@ -86,5 +80,5 @@ gf.mdl.ComponentType = {
    * 32-bit floating point number.
    * Like {@see goog.webgl#FLOAT}.
    */
-  FLOAT: 0
+  FLOAT: 0x1406
 };

@@ -24,6 +24,7 @@ goog.require('gf.sim.Entity');
 goog.require('gf.vec.Mat4');
 goog.require('goog.vec.Mat4');
 goog.require('goog.vec.Quaternion');
+goog.require('goog.vec.Vec3');
 goog.require('goog.vec.Vec4');
 
 
@@ -66,6 +67,9 @@ gf.sim.SpatialEntity = function(
    * @type {!goog.vec.Mat4.Float32}
    */
   this.transform_ = goog.vec.Mat4.createFloat32();
+
+  var state = this.getState();
+  state.setScale(goog.vec.Vec3.createFloat32FromValues(1, 1, 1));
 };
 goog.inherits(gf.sim.SpatialEntity, gf.sim.Entity);
 
@@ -169,7 +173,7 @@ gf.sim.SpatialEntity.prototype.getTransform = function(
     if (current instanceof gf.sim.SpatialEntity) {
       goog.vec.Mat4.multMat(current.transform_, result, result);
     }
-    current = this.getParent();
+    current = current.getParent();
   }
   return result;
 };

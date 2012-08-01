@@ -157,6 +157,9 @@ gf.graphics.LoadableTexture.prototype.setImageInfo = function(imageInfo) {
  * @protected
  */
 gf.graphics.LoadableTexture.prototype.beginLoadingData = function() {
+  var dom = this.assetManager.dom;
+  goog.asserts.assert(dom);
+
   // Find the best data source
   // TODO(benvanik): pick LOD
   var lod = 0;
@@ -183,7 +186,7 @@ gf.graphics.LoadableTexture.prototype.beginLoadingData = function() {
         gf.assets.ContentLoader.Type.ARRAY_BUFFER);
   } else {
     assetLoader = new gf.assets.ImageLoader(
-        this.assetManager.dom, url);
+        dom, url);
   }
   goog.asserts.assert(assetLoader);
   this.loadingDeferred_ = this.assetManager.load(assetLoader);

@@ -21,6 +21,7 @@
 goog.provide('gf.mdl.RenderInstance');
 
 goog.require('gf.mdl.Instance');
+goog.require('goog.webgl');
 
 
 
@@ -51,9 +52,30 @@ gf.mdl.RenderInstance = function(model) {
 goog.inherits(gf.mdl.RenderInstance, gf.mdl.Instance);
 
 
-// TODO(benvanik): render
 /**
- *
+ * Renders the instance.
+ * @param {!goog.vec.Mat4.Float32} transform Instance world transform.
  */
-gf.mdl.RenderInstance.prototype.render = function() {
+gf.mdl.RenderInstance.prototype.render = function(transform) {
+  var ctx = this.graphicsContext_;
+  var gl = ctx.getGL();
+
+  // Setup geometry
+  this.geometryResource_.bind();
+
+  // Draw
+  var parts = this.model.getParts();
+  for (var n = 0; n < parts.length; n++) {
+    var part = parts[n];
+
+    // Set program
+    // TODO(benvanik): set program, transform, and any material uniforms
+
+    // Draw
+    gl.drawElements(
+        part.primitiveType,
+        part.elementCount,
+        goog.webgl.UNSIGNED_SHORT,
+        part.elementOffset);
+  }
 };

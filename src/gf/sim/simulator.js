@@ -25,6 +25,7 @@ goog.require('gf.Component');
 goog.require('gf.log');
 goog.require('gf.sim');
 goog.require('gf.sim.EntityDirtyFlag');
+goog.require('gf.sim.EntityFlag');
 /** @suppress {extraRequire} */
 goog.require('gf.sim.IEntityWatcher');
 goog.require('gf.sim.PredictedCommand');

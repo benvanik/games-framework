@@ -247,9 +247,9 @@ gf.mdl.ModelPart = function(material) {
 
   /**
    * Primitive type.
-   * @type {!gf.mdl.PrimitiveType}
+   * @type {gf.mdl.PrimitiveType}
    */
-  this.primitiveType = gf.mdl.PrimitiveType.TRIANGLE_LIST;
+  this.primitiveType = gf.mdl.PrimitiveType.TRIANGLES;
 
   /**
    * The number of elements in this part.

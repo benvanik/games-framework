@@ -22,7 +22,6 @@ goog.provide('gf.sim.ClientSimulator');
 
 goog.require('gf.log');
 goog.require('gf.net.PacketWriter');
-goog.require('gf.sim');
 goog.require('gf.sim.EntityFlag');
 goog.require('gf.sim.RemoveEntityMode');
 goog.require('gf.sim.Simulator');

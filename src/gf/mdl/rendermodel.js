@@ -95,7 +95,7 @@ gf.mdl.RenderModel.prototype.setGeometryData = function(value) {
   // Setup the GPU geometry resource
   goog.asserts.assert(!this.geometryResource_);
   this.geometryResource_ = new gf.mdl.GeometryResource(
-      this.graphicsContext_, value);
+      this.graphicsContext_, value, this.id);
   this.registerDisposable(this.geometryResource_);
 
   // TODO(benvanik): is this the right place to do this?

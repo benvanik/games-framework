@@ -100,6 +100,6 @@ gf.mdl.Library.prototype.createModelInstance = function(modelId) {
  * Creates a model by ID.
  * @protected
  * @param {string} modelId Model ID.
- * @return {gf.mdl.DataModel} Data model, if found.
+ * @return {gf.mdl.Model} Data model, if found.
  */
 gf.mdl.Library.prototype.createModel = goog.abstractMethod;
