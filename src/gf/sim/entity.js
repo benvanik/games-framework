@@ -624,7 +624,11 @@ gf.sim.Entity.prototype.scheduleUpdate = function(priority, opt_targetTime) {
  * On the client this is called immediately after network processing and before
  * scheduling.
  */
-gf.sim.Entity.prototype.postNetworkUpdate = goog.nullFunction;
+gf.sim.Entity.prototype.postNetworkUpdate = function() {
+  if (gf.CLIENT && this.clientState_) {
+    this.state_.copyImmediateVariables(this.clientState_);
+  }
+};
 
 
 /**
@@ -734,7 +738,13 @@ gf.sim.EntityFlag = {
    * Replicate this entity to the owner only.
    * Examples: player entity controllers, cameras.
    */
-  OWNER_ONLY: 1 << 6
+  OWNER_ONLY: 1 << 6,
+
+  /**
+   * Entity is the root entity in the simulation.
+   * This must only ever be set on a single entity.
+   */
+  ROOT: 1 << 7
 };
 
 

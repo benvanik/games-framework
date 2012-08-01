@@ -27,7 +27,6 @@ goog.require('gf.sim.EntityFlag');
 /** @suppress {extraRequire} */
 goog.require('gf.sim.Observer');
 goog.require('gf.sim.Simulator');
-goog.require('gf.sim.commands.SetRootEntityCommand');
 goog.require('gf.sim.packets.ExecCommands');
 goog.require('gf.sim.util.CommandList');
 goog.require('goog.array');
@@ -150,15 +149,6 @@ gf.sim.ServerSimulator.prototype.addObserver = function(observer) {
     // If the entity is relevant this will schedule a creation
     observer.notifyEntityChange(entity);
   }, this);
-
-  // Set the root entity
-  var root = this.getRootEntity();
-  if (root) {
-    var cmd = /** @type {!gf.sim.commands.SetRootEntityCommand} */ (
-        this.createCommand(gf.sim.commands.SetRootEntityCommand.ID));
-    cmd.entityId = root.getId();
-    observer.queueOutgoingCommand(cmd);
-  }
 };
 
 
@@ -186,21 +176,6 @@ gf.sim.ServerSimulator.prototype.removeObserver = function(observer) {
   // Remove from list and dispose (we own it)
   goog.array.remove(this.observers_, observer);
   goog.dispose(observer);
-};
-
-
-/**
- * @override
- */
-gf.sim.ServerSimulator.prototype.setRootEntity = function(value) {
-  if (value != this.getRootEntity()) {
-    goog.base(this, 'setRootEntity', value);
-
-    var cmd = /** @type {!gf.sim.commands.SetRootEntityCommand} */ (
-        this.createCommand(gf.sim.commands.SetRootEntityCommand.ID));
-    cmd.entityId = value ? value.getId() : gf.sim.NO_ENTITY_ID;
-    this.broadcastCommand(cmd);
-  }
 };
 
 

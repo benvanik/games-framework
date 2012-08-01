@@ -279,6 +279,12 @@ gf.sim.Simulator.prototype.addEntity = function(entity) {
   if (!wasDirty) {
     this.invalidateEntity(entity);
   }
+
+  // If this is a root, set
+  if (entity.getFlags() & gf.sim.EntityFlag.ROOT) {
+    goog.asserts.assert(!this.rootEntity_);
+    this.rootEntity_ = entity;
+  }
 };
 
 
@@ -367,15 +373,6 @@ gf.sim.Simulator.prototype.removeEntity = function(entity, opt_mode) {
  */
 gf.sim.Simulator.prototype.getRootEntity = function() {
   return this.rootEntity_;
-};
-
-
-/**
- * Sets the root entity.
- * @param {gf.sim.Entity} value New root entity, if any.
- */
-gf.sim.Simulator.prototype.setRootEntity = function(value) {
-  this.rootEntity_ = value;
 };
 
 
