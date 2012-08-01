@@ -65,16 +65,16 @@ gf.assets.LoadPriority = {
  * @constructor
  * @extends {gf.Component}
  * @param {!gf.Runtime} runtime Current runtime.
- * @param {!goog.dom.DomHelper} dom DOM helper.
+ * @param {goog.dom.DomHelper=} opt_dom DOM helper.
  */
-gf.assets.AssetManager = function(runtime, dom) {
+gf.assets.AssetManager = function(runtime, opt_dom) {
   goog.base(this, runtime);
 
   /**
    * DOM helper.
-   * @type {!goog.dom.DomHelper}
+   * @type {goog.dom.DomHelper}
    */
-  this.dom = dom;
+  this.dom = opt_dom || null;
 };
 goog.inherits(gf.assets.AssetManager, gf.Component);
 

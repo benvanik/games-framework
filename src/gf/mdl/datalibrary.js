@@ -77,7 +77,7 @@ gf.mdl.DataLibrary.prototype.registerModelType = function(
   goog.asserts.assert(!this.modelTypes_[modelId]);
   this.modelTypes_[modelId] = {
     id: modelId,
-    createFunction: createFunction;
+    createFunction: createFunction
   };
 };
 
@@ -85,7 +85,7 @@ gf.mdl.DataLibrary.prototype.registerModelType = function(
 /**
  * @override
  */
-gf.mdl.DataLibrary.prototype.createModel = function() {
+gf.mdl.DataLibrary.prototype.createModel = function(modelId) {
   var modelType = this.modelTypes_[modelId];
   if (!modelType) {
     // Model not found

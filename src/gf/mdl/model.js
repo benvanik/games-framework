@@ -50,9 +50,16 @@ gf.mdl.ModelCreateFunction;
  *
  * @constructor
  * @extends {goog.Disposable}
+ * @param {string} modelId Model ID.
  */
-gf.mdl.Model = function() {
+gf.mdl.Model = function(modelId) {
   goog.base(this);
+
+  /**
+   * Model ID.
+   * @type {string}
+   */
+  this.id = modelId;
 
   /**
    * Axis-aligned bounding box.
@@ -160,7 +167,7 @@ gf.mdl.Model.prototype.createBone = function(parentBone, opt_name) {
 
   var bone = new gf.mdl.Bone();
   bone.index = this.bones_.length;
-  bone.name = opt_name || nul;
+  bone.name = opt_name || null;
   bone.parent = parentBone;
   if (parentBone) {
     parentBone.children.push(bone);

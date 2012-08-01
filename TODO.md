@@ -133,6 +133,8 @@ Net
 
 * geoip: http://geoip.wtanaka.com/
 
+* Make model IDs CRC32? ModelID type -- perhaps special StringID?
+
 IO
 ================================================================================
 

@@ -76,14 +76,14 @@ gf.mdl.Library.prototype.update = function(frame) {
 /**
  * Creates a new model instance.
  * @param {string} modelId Model ID.
- * @return {gf.mdl.DataInstance} New model instance, if the model was found.
+ * @return {gf.mdl.Instance} New model instance, if the model was found.
  */
 gf.mdl.Library.prototype.createModelInstance = function(modelId) {
   // Attempt to get the model
   var model = this.models_[modelId];
   if (!model) {
     // Create the model
-    model = this.getModel(modelId);
+    model = this.createModel(modelId);
     if (!model) {
       return null;
     }

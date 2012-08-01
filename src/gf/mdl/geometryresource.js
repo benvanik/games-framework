@@ -117,7 +117,19 @@ gf.mdl.GeometryResource.prototype.restore = function() {
   // Create VAO
   goog.asserts.assert(!this.vao_);
   var vaoAttributes = [];
-  // gf.graphics.VertexAttrib
+  for (var n = 0; n < this.geometryData.attributes.length; n++) {
+    var attrib = this.geometryData.attributes[n];
+    var type;
+    switch (attrib.type) {
+      default:
+      case gf.mdl.ComponentType.FLOAT:
+        type = goog.webgl.FLOAT;
+        break;
+    }
+    vaoAttributes.push(new gf.graphics.VertexAttrib(
+        n, this.attributeBuffer_, attrib.size, type, attrib.normalized,
+        attrib.stride, attrib.offset));
+  }
   this.vao_ = new gf.graphics.VertexArrayObject(this.graphicsContext,
       vaoAttributes, this.elementBuffer_);
 };

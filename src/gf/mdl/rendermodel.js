@@ -41,10 +41,11 @@ gf.mdl.RenderModelCreateFunction;
  *
  * @constructor
  * @extends {gf.mdl.Model}
+ * @param {string} modelId Model ID.
  * @param {!gf.graphics.GraphicsContext} graphicsContext Graphics context.
  */
-gf.mdl.RenderModel = function(graphicsContext) {
-  goog.base(this);
+gf.mdl.RenderModel = function(modelId, graphicsContext) {
+  goog.base(this, modelId);
 
   /**
    * Graphics context.
@@ -96,6 +97,9 @@ gf.mdl.RenderModel.prototype.setGeometryData = function(value) {
   this.geometryResource_ = new gf.mdl.GeometryResource(
       this.graphicsContext_, value);
   this.registerDisposable(this.geometryResource_);
+
+  // TODO(benvanik): is this the right place to do this?
+  this.geometryResource_.restore();
 };
 
 
