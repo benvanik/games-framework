@@ -26,11 +26,14 @@ goog.require('goog.asserts');
 
 
 
+// TODO(benvanik): find a way to do code gen at runtime in compiled code
+// Could use it to generate non-looped direct functions with no indirection
 /**
  * Optimized variable table.
  * Stores a flattened list of variable descriptors for a type chain.
  * Used for identifying variables over the network and when manipulating
  * state snapshots.
+ * Variable tables are static and shared among all entities of a given type.
  *
  * @constructor
  * @param {!Array.<!gf.sim.Variable>} variableList A list of all variables.
@@ -75,6 +78,15 @@ gf.sim.VariableTable = function(variableList) {
   this.interpolatedVariables_ = [];
 
   /**
+   * Variables that have their {@see gf.sim.VariableFlag#INTERPOLATED} bit set
+   * but not their {@see gf.sim.VariableFlag#PREDICTED} bit set. This is used
+   * for interpolating variables on clients that have prediction enabled.
+   * @private
+   * @type {!Array.<!gf.sim.Variable>}
+   */
+  this.interpolatedNotPredictedVariables_ = [];
+
+  /**
    * List, in sorted ordinal order, of all variables.
    * @private
    * @type {!Array.<!gf.sim.Variable>}
@@ -99,6 +111,9 @@ gf.sim.VariableTable = function(variableList) {
     }
     if (v.flags & gf.sim.VariableFlag.INTERPOLATED) {
       this.interpolatedVariables_.push(v);
+      if (!(v.flags & gf.sim.VariableFlag.PREDICTED)) {
+        this.interpolatedNotPredictedVariables_.push(v);
+      }
     }
   }
 };
@@ -147,9 +162,9 @@ gf.sim.VariableTable.prototype.readVariable = function(
  * @param {!gf.net.PacketReader} reader Packet reader.
  */
 gf.sim.VariableTable.prototype.readAllVariables = function(target, reader) {
-  for (var n = 0; n < this.variables_.length; n++) {
-    var v = this.variables_[n];
-    v.read(target, reader);
+  var vars = this.variables_;
+  for (var n = 0; n < vars.length; n++) {
+    vars[n].read(target, reader);
   }
 };
 
@@ -173,9 +188,9 @@ gf.sim.VariableTable.prototype.writeVariable = function(
  * @param {!gf.net.PacketWriter} writer Packet writer.
  */
 gf.sim.VariableTable.prototype.writeAllVariables = function(target, writer) {
-  for (var n = 0; n < this.variables_.length; n++) {
-    var v = this.variables_[n];
-    v.write(target, writer);
+  var vars = this.variables_;
+  for (var n = 0; n < vars.length; n++) {
+    vars[n].write(target, writer);
   }
 };
 
@@ -186,9 +201,9 @@ gf.sim.VariableTable.prototype.writeAllVariables = function(target, writer) {
  * @param {!Object} target Target object.
  */
 gf.sim.VariableTable.prototype.copyVariables = function(source, target) {
-  for (var n = 0; n < this.variables_.length; n++) {
-    var v = this.variables_[n];
-    v.copy(source, target);
+  var vars = this.variables_;
+  for (var n = 0; n < vars.length; n++) {
+    vars[n].copy(source, target);
   }
 };
 
@@ -201,9 +216,9 @@ gf.sim.VariableTable.prototype.copyVariables = function(source, target) {
  */
 gf.sim.VariableTable.prototype.copyImmediateVariables = function(
     source, target) {
-  for (var n = 0; n < this.immediateVariables_.length; n++) {
-    var v = this.immediateVariables_[n];
-    v.copy(source, target);
+  var vars = this.immediateVariables_;
+  for (var n = 0; n < vars.length; n++) {
+    vars[n].copy(source, target);
   }
 };
 
@@ -217,9 +232,9 @@ gf.sim.VariableTable.prototype.copyImmediateVariables = function(
  */
 gf.sim.VariableTable.prototype.copyPredictedVariables = function(
     source, target) {
-  for (var n = 0; n < this.predictedVariables_.length; n++) {
-    var v = this.predictedVariables_[n];
-    v.copy(source, target);
+  var vars = this.predictedVariables_;
+  for (var n = 0; n < vars.length; n++) {
+    vars[n].copy(source, target);
   }
 };
 
@@ -236,8 +251,30 @@ gf.sim.VariableTable.prototype.copyPredictedVariables = function(
  */
 gf.sim.VariableTable.prototype.interpolateVariables = function(
     source, target, t, result) {
-  for (var n = 0; n < this.interpolatedVariables_.length; n++) {
-    var v = this.interpolatedVariables_[n];
-    v.interpolate(source, target, t, result);
+  var vars = this.interpolatedVariables_;
+  for (var n = 0; n < vars.length; n++) {
+    vars[n].interpolate(source, target, t, result);
+  }
+};
+
+
+/**
+ * Interpolates unpredicted variables between two states.
+ * All values with {@see gf.sim.VariableFlag#INTERPOLATED} set will be
+ * interpolated between the source and target by the given time. The result
+ * will be stored on the given result object.
+ * This version will ignore variables that also have
+ * {@see gf.sim.VariableFlag#PREDICTED} set on them, preventing interpolation
+ * from messing with the prediction system.
+ * @param {!Object} source Interpolation source object.
+ * @param {!Object} target Interpolation target object.
+ * @param {number} t Interpolation coefficient, [0-1].
+ * @param {!Object} result Storage object.
+ */
+gf.sim.VariableTable.prototype.interpolateUnpredictedVariables = function(
+    source, target, t, result) {
+  var vars = this.interpolatedNotPredictedVariables_;
+  for (var n = 0; n < vars.length; n++) {
+    vars[n].interpolate(source, target, t, result);
   }
 };

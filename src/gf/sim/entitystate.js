@@ -293,5 +293,10 @@ gf.sim.EntityState.prototype.copyPredictedVariables = function(targetState) {
  */
 gf.sim.EntityState.prototype.interpolate = function(
     sourceState, targetState, t) {
-  this.variableTable_.interpolateVariables(sourceState, targetState, t, this);
+  var vtable = this.variableTable_;
+  if (this.entity.getFlags() & gf.sim.EntityFlag.PREDICTED) {
+    vtable.interpolateUnpredictedVariables(sourceState, targetState, t, this);
+  } else {
+    vtable.interpolateVariables(sourceState, targetState, t, this);
+  }
 };
