@@ -20,6 +20,11 @@ goog.require('gf');
 
 
 
+// TODO(benvanik): fix this clock, it's all messed up
+// Need to do something much more structured such that it's impossible for
+// debugging to cause errors - perhaps manually step the clock instead of ever
+// using gf.now, ensuring that code always captures time at the start of js
+// exec instead of randomly inside it, etc
 /**
  * Clock provider.
  * Allows for sampling of fixed timestep times, local client times, and
@@ -57,6 +62,13 @@ gf.timing.Clock = function() {
    * @type {number}
    */
   this.clockDelta_ = 0;
+
+  /**
+   * Whether the clock has received server time yet.
+   * @private
+   * @type {boolean}
+   */
+  this.hasGotTime_ = false;
 };
 
 
@@ -87,6 +99,10 @@ gf.timing.Clock.prototype.getClientTime = function() {
  * @return {number} Server time, in seconds.
  */
 gf.timing.Clock.prototype.getServerTime = function() {
+  if (gf.CLIENT && !this.hasGotTime_) {
+    // Always return zero until the time comes from the server
+    return 0;
+  }
   var clientTime = this.getClientTime();
   return clientTime + this.clockDelta_;
 };
@@ -121,6 +137,8 @@ gf.timing.Clock.prototype.stepGameTime = function(timeDelta) {
 gf.timing.Clock.prototype.updateServerTime = function(serverTime, latency) {
   this.latency = latency;
 
+  goog.asserts.assert(serverTime);
+
   // Prevent moving time backwards - this will wait until we have caught up
   // with the server time
   var newTime = serverTime + latency;
@@ -139,7 +157,9 @@ gf.timing.Clock.prototype.updateServerTime = function(serverTime, latency) {
     // Drift towards the right value
     this.clockDelta_ += 1 / 1000;
   } else {
-    // Drif towards the right value
+    // Drift towards the right value
     this.clockDelta_ -= 1 / 1000;
   }
+
+  this.hasGotTime_ = true;
 };
