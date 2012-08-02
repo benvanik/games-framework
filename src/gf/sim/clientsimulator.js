@@ -303,7 +303,7 @@ gf.sim.ClientSimulator.prototype.compact_ = function(frame) {
 gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     function(packet, packetType, reader) {
   // Read header
-  var timeBase = reader.readVarUint() / 1000;
+  var time = reader.readVarUint() / 1000;
   var confirmedSequence = reader.readVarUint();
   var createEntityCount = reader.readVarUint();
   var updateEntityCount = reader.readVarUint();
@@ -454,7 +454,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
 
     // Read command data
     var command = commandFactory.allocate();
-    command.read(reader, timeBase);
+    command.read(reader);
     this.statistics.incomingCommandSize += reader.offset - startOffset;
 
     // Queue for processing

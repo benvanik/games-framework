@@ -173,29 +173,20 @@ gf.sim.util.SyncSimulationWriter.prototype.addDeleteEntity = function(entity) {
 
 /**
  * Ends the writing operation and returns the final packet.
+ * @param {number} time Current server time.
  * @return {!ArrayBuffer} Finalized packet for sending.
  */
-gf.sim.util.SyncSimulationWriter.prototype.finish = function() {
+gf.sim.util.SyncSimulationWriter.prototype.finish = function(time) {
   // Add header
   var writer = gf.net.PacketWriter.getSharedWriter();
   gf.sim.packets.SyncSimulation.write(
       writer, gf.sim.packets.SyncSimulation.writeInstance);
 
-  // Find timebase
-  var timeBase = 0;
-  for (var n = 0; n < this.commandCount_; n++) {
-    var command = this.commands_[n];
-    if (command.factory.flags & gf.sim.CommandFlag.TIME) {
-      timeBase = command.getTime();
-      break;
-    }
-  }
-
   var startOffset = 0;
 
   // Write header data
   // TODO(benvanik): could pack the header very tightly
-  writer.writeVarUint((timeBase * 1000) | 0);
+  writer.writeVarUint((time * 1000) | 0);
   writer.writeVarUint(this.confirmedSequence_);
   writer.writeVarUint(this.createEntityCount_);
   writer.writeVarUint(this.updateEntityCount_);
@@ -279,7 +270,7 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function() {
 
     // Write command ID and contents
     writer.writeVarUint(command.factory.typeId);
-    command.write(writer, timeBase);
+    command.write(writer);
 
     this.statistics_.outgoingCommands++;
     this.statistics_.outgoingCommandSize += writer.offset - startOffset;

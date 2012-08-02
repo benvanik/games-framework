@@ -375,7 +375,7 @@ gf.sim.Observer.prototype.flush = function(time) {
   // IFF we have a valid packet, emit -- note that we may send empty packets
   // if we need to flush a sequence confirmation number
   if (needsSequenceFlush || writer.hasContents()) {
-    this.session_.send(writer.finish(), this.user_);
+    this.session_.send(writer.finish(time), this.user_);
   } else {
     writer.drop();
   }

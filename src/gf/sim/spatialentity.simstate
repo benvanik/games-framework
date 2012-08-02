@@ -7,7 +7,8 @@
       "type": "Vec3",
       "flags": [
         "UPDATED_FREQUENTLY",
-        "INTERPOLATED"
+        "INTERPOLATED",
+        "PREDICTED"
       ],
       "onchange": "this.entity.invalidateTransform();"
     },
@@ -17,7 +18,8 @@
       "normalized": true,
       "flags": [
         "UPDATED_FREQUENTLY",
-        "INTERPOLATED"
+        "INTERPOLATED",
+        "PREDICTED"
       ],
       "onchange": "this.entity.invalidateTransform();"
     },
@@ -26,7 +28,8 @@
       "type": "Vec3",
       "flags": [
         "UPDATED_FREQUENTLY",
-        "INTERPOLATED"
+        "INTERPOLATED",
+        "PREDICTED"
       ],
       "onchange": "this.entity.invalidateTransform();"
     },
@@ -38,6 +41,14 @@
         "INTERPOLATED"
       ],
       "onchange": "this.entity.invalidateTransform();"
+    },
+    {
+      "name": "velocity",
+      "type": "Vec3",
+      "flags": [
+        "UPDATED_FREQUENTLY",
+        "PREDICTED"
+      ]
     }
   ]
 }

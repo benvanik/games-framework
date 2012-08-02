@@ -23,6 +23,7 @@ goog.provide('gf.sim.EntityDirtyFlag');
 goog.provide('gf.sim.EntityFlag');
 
 goog.require('gf');
+goog.require('gf.log');
 goog.require('gf.sim');
 goog.require('gf.sim.commands.ReparentCommand');
 goog.require('goog.Disposable');
@@ -459,10 +460,7 @@ gf.sim.Entity.prototype.getState = function() {
  * @param {!gf.net.PacketReader} reader Packet reader.
  */
 gf.sim.Entity.prototype.read = function(reader) {
-  // Update network state
   this.state_.read(reader);
-
-  // TODO(benvanik): preserve a state history entry if INTERPOLATED?
 };
 
 
@@ -471,10 +469,7 @@ gf.sim.Entity.prototype.read = function(reader) {
  * @param {!gf.net.PacketReader} reader Packet reader.
  */
 gf.sim.Entity.prototype.readDelta = function(reader) {
-  // Update network state
   this.state_.readDelta(reader);
-
-  // TODO(benvanik): preserve a state history entry if INTERPOLATED?
 };
 
 

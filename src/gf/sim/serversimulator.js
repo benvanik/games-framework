@@ -398,7 +398,6 @@ gf.sim.ServerSimulator.prototype.handleExecCommands_ =
   }
 
   // Read header
-  var timeBase = reader.readVarUint() / 1000;
   var highSequenceNumber = reader.readVarUint();
   var commandCount = reader.readVarUint();
 
@@ -420,7 +419,7 @@ gf.sim.ServerSimulator.prototype.handleExecCommands_ =
 
     // Read command data
     var command = commandFactory.allocate();
-    command.read(reader, timeBase);
+    command.read(reader);
 
     // Limit command execution to entities owned by the user only
     // Basically:

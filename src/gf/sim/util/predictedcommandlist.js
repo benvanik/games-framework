@@ -175,17 +175,6 @@ gf.sim.util.PredictedCommandList.prototype.hasOutgoing = function() {
 gf.sim.util.PredictedCommandList.prototype.write = function(writer) {
   goog.asserts.assert(this.outgoingCount_);
 
-  // Write timebase
-  var timeBase = 0;
-  for (var n = 0; n < this.outgoingCount_; n++) {
-    var command = this.outgoingArray_[n];
-    if (command.factory.flags & gf.sim.CommandFlag.TIME) {
-      timeBase = command.getTime();
-      break;
-    }
-  }
-  writer.writeVarUint((timeBase * 1000) | 0);
-
   // Write sequence high number
   writer.writeVarUint(this.nextSequenceId_ - 1);
 
@@ -201,7 +190,7 @@ gf.sim.util.PredictedCommandList.prototype.write = function(writer) {
 
     // Add command to packet
     writer.writeVarUint(command.factory.typeId);
-    command.write(writer, timeBase);
+    command.write(writer);
 
     // Cleanup command
     if (command instanceof gf.sim.PredictedCommand) {

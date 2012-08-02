@@ -47,6 +47,14 @@ gf.sim.EntityState = function(entity, variableTable) {
   this.entity = entity;
 
   /**
+   * State time, if the state is historical.
+   * This is used by the client-side interpolation system and server-side
+   * rewinding.
+   * @type {number}
+   */
+  this.time = 0;
+
+  /**
    * Table for variable handling.
    * This should be the table containing all variables for the entire type
    * chain.
@@ -283,7 +291,7 @@ gf.sim.EntityState.prototype.copyPredictedVariables = function(targetState) {
  * @param {!gf.sim.EntityState} targetState Interpolation target object.
  * @param {number} t Interpolation coefficient, [0-1].
  */
-gf.sim.EntityState.prototype.interpolate = function(sourceState, targetState,
-    t) {
+gf.sim.EntityState.prototype.interpolate = function(
+    sourceState, targetState, t) {
   this.variableTable_.interpolateVariables(sourceState, targetState, t, this);
 };

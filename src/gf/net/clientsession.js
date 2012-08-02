@@ -105,7 +105,7 @@ goog.inherits(gf.net.ClientSession, gf.net.Session);
  * @const
  * @type {number}
  */
-gf.net.ClientSession.PING_INTERVAL_ = 2000;
+gf.net.ClientSession.PING_INTERVAL_ = 500;
 
 
 /**

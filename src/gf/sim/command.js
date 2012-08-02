@@ -45,7 +45,6 @@ gf.sim.CommandFlag = {
 };
 
 
-
 /**
  * Simulation command.
  * Used as a basic RPC mechanism. Commands are generated and queued to target
@@ -104,12 +103,11 @@ gf.sim.Command.prototype.setTime = function(value) {
 /**
  * Reads the command contents from the given packet reader.
  * @param {!gf.net.PacketReader} reader Packet reader.
- * @param {number} timeBase Time base of the packet.
  */
-gf.sim.Command.prototype.read = function(reader, timeBase) {
+gf.sim.Command.prototype.read = function(reader) {
   var flags = this.factory.flags;
   if (flags & gf.sim.CommandFlag.TIME) {
-    this.time_ = timeBase + reader.readVarUint() / 1000;
+    this.time_ = reader.readVarUint() / 1000;
   }
   if (!(flags & gf.sim.CommandFlag.GLOBAL)) {
     this.targetEntityId = reader.readVarUint();
@@ -120,17 +118,11 @@ gf.sim.Command.prototype.read = function(reader, timeBase) {
 /**
  * Writes the command to the given packet writer.
  * @param {!gf.net.PacketWriter} writer Packet writer.
- * @param {number} timeBase Time base of the packet.
  */
-gf.sim.Command.prototype.write = function(writer, timeBase) {
+gf.sim.Command.prototype.write = function(writer) {
   var flags = this.factory.flags;
   if (flags & gf.sim.CommandFlag.TIME) {
-    var timeDelta = ((this.time_ - timeBase) * 1000) | 0;
-    goog.asserts.assert(timeDelta >= 0);
-    if (timeDelta < 0) {
-      timeDelta = 0;
-    }
-    writer.writeVarUint(timeDelta);
+    writer.writeVarUint((this.time_ * 1000) | 0);
   }
   if (!(flags & gf.sim.CommandFlag.GLOBAL)) {
     writer.writeVarUint(this.targetEntityId);
@@ -165,6 +157,16 @@ gf.sim.Command.prototype.release = function() {
 gf.sim.PredictedCommand = function(commandFactory) {
   goog.base(this, commandFactory);
 
+  /**
+   * The time this command covers.
+   * When sourcing from a client this is usually the frame time delta.
+   * When executing the command and performing calculations over time, this
+   * value should be used in place of any frame time from the engine.
+   * @private
+   * @type {number}
+   */
+  this.timeDelta_ = 0;
+
   if (gf.CLIENT) {
     /**
      * Sequence identifier.
@@ -188,10 +190,30 @@ goog.inherits(gf.sim.PredictedCommand, gf.sim.Command);
 
 
 /**
+ * Gets the time delta for this command.
+ * @return {number} Time delta, in seconds.
+ */
+gf.sim.PredictedCommand.prototype.getTimeDelta = function() {
+  return this.timeDelta_;
+};
+
+
+/**
+ * Sets the time delta for this command.
+ * @param {number} value Time delta, in seconds.
+ */
+gf.sim.PredictedCommand.prototype.setTimeDelta = function(value) {
+  this.timeDelta_ = ((value * 1000) | 0) / 1000;
+};
+
+
+/**
  * @override
  */
-gf.sim.PredictedCommand.prototype.read = function(reader, timeBase) {
-  goog.base(this, 'read', reader, timeBase);
+gf.sim.PredictedCommand.prototype.read = function(reader) {
+  goog.base(this, 'read', reader);
+
+  this.timeDelta_ = reader.readVarUint() / 1000;
 
   // Always reset
   this.hasPredicted = false;
@@ -201,8 +223,10 @@ gf.sim.PredictedCommand.prototype.read = function(reader, timeBase) {
 /**
  * @override
  */
-gf.sim.PredictedCommand.prototype.write = function(writer, timeBase) {
-  goog.base(this, 'write', writer, timeBase);
+gf.sim.PredictedCommand.prototype.write = function(writer) {
+  goog.base(this, 'write', writer);
+
+  writer.writeVarUint((this.timeDelta_ * 1000) | 0);
 };
 
 

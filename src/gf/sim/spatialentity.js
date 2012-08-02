@@ -79,7 +79,6 @@ goog.inherits(gf.sim.SpatialEntity, gf.sim.Entity);
  */
 gf.sim.SpatialEntity.prototype.postNetworkUpdate = function() {
   goog.base(this, 'postNetworkUpdate');
-
   this.transformDirty_ = true;
 };
 
