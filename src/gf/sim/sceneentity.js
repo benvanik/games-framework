@@ -42,6 +42,10 @@ gf.sim.SceneEntity = function(
     simulator, entityFactory, entityId, entityFlags, spatialDatabase) {
   goog.base(this, simulator, entityFactory, entityId, entityFlags);
 
+  if (goog.DEBUG) {
+    this.debugName = 'Scene';
+  }
+
   /**
    * Spatial lookup database.
    * Children are added to this to enable fast lookups.

@@ -79,6 +79,14 @@ gf.sim.Entity = function(simulator, entityFactory, entityId, entityFlags) {
    */
   this.factory = entityFactory;
 
+  if (goog.DEBUG) {
+    /**
+     * Optional name used when debugging.
+     * @type {string?}
+     */
+    this.debugName = null;
+  }
+
   /**
    * Owning user, if any.
    * An owning user generally has more permission to modify an entity than
@@ -175,6 +183,12 @@ goog.inherits(gf.sim.Entity, goog.Disposable);
  * @override
  */
 gf.sim.Entity.prototype.disposeInternal = function() {
+  // Trigger removal code from parent
+  var parent = this.getParent();
+  if (parent) {
+    parent.removeChild_(this);
+  }
+
   // Return entity states back to the pool
   this.factory.releaseState(this.state_);
   if (gf.CLIENT && this.clientState_) {
@@ -185,6 +199,34 @@ gf.sim.Entity.prototype.disposeInternal = function() {
   }
 
   goog.base(this, 'disposeInternal');
+};
+
+
+/**
+ * Dumps information about the entity to the console.
+ * Subclasses can override this to write their own information.
+ * @param {number} indent Indent level in the tree.
+ * @return {string} Padding string.
+ */
+gf.sim.Entity.prototype.dumpInfo = function(indent) {
+  var pad = '';
+  for (var n = 0; n < indent; n++) {
+    pad += '..';
+  }
+
+  gf.log.write(pad +
+      (goog.DEBUG ? (this.debugName ? this.debugName : 'Entity') : 'Entity') +
+      ' ' + this.getId() + ' / type ' + this.getTypeId() +
+      (this.owner_ ? ' / owner ' + this.owner_.sessionId : ''));
+  if (this.children_.length) {
+    for (var n = 0; n < this.children_.length; n++) {
+      var child = this.children_[n];
+      child.dumpInfo(indent + 1);
+    }
+  }
+  // TODO(benvanik): state? most can be reflected
+
+  return pad;
 };
 
 
@@ -362,12 +404,13 @@ gf.sim.Entity.prototype.getOwnedEntities = function() {
  * Subclasses can override this to remove retained entities.
  */
 gf.sim.Entity.prototype.recursivelyRemoveEntities = function() {
-  for (var n = 0; n < this.children_.length; n++) {
+  // Do this in reverse, as the removal will remove them from ourselves
+  for (var n = this.children_.length - 1; n >= 0; n--) {
     var child = this.children_[n];
     this.childRemoved(child);
     this.simulator.removeEntity(child);
   }
-  this.children_.length = 0;
+  goog.asserts.assert(!this.children_.length);
 
   // Remove custom owned entities
   var entities = this.getOwnedEntities();
