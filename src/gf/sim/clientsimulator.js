@@ -349,8 +349,18 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
       return false;
     }
 
+    // If entity has prediction flag and is not owned by this user then clear it
+    // Otherwise we will try to predict other player entities
+    var owner = entityOwnerId ?
+        this.session_.getUserByWireId(entityOwnerId) : null;
+    if (owner && owner != this.session_.getLocalUser() &&
+        entityFlags & gf.sim.EntityFlag.PREDICTED) {
+      entityFlags &= ~gf.sim.EntityFlag.PREDICTED;
+    }
+
     // Create entity
     var entity = entityFactory.createEntity(this, entityId, entityFlags);
+    entity.setOwner(owner);
 
     // Load initial values
     entity.read(reader);
@@ -358,11 +368,6 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
 
     // Add to simulation
     this.addEntity(entity);
-
-    // Set owning user
-    if (entityOwnerId) {
-      entity.setOwner(this.session_.getUserByWireId(entityOwnerId));
-    }
 
     // Queue for parenting
     // We have to do this after the adds as we are not sorted and the parent
