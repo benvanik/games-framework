@@ -245,4 +245,53 @@ gf.sim.util.PredictedCommandList.prototype.executePrediction = function(
   simulator.executeCommands(
       this.outgoingPredictedArray_,
       this.outgoingPredictedCount_);
+
+  /*
+   * This code does not seem to be needed, though it should be.
+   * It tries to interpolate the state from last frame with the state from
+   * this frame, post-prediction. I think it's most useful when there's the
+   * possibility of skew between client/server and there is correction required.
+   * Right now if there's a difference between client/server the client will
+   * snap to the new position in potentially weird ways.
+
+  // TODO(benvanik): prevent alloc
+  var pastState = entity.state.clone();
+
+  // Run all unconfirmed commands
+  for (var n = 0; n < this.unconfirmedCommands_.length; n++) {
+    var cmd = this.unconfirmedCommands_[n];
+    if (cmd.time >= frame.time) {
+      break;
+    }
+    pastState.setFromState(entity.state);
+    this.executeCommand(frame.time, cmd);
+  }
+
+  // Run all unsent commands
+  for (var n = 0; n < this.pendingCommands_.length; n++) {
+    var cmd = this.pendingCommands_[n];
+    if (cmd.time >= frame.time) {
+      break;
+    }
+    pastState.setFromState(entity.state);
+    this.executeCommand(frame.time, cmd);
+  }
+
+  // Lerp the last two states
+  var futureState = entity.state;
+  if (pastState.time != futureState.time) {
+    var tt = frame.time - (200 / 1000);
+    var duration = futureState.time - pastState.time;
+    var baseTime = tt - pastState.time;
+    var t = baseTime / (futureState.time - pastState.time);
+    gf.log.write(tt, pastState.time, futureState.time, t);
+    t = goog.math.clamp(t, 0, 1);
+    blk.env.EntityState.interpolate(pastState, futureState, t,
+        entity.state);
+  }
+
+  // State should now be up to date!
+  gf.log.write(entity.state.position[0], entity.state.position[1],
+      entity.state.position[2]);
+  */
 };
