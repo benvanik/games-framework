@@ -35,3 +35,30 @@ gf.vec.Color.toUint32 = function(value) {
   var a = Math.min(255, value[3] * 255);
   return (a << 24) | (b << 16) | (g << 8) | r;
 };
+
+
+/**
+ * Linear interpolation between two color values.
+ * @param {number} source Source Uint32 color as ABGR.
+ * @param {number} target Target Uint32 color as ABGR.
+ * @param {number} t Interpolation value, [0-1].
+ * @return {number} Result ABGR.
+ */
+gf.vec.Color.lerpUint32 = function(source, target, t) {
+  // There has got to be a better way...
+  // Knowing that t = [0,1], I'm sure it's possible to do this in two mults
+  var sourceA = (source >> 24) & 0xFF;
+  var sourceB = (source >> 16) & 0xFF;
+  var sourceG = (source >> 8) & 0xFF;
+  var sourceR = source & 0xFF;
+  var targetA = (target >> 24) & 0xFF;
+  var targetB = (target >> 16) & 0xFF;
+  var targetG = (target >> 8) & 0xFF;
+  var targetR = target & 0xFF;
+  var result =
+      ((sourceA + t * (targetA - sourceA)) & 0xFF) << 24 |
+      ((sourceB + t * (targetB - sourceB)) & 0xFF) << 16 |
+      ((sourceG + t * (targetG - sourceG)) & 0xFF) << 8 |
+      ((sourceR + t * (targetR - sourceR)) & 0xFF);
+  return result;
+};

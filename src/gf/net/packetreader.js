@@ -294,6 +294,21 @@ gf.net.PacketReader.prototype.readVec3 = function(value) {
 
 /**
  * Reads a value from the buffer.
+ * The result of this function will be reset on the next read operation and must
+ * only be used to copy the value to some other structure.
+ * @return {!goog.vec.Vec3.Float32} Value pointer.
+ */
+gf.net.PacketReader.prototype.readVec3Temp = function() {
+  goog.asserts.assert(this.offset + 3 * 4 <= this.buffer.length);
+  for (var n = 0; n < 3 * 4; n++) {
+    this.float32byte_[n] = this.buffer[this.offset++];
+  }
+  return this.float32_;
+};
+
+
+/**
+ * Reads a value from the buffer.
  * @param {!goog.vec.Vec4.Float32} value Value to receive the contents.
  */
 gf.net.PacketReader.prototype.readVec4 = function(value) {
@@ -302,6 +317,21 @@ gf.net.PacketReader.prototype.readVec4 = function(value) {
     this.float32byte_[n] = this.buffer[this.offset++];
   }
   goog.vec.Vec4.setFromArray(value, this.float32_);
+};
+
+
+/**
+ * Reads a value from the buffer.
+ * The result of this function will be reset on the next read operation and must
+ * only be used to copy the value to some other structure.
+ * @return {!goog.vec.Vec3.Float32} Value pointer.
+ */
+gf.net.PacketReader.prototype.readVec4Temp = function() {
+  goog.asserts.assert(this.offset + 4 * 4 <= this.buffer.length);
+  for (var n = 0; n < 4 * 4; n++) {
+    this.float32byte_[n] = this.buffer[this.offset++];
+  }
+  return this.float32_;
 };
 
 
@@ -320,6 +350,21 @@ gf.net.PacketReader.prototype.readMat3 = function(value) {
 
 /**
  * Reads a value from the buffer.
+ * The result of this function will be reset on the next read operation and must
+ * only be used to copy the value to some other structure.
+ * @return {!goog.vec.Vec3.Float32} Value pointer.
+ */
+gf.net.PacketReader.prototype.readMat3Temp = function() {
+  goog.asserts.assert(this.offset + 3 * 3 * 4 <= this.buffer.length);
+  for (var n = 0; n < 3 * 3 * 4; n++) {
+    this.float32byte_[n] = this.buffer[this.offset++];
+  }
+  return this.float32_;
+};
+
+
+/**
+ * Reads a value from the buffer.
  * @param {!goog.vec.Mat4.Type} value Value to receive the contents.
  */
 gf.net.PacketReader.prototype.readMat4 = function(value) {
@@ -328,6 +373,21 @@ gf.net.PacketReader.prototype.readMat4 = function(value) {
     this.float32byte_[n] = this.buffer[this.offset++];
   }
   goog.vec.Mat4.setFromArray(value, this.float32_);
+};
+
+
+/**
+ * Reads a value from the buffer.
+ * The result of this function will be reset on the next read operation and must
+ * only be used to copy the value to some other structure.
+ * @return {!goog.vec.Vec3.Float32} Value pointer.
+ */
+gf.net.PacketReader.prototype.readMat4Temp = function() {
+  goog.asserts.assert(this.offset + 4 * 4 * 4 <= this.buffer.length);
+  for (var n = 0; n < 4 * 4 * 4; n++) {
+    this.float32byte_[n] = this.buffer[this.offset++];
+  }
+  return this.float32_;
 };
 
 

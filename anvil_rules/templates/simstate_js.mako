@@ -23,7 +23,7 @@ goog.require('${state.super}');
  */
 ${state.name} = function(entity, opt_variableTable) {
   var variableTable = opt_variableTable || gf.sim.EntityState.getVariableTable(
-      ${state.name}.declareVariables);
+      ${state.name}.declareVariables, this);
   goog.base(this, entity, variableTable);
   % for i, var in enumerate(state.vars):
 

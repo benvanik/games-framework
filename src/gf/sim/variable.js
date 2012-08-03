@@ -21,6 +21,9 @@
 goog.provide('gf.sim.Variable');
 goog.provide('gf.sim.VariableFlag');
 
+goog.require('gf.net.PacketReader');
+goog.require('gf.net.PacketWriter');
+goog.require('gf.vec.Color');
 goog.require('goog.vec.Quaternion');
 goog.require('goog.vec.Vec3');
 
@@ -72,37 +75,47 @@ gf.sim.Variable.prototype.clone = goog.abstractMethod;
 
 
 /**
- * Reads the variable.
- * @param {!Object} target Target object.
- * @param {!gf.net.PacketReader} reader Packet reader.
+ * Gets a source code statement for read.
+ * Used by the JIT system in the variable table.
+ * @param {!Object} obj Representative object.
+ * @return {string} Source statement.
  */
-gf.sim.Variable.prototype.read = goog.abstractMethod;
+gf.sim.Variable.prototype.getReadSource = goog.abstractMethod;
 
 
 /**
- * Writes the variable.
- * @param {!Object} target Target object.
- * @param {!gf.net.PacketWriter} writer Packet writer.
+ * Gets a source code statement for write.
+ * Used by the JIT system in the variable table.
+ * @param {!Object} obj Representative object.
+ * @return {string} Source statement.
  */
-gf.sim.Variable.prototype.write = goog.abstractMethod;
+gf.sim.Variable.prototype.getWriteSource = goog.abstractMethod;
 
 
 /**
- * Copies the value from one object to another.
- * @param {!Object} source Source object.
- * @param {!Object} target Target object.
+ * Gets a source code statement for copy.
+ * Used by the JIT system in the variable table.
+ * @param {!Object} obj Representative object.
+ * @return {string} Source statement.
  */
-gf.sim.Variable.prototype.copy = goog.abstractMethod;
+gf.sim.Variable.prototype.getCopySource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  return 'target.' + setter + '(source.' + getter + '());';
+};
 
 
 /**
- * Interpolates the value between the given two states.
- * @param {!Object} source Interpolation source object.
- * @param {!Object} target Interpolation target object.
- * @param {number} t Interpolation coefficient, [0-1].
- * @param {!Object} result Storage object.
+ * Gets a source code statement for interpolate.
+ * Used by the JIT system in the variable table.
+ * @param {!Object} obj Representative object.
+ * @return {string} Source statement.
  */
-gf.sim.Variable.prototype.interpolate = goog.abstractMethod;
+gf.sim.Variable.prototype.getInterpolateSource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  return 'result.' + setter + '(target.' + getter + '());';
+};
 
 
 /**
@@ -135,6 +148,25 @@ gf.sim.Variable.sortByPriority = function(a, b) {
   var frequentA = a.flags & gf.sim.VariableFlag.UPDATED_FREQUENTLY;
   var frequentB = b.flags & gf.sim.VariableFlag.UPDATED_FREQUENTLY;
   return (frequentB - frequentA) || (a.ordinal - b.ordinal);
+};
+
+
+/**
+ * Gets the compiled name of a member on an object.
+ * This looks up by member value, so only use with known-good values.
+ * @private
+ * @param {!Object} obj Representative object.
+ * @param {!Object} memberValue Member value.
+ * @return {string?} Member name, if found.
+ */
+gf.sim.Variable.getCompiledFunctionName_ = function(obj, memberValue) {
+  for (var name in obj) {
+    if (obj[name] === memberValue) {
+      return name;
+    }
+  }
+  goog.asserts.fail('member not found');
+  return null;
 };
 
 
@@ -210,36 +242,47 @@ gf.sim.Variable.Integer.prototype.clone = function() {
 /**
  * @override
  */
-gf.sim.Variable.Integer.prototype.read = function(target, reader) {
-  this.setter_.call(target, reader.readVarInt());
+gf.sim.Variable.Integer.prototype.getReadSource = function(obj) {
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  var reader = gf.net.PacketReader.getSharedReader();
+  var readFn = gf.sim.Variable.getCompiledFunctionName_(
+      reader, reader.readVarInt);
+  return 'target.' + setter + '(reader.' + readFn + '());';
 };
 
 
 /**
  * @override
  */
-gf.sim.Variable.Integer.prototype.write = function(target, writer) {
-  writer.writeVarInt(this.getter_.call(target) | 0);
+gf.sim.Variable.Integer.prototype.getWriteSource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var writer = gf.net.PacketWriter.getSharedWriter();
+  var writeFn = gf.sim.Variable.getCompiledFunctionName_(
+      writer, writer.writeVarInt);
+  return 'writer.' + writeFn + '(target.' + getter + '() | 0);';
 };
 
 
 /**
  * @override
  */
-gf.sim.Variable.Integer.prototype.copy = function(source, target) {
-  this.setter_.call(target, this.getter_.call(source) | 0);
+gf.sim.Variable.Integer.prototype.getCopySource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  return 'target.' + setter + '(source.' + getter + '() | 0);';
 };
 
 
 /**
  * @override
  */
-gf.sim.Variable.Integer.prototype.interpolate = function(source, target, t,
-    result) {
-  var sourceValue = this.getter_.call(source) | 0;
-  var targetValue = this.getter_.call(target) | 0;
-  this.setter_.call(result,
-      (sourceValue + t * (targetValue - sourceValue)) | 0);
+gf.sim.Variable.Integer.prototype.getInterpolateSource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  return '' +
+      'var _s = source.' + getter + '();' +
+      'var _t = target.' + getter + '();' +
+      'target.' + setter + '((_s + t * (_t - _s)) | 0);';
 };
 
 
@@ -284,35 +327,37 @@ gf.sim.Variable.Float.prototype.clone = function() {
 /**
  * @override
  */
-gf.sim.Variable.Float.prototype.read = function(target, reader) {
-  this.setter_.call(target, reader.readFloat32());
+gf.sim.Variable.Float.prototype.getReadSource = function(obj) {
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  var reader = gf.net.PacketReader.getSharedReader();
+  var readFn = gf.sim.Variable.getCompiledFunctionName_(
+      reader, reader.readFloat32);
+  return 'target.' + setter + '(reader.' + readFn + '());';
 };
 
 
 /**
  * @override
  */
-gf.sim.Variable.Float.prototype.write = function(target, writer) {
-  writer.writeFloat32(this.getter_.call(target));
+gf.sim.Variable.Float.prototype.getWriteSource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var writer = gf.net.PacketWriter.getSharedWriter();
+  var writeFn = gf.sim.Variable.getCompiledFunctionName_(
+      writer, writer.writeFloat32);
+  return 'writer.' + writeFn + '(target.' + getter + '());';
 };
 
 
 /**
  * @override
  */
-gf.sim.Variable.Float.prototype.copy = function(source, target) {
-  this.setter_.call(target, this.getter_.call(source));
-};
-
-
-/**
- * @override
- */
-gf.sim.Variable.Float.prototype.interpolate = function(source, target, t,
-    result) {
-  var sourceValue = this.getter_.call(source);
-  var targetValue = this.getter_.call(target);
-  this.setter_.call(result, sourceValue + t * (targetValue - sourceValue));
+gf.sim.Variable.Float.prototype.getInterpolateSource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  return '' +
+      'var _s = source.' + getter + '();' +
+      'var _t = target.' + getter + '();' +
+      'result.' + setter + '((_s + t * (_t - _s)));';
 };
 
 
@@ -359,50 +404,44 @@ gf.sim.Variable.Vec3.prototype.clone = function() {
 /**
  * @override
  */
-gf.sim.Variable.Vec3.prototype.read = function(target, reader) {
-  var v = gf.sim.Variable.Vec3.tmp_;
-  reader.readVec3(v);
-  this.setter_.call(target, v);
+gf.sim.Variable.Vec3.prototype.getReadSource = function(obj) {
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  var reader = gf.net.PacketReader.getSharedReader();
+  var readFn = gf.sim.Variable.getCompiledFunctionName_(
+      reader, reader.readVec3Temp);
+  return 'target.' + setter + '(reader.' + readFn + '());';
 };
 
 
 /**
  * @override
  */
-gf.sim.Variable.Vec3.prototype.write = function(target, writer) {
-  writer.writeVec3(this.getter_.call(target));
+gf.sim.Variable.Vec3.prototype.getWriteSource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var writer = gf.net.PacketWriter.getSharedWriter();
+  var writeFn = gf.sim.Variable.getCompiledFunctionName_(
+      writer, writer.writeVec3);
+  return 'writer.' + writeFn + '(target.' + getter + '());';
 };
 
 
 /**
  * @override
  */
-gf.sim.Variable.Vec3.prototype.copy = function(source, target) {
-  this.setter_.call(target, this.getter_.call(source));
+gf.sim.Variable.Vec3.prototype.getInterpolateSource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  var tmpVec3 = gf.sim.Variable.getCompiledFunctionName_(obj,
+      gf.sim.Variable.tmpVec3);
+  return '' +
+      'var _sv3 = source.' + getter + '();' +
+      'var _tv3 = target.' + getter + '();' +
+      'var _rv3 = source.' + tmpVec3 + ';' +
+      '_rv3[0] = (_tv3[0] - _sv3[0]) * t + _sv3[0];' +
+      '_rv3[1] = (_tv3[1] - _sv3[1]) * t + _sv3[1];' +
+      '_rv3[2] = (_tv3[2] - _sv3[2]) * t + _sv3[2];' +
+      'result.' + setter + '(_rv3);';
 };
-
-
-/**
- * @override
- */
-gf.sim.Variable.Vec3.prototype.interpolate = function(source, target, t,
-    result) {
-  var v = gf.sim.Variable.Vec3.tmp_;
-  goog.vec.Vec3.lerp(
-      this.getter_.call(source),
-      this.getter_.call(target),
-      t,
-      v);
-  this.setter_.call(result, v);
-};
-
-
-/**
- * Scratch Vec3 for math.
- * @private
- * @type {!goog.vec.Vec3.Float32}
- */
-gf.sim.Variable.Vec3.tmp_ = goog.vec.Vec3.createFloat32();
 
 
 
@@ -458,61 +497,43 @@ gf.sim.Variable.Quaternion.prototype.clone = function() {
 /**
  * @override
  */
-gf.sim.Variable.Quaternion.prototype.read = function(target, reader) {
-  var q = gf.sim.Variable.Quaternion.tmp_;
-  // if (this.normalized_) {
-  //   // Reconstruct w
-  //   reader.readVec3(q);
-  //   // Trick is from http://www.gamedev.net/topic/461253-compressed-quaternions/
-  //   // Known to have issues - may not be worth it
-  //   q[3] = Math.sqrt(1 - q[0] * q[0] + q[1] * q[1] + q[2] * q[2]);
-  // } else {
-  reader.readVec4(q);
-  this.setter_.call(target, q);
+gf.sim.Variable.Quaternion.prototype.getReadSource = function(obj) {
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  var reader = gf.net.PacketReader.getSharedReader();
+  var readFn = gf.sim.Variable.getCompiledFunctionName_(
+      reader, reader.readVec4Temp);
+  return 'target.' + setter + '(reader.' + readFn + '());';
 };
 
 
 /**
  * @override
  */
-gf.sim.Variable.Quaternion.prototype.write = function(target, writer) {
-  // if (this.normalized_) {
-  //   // Just ignore w
-  //   writer.writeVec3(this.getter_.call(target));
-  // } else {
-  writer.writeVec4(this.getter_.call(target));
+gf.sim.Variable.Quaternion.prototype.getWriteSource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var writer = gf.net.PacketWriter.getSharedWriter();
+  var writeFn = gf.sim.Variable.getCompiledFunctionName_(
+      writer, writer.writeVec4);
+  return 'writer.' + writeFn + '(target.' + getter + '());';
 };
 
 
 /**
  * @override
  */
-gf.sim.Variable.Quaternion.prototype.copy = function(source, target) {
-  this.setter_.call(target, this.getter_.call(source));
+gf.sim.Variable.Quaternion.prototype.getInterpolateSource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  var tmpQuat = gf.sim.Variable.getCompiledFunctionName_(obj,
+      gf.sim.Variable.tmpQuat);
+  var slerp = gf.sim.Variable.getCompiledFunctionName_(obj,
+      goog.vec.Quaternion.slerp);
+  return '' +
+      'var _rq = source.' + tmpQuat + ';' +
+      'source.' + slerp +
+          '(source.' + getter + '(), target.' + getter + '(), t, _rq);' +
+      'result.' + setter + '(_rq);';
 };
-
-
-/**
- * @override
- */
-gf.sim.Variable.Quaternion.prototype.interpolate = function(source, target, t,
-    result) {
-  var q = gf.sim.Variable.Quaternion.tmp_;
-  goog.vec.Quaternion.slerp(
-      this.getter_.call(source),
-      this.getter_.call(target),
-      t,
-      q);
-  this.setter_.call(result, q);
-};
-
-
-/**
- * Scratch Quaternion for math.
- * @private
- * @type {!goog.vec.Quaternion.Float32}
- */
-gf.sim.Variable.Quaternion.tmp_ = goog.vec.Quaternion.createFloat32();
 
 
 
@@ -556,50 +577,38 @@ gf.sim.Variable.Color.prototype.clone = function() {
 /**
  * @override
  */
-gf.sim.Variable.Color.prototype.read = function(target, reader) {
-  this.setter_.call(target, reader.readFloat32());
+gf.sim.Variable.Color.prototype.getReadSource = function(obj) {
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  var reader = gf.net.PacketReader.getSharedReader();
+  var readFn = gf.sim.Variable.getCompiledFunctionName_(
+      reader, reader.readUint32);
+  return 'target.' + setter + '(reader.' + readFn + '());';
 };
 
 
 /**
  * @override
  */
-gf.sim.Variable.Color.prototype.write = function(target, writer) {
-  writer.writeFloat32(this.getter_.call(target));
+gf.sim.Variable.Color.prototype.getWriteSource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var writer = gf.net.PacketWriter.getSharedWriter();
+  var writeFn = gf.sim.Variable.getCompiledFunctionName_(
+      writer, writer.writeUint32);
+  return 'writer.' + writeFn + '(target.' + getter + '());';
 };
 
 
 /**
  * @override
  */
-gf.sim.Variable.Color.prototype.copy = function(source, target) {
-  this.setter_.call(target, this.getter_.call(source));
-};
-
-
-/**
- * @override
- */
-gf.sim.Variable.Color.prototype.interpolate = function(source, target, t,
-    result) {
-  // There has got to be a better way...
-  // Knowing that t = [0,1], I'm sure it's possible to do this in two mults
-  var sourceValue = this.getter_.call(source);
-  var sourceA = (sourceValue >> 24) & 0xFF;
-  var sourceB = (sourceValue >> 16) & 0xFF;
-  var sourceG = (sourceValue >> 8) & 0xFF;
-  var sourceR = sourceValue & 0xFF;
-  var targetValue = this.getter_.call(target);
-  var targetA = (sourceValue >> 24) & 0xFF;
-  var targetB = (sourceValue >> 16) & 0xFF;
-  var targetG = (sourceValue >> 8) & 0xFF;
-  var targetR = sourceValue & 0xFF;
-  var value =
-      ((sourceA + t * (targetA - sourceA)) & 0xFF) << 24 |
-      ((sourceB + t * (targetB - sourceB)) & 0xFF) << 16 |
-      ((sourceG + t * (targetG - sourceG)) & 0xFF) << 8 |
-      ((sourceR + t * (targetR - sourceR)) & 0xFF);
-  this.setter_.call(result, value);
+gf.sim.Variable.Color.prototype.getInterpolateSource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  var lerp = gf.sim.Variable.getCompiledFunctionName_(obj,
+      gf.vec.Color.lerpUint32);
+  return '' +
+      'result.' + setter + '(source.' + lerp + '(' +
+          'source.' + getter + '(), target.' + getter + '(), t));';
 };
 
 
@@ -644,34 +653,24 @@ gf.sim.Variable.String.prototype.clone = function() {
 /**
  * @override
  */
-gf.sim.Variable.String.prototype.read = function(target, reader) {
-  this.setter_.call(target, reader.readString());
+gf.sim.Variable.String.prototype.getReadSource = function(obj) {
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  var reader = gf.net.PacketReader.getSharedReader();
+  var readFn = gf.sim.Variable.getCompiledFunctionName_(
+      reader, reader.readString);
+  return 'target.' + setter + '(reader.' + readFn + '());';
 };
 
 
 /**
  * @override
  */
-gf.sim.Variable.String.prototype.write = function(target, writer) {
-  writer.writeString(this.getter_.call(target));
-};
-
-
-/**
- * @override
- */
-gf.sim.Variable.String.prototype.copy = function(source, target) {
-  this.setter_.call(target, this.getter_.call(source));
-};
-
-
-/**
- * @override
- */
-gf.sim.Variable.String.prototype.interpolate = function(source, target, t,
-    result) {
-  // Instantaneous to target
-  this.setter_.call(result, this.getter_.call(target));
+gf.sim.Variable.String.prototype.getWriteSource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var writer = gf.net.PacketWriter.getSharedWriter();
+  var writeFn = gf.sim.Variable.getCompiledFunctionName_(
+      writer, writer.writeString);
+  return 'writer.' + writeFn + '(target.' + getter + '());';
 };
 
 
@@ -716,34 +715,24 @@ gf.sim.Variable.UserID.prototype.clone = function() {
 /**
  * @override
  */
-gf.sim.Variable.UserID.prototype.read = function(target, reader) {
-  this.setter_.call(target, reader.readString());
+gf.sim.Variable.UserID.prototype.getReadSource = function(obj) {
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  var reader = gf.net.PacketReader.getSharedReader();
+  var readFn = gf.sim.Variable.getCompiledFunctionName_(
+      reader, reader.readString);
+  return 'target.' + setter + '(reader.' + readFn + '());';
 };
 
 
 /**
  * @override
  */
-gf.sim.Variable.UserID.prototype.write = function(target, writer) {
-  writer.writeString(this.getter_.call(target));
-};
-
-
-/**
- * @override
- */
-gf.sim.Variable.UserID.prototype.copy = function(source, target) {
-  this.setter_.call(target, this.getter_.call(source));
-};
-
-
-/**
- * @override
- */
-gf.sim.Variable.UserID.prototype.interpolate = function(source, target, t,
-    result) {
-  // Instantaneous to target
-  this.setter_.call(result, this.getter_.call(target));
+gf.sim.Variable.UserID.prototype.getWriteSource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var writer = gf.net.PacketWriter.getSharedWriter();
+  var writeFn = gf.sim.Variable.getCompiledFunctionName_(
+      writer, writer.writeString);
+  return 'writer.' + writeFn + '(target.' + getter + '());';
 };
 
 
@@ -788,32 +777,37 @@ gf.sim.Variable.EntityID.prototype.clone = function() {
 /**
  * @override
  */
-gf.sim.Variable.EntityID.prototype.read = function(target, reader) {
-  this.setter_.call(target, reader.readVarUint());
+gf.sim.Variable.EntityID.prototype.getReadSource = function(obj) {
+  var setter = gf.sim.Variable.getCompiledFunctionName_(obj, this.setter_);
+  var reader = gf.net.PacketReader.getSharedReader();
+  var readFn = gf.sim.Variable.getCompiledFunctionName_(
+      reader, reader.readVarUint);
+  return 'target.' + setter + '(reader.' + readFn + '());';
 };
 
 
 /**
  * @override
  */
-gf.sim.Variable.EntityID.prototype.write = function(target, writer) {
-  writer.writeVarUint(this.getter_.call(target));
+gf.sim.Variable.EntityID.prototype.getWriteSource = function(obj) {
+  var getter = gf.sim.Variable.getCompiledFunctionName_(obj, this.getter_);
+  var writer = gf.net.PacketWriter.getSharedWriter();
+  var writeFn = gf.sim.Variable.getCompiledFunctionName_(
+      writer, writer.writeVarUint);
+  return 'writer.' + writeFn + '(target.' + getter + '());';
 };
+
 
 
 /**
- * @override
+ * Scratch Vec3 for math.
+ * @type {!goog.vec.Vec3.Float32}
  */
-gf.sim.Variable.EntityID.prototype.copy = function(source, target) {
-  this.setter_.call(target, this.getter_.call(source));
-};
+gf.sim.Variable.tmpVec3 = goog.vec.Vec3.createFloat32();
 
 
 /**
- * @override
+ * Scratch Quaternion for math.
+ * @type {!goog.vec.Quaternion.Float32}
  */
-gf.sim.Variable.EntityID.prototype.interpolate = function(source, target, t,
-    result) {
-  // Instantaneous to target
-  this.setter_.call(result, this.getter_.call(target));
-};
+gf.sim.Variable.tmpQuat = goog.vec.Quaternion.createFloat32();

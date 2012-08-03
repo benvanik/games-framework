@@ -20,6 +20,7 @@
 
 goog.provide('gf.sim.EntityState');
 
+goog.require('gf.sim.Variable');
 goog.require('gf.sim.VariableTable');
 goog.require('goog.asserts');
 
@@ -92,11 +93,12 @@ gf.sim.EntityState = function(entity, variableTable) {
  *     Entity state variable declaration function.
  * @return {!gf.sim.VariableTable} A shared variable table.
  */
-gf.sim.EntityState.getVariableTable = function(declarationFunction) {
+gf.sim.EntityState.getVariableTable = function(declarationFunction, obj) {
   if (!declarationFunction.variableTable_) {
     var variableList = [];
     declarationFunction(variableList);
-    declarationFunction.variableTable_ = new gf.sim.VariableTable(variableList);
+    declarationFunction.variableTable_ = new gf.sim.VariableTable(
+        variableList, obj);
   }
   return declarationFunction.variableTable_;
 };
@@ -155,37 +157,15 @@ gf.sim.EntityState.prototype.read = function(reader) {
  */
 gf.sim.EntityState.prototype.readDelta = function(reader) {
   // Read the first 32 variables
-  this.readDeltaVariables_(reader, 0);
+  var presentBits00_31 = reader.readVarUint();
+  this.variableTable_.readPresentVariables(
+      0, presentBits00_31, this, reader);
 
   // Write the next 32, if present
   if (this.variableTable_.getCount() > 31) {
-    this.readDeltaVariables_(reader, 32);
-  }
-};
-
-
-/**
- * Reads a range of delta variables.
- * This function is designed to be called on a subset of the variable range.
- * For example, the first 32 variables, second 32, etc.
- * @private
- * @param {!gf.net.PacketReader} reader Packet reader.
- * @param {number} startingOrdinal Ordinal this range starts at.
- */
-gf.sim.EntityState.prototype.readDeltaVariables_ = function(
-    reader, startingOrdinal) {
-  // Read bits indicating which variables are present
-  var presentBits = reader.readVarUint();
-
-  // For each bit that is present, read the value
-  var ordinal = startingOrdinal;
-  while (presentBits) {
-    if (presentBits & 1) {
-      // Variable at <ordinal> is present and needs reading
-      this.variableTable_.readVariable(ordinal, this, reader);
-    }
-    presentBits >>= 1;
-    ordinal++;
+    var presentBits32_63 = reader.readVarUint();
+    this.variableTable_.readPresentVariables(
+        32, presentBits32_63, this, reader);
   }
 };
 
@@ -214,38 +194,15 @@ gf.sim.EntityState.prototype.writeDelta = function(writer) {
   // delta
 
   // Write the first 32 variables
-  this.writeDeltaVariables_(writer, this.dirtyBits00_31_, 0);
+  writer.writeVarUint(this.dirtyBits00_31_);
+  this.variableTable_.writePresentVariables(
+      0, this.dirtyBits00_31_, this, writer);
 
   // Write the next 32, if present
   if (this.dirtyBits32_63_ && this.variableTable_.getCount() > 31) {
-    this.writeDeltaVariables_(writer, this.dirtyBits32_63_, 32);
-  }
-};
-
-
-/**
- * Writes a range of delta variables.
- * This function is designed to be called on a subset of the variable range.
- * For example, the first 32 variables, second 32, etc.
- * @private
- * @param {!gf.net.PacketWriter} writer Packet writer.
- * @param {number} presentBits Bit field indicating which variables are present.
- * @param {number} startingOrdinal Ordinal this range starts at.
- */
-gf.sim.EntityState.prototype.writeDeltaVariables_ = function(
-    writer, presentBits, startingOrdinal) {
-  // Write dirty bits
-  writer.writeVarUint(presentBits);
-
-  // For each bit that is dirty, write the value
-  var ordinal = startingOrdinal;
-  while (presentBits) {
-    if (presentBits & 1) {
-      // Variable at <ordinal> is dirty and needs writing
-      this.variableTable_.writeVariable(ordinal, this, writer);
-    }
-    presentBits >>= 1;
-    ordinal++;
+    writer.writeVarUint(this.dirtyBits32_63_);
+    this.variableTable_.writePresentVariables(
+        32, this.dirtyBits32_63_, this, writer);
   }
 };
 
@@ -300,3 +257,52 @@ gf.sim.EntityState.prototype.interpolate = function(
     vtable.interpolateVariables(sourceState, targetState, t, this);
   }
 };
+
+
+// TODO(benvanik): find a way to remove these - point at an indirection table?
+/**
+ * Scratch Vec3 for math.
+ * This is currently used by the variable table system.
+ * @protected
+ * @type {!goog.vec.Vec3.Float32}
+ */
+gf.sim.EntityState.prototype.tmpVec3 = gf.sim.Variable.tmpVec3;
+
+
+/**
+ * Scratch Quaternion for math.
+ * This is currently used by the variable table system.
+ * @protected
+ * @type {!goog.vec.Quaternion.Float32}
+ */
+gf.sim.EntityState.prototype.tmpQuat = gf.sim.Variable.tmpQuat;
+
+
+/**
+ * Quaternion slerp.
+ * This is currently used by the variable table system.
+ * @protected
+ * @type {!Function}
+ */
+gf.sim.EntityState.prototype.qslerp = goog.vec.Quaternion.slerp;
+
+
+/**
+ * Color lerp.
+ * This is currently used by the variable table system.
+ * @protected
+ * @type {!Function}
+ */
+gf.sim.EntityState.prototype.colorLerp = gf.vec.Color.lerpUint32;
+
+// HACK: ensure things are included
+goog.scope(function() {
+  gf.sim.EntityState.prototype.tmpVec3[0] =
+      gf.sim.EntityState.prototype.tmpVec3[1];
+  gf.sim.EntityState.prototype.qslerp(
+      gf.sim.EntityState.prototype.tmpQuat,
+      gf.sim.EntityState.prototype.tmpQuat,
+      0,
+      gf.sim.EntityState.prototype.tmpQuat);
+  gf.sim.EntityState.prototype.colorLerp(0, 0, 0);
+});
