@@ -21,7 +21,6 @@
 goog.provide('gf.sim.util.PredictedCommandList');
 
 goog.require('gf.log');
-goog.require('gf.sim.CommandFlag');
 goog.require('gf.sim.PredictedCommand');
 goog.require('goog.asserts');
 

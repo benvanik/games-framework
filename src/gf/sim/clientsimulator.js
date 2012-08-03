@@ -22,6 +22,7 @@ goog.provide('gf.sim.ClientSimulator');
 
 goog.require('gf.log');
 goog.require('gf.net.PacketWriter');
+goog.require('gf.sim');
 goog.require('gf.sim.EntityFlag');
 goog.require('gf.sim.RemoveEntityMode');
 goog.require('gf.sim.Simulator');
@@ -166,7 +167,8 @@ gf.sim.ClientSimulator.prototype.update = function(frame) {
   //       in the netservice
 
   // Prepare entity states for update with interpolation/prediction
-  this.interpolateEntities(frame.time);
+  var serverTime = this.runtime.clock.getServerTime();
+  this.interpolateEntities(serverTime - gf.sim.INTERPOLATION_DELAY);
 
   // Process incoming commands
   this.executeCommands(
@@ -366,6 +368,9 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     entity.read(reader);
     this.statistics.entityCreateSize += reader.offset - startOffset;
 
+    // Snapshot
+    entity.snapshotState(time);
+
     // Add to simulation
     this.addEntity(entity);
 
@@ -400,6 +405,9 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     // Load delta values
     entity.readDelta(reader);
     this.statistics.entityUpdateSize += reader.offset - startOffset;
+
+    // Snapshot
+    entity.snapshotState(time);
 
     gf.log.write('<- update entity', entityId);
   }

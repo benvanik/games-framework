@@ -45,6 +45,7 @@ gf.sim.CommandFlag = {
 };
 
 
+
 /**
  * Simulation command.
  * Used as a basic RPC mechanism. Commands are generated and queued to target

@@ -297,12 +297,12 @@ gf.sim.EntityState.prototype.colorLerp = gf.vec.Color.lerpUint32;
 
 // HACK: ensure things are included
 goog.scope(function() {
-  gf.sim.EntityState.prototype.tmpVec3[0] =
-      gf.sim.EntityState.prototype.tmpVec3[1];
-  gf.sim.EntityState.prototype.qslerp(
-      gf.sim.EntityState.prototype.tmpQuat,
-      gf.sim.EntityState.prototype.tmpQuat,
-      0,
-      gf.sim.EntityState.prototype.tmpQuat);
-  gf.sim.EntityState.prototype.colorLerp(0, 0, 0);
-});
+gf.sim.EntityState.prototype.tmpVec3[0] =
+    gf.sim.EntityState.prototype.tmpVec3[1];
+gf.sim.EntityState.prototype.qslerp(
+    gf.sim.EntityState.prototype.tmpQuat,
+    gf.sim.EntityState.prototype.tmpQuat,
+    0,
+    gf.sim.EntityState.prototype.tmpQuat);
+gf.sim.EntityState.prototype.colorLerp(0, 0, 0);
+});  // goog.scope

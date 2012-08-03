@@ -24,6 +24,7 @@ goog.provide('gf.sim.VariableFlag');
 goog.require('gf.net.PacketReader');
 goog.require('gf.net.PacketWriter');
 goog.require('gf.vec.Color');
+goog.require('goog.asserts');
 goog.require('goog.vec.Quaternion');
 goog.require('goog.vec.Vec3');
 
@@ -796,7 +797,6 @@ gf.sim.Variable.EntityID.prototype.getWriteSource = function(obj) {
       writer, writer.writeVarUint);
   return 'writer.' + writeFn + '(target.' + getter + '());';
 };
-
 
 
 /**

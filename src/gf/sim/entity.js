@@ -492,6 +492,22 @@ gf.sim.Entity.prototype.writeDelta = function(writer) {
 
 
 /**
+ * Snapshots the current entity state.
+ * This snapshot can then be used for interpolation or history.
+ * Only entities that are interpolated get snapshots.
+ * @param {number} time Time the state was updated.
+ */
+gf.sim.Entity.prototype.snapshotState = function(time) {
+  if (this.getFlags() & gf.sim.EntityFlag.INTERPOLATED) {
+    var historyState = this.factory.allocateState(this);
+    historyState.time = time;
+    this.state_.copy(historyState);
+    this.previousStates_.push(historyState);
+  }
+};
+
+
+/**
  * Interpolates the entity to the given time.
  * This will only be called if the entity has either its interpolated or
  * predicted bits set. It will be called immediately after network updates
@@ -540,50 +556,71 @@ gf.sim.Entity.prototype.interpolate_ = gf.CLIENT ? function(time) {
   var clientState = this.clientState_;
   goog.asserts.assert(clientState);
 
-  // TODO(benvanik): sanity check that all this time stuff is actually required
-  clientState.interpolate(this.state_, this.state_, 0);
-
-  // // Need at least two states to interpolate
-  // if (!this.previousStates_.length) {
-  //   return;
-  // } else if (this.previousStates_.length == 1) {
-  //   // Only one state - just copy the variables
-  //   clientState.interpolate(
-  //       this.previousStates_[0], this.previousStates_[0], 0);
-  //   clientState.time = time;
+  // if (this.getOwner() == blk.sim.getLocalPlayer(this).getOwner()) {
+  //   clientState.interpolate(this.state_, this.state_, 0);
   //   return;
   // }
 
-  // // Find the two states that straddle the current time
-  // var futureState = null;
-  // for (var n = 1; n < this.previousStates_.length; n++) {
-  //   futureState = this.previousStates_[n];
-  //   if (futureState.time >= time) {
-  //     break;
-  //   }
-  // }
-  // if (!futureState) {
-  //   var lastState = this.previousStates_[0];
-  //   clientState.interpolate(lastState, lastState, 0);
-  //   clientState.time = time;
-  //   return;
-  // }
-  // var pastState = this.previousStates_[n - 1];
+  // The logic here is a bit hairy, but the idea is:
+  // (time = current time, states[N] = some state in history)
+  // - if time < states[0].time:
+  //   - wait until time catches up to the first state
+  // - find the states straddled by time, past & future
+  // - t = interp between past/future
+  // - remove all states before the current time
+  // - interpolate(past, future, t)
 
-  // // Find interpolation factor t
-  // var duration = futureState.time - pastState.time;
-  // var baseTime = time - pastState.time;
-  // var t = baseTime / (futureState.time - pastState.time);
-  // t = goog.math.clamp(t, 0, 1);
+  // I'm 100% positive there are bugs here; some that I suspect:
+  // - not handling the first state that comes through right
+  // - when going from no states to some states, there's no lerp
+  //   - may need to rewind time (-timeDelta?) to lerp with current state
 
-  // // Remove past state only if we go over it
-  // if (t >= 1) {
-  //   this.previousStates_.splice(0, n - 1);
-  //   this.factory.releaseState(pastState);
-  // }
+  // Need at least two states to interpolate, and states must be in the
+  // current time range
+  // In the steady state (no changes) this is the most common case
+  if (!this.previousStates_.length || this.previousStates_[0].time > time) {
+    return;
+  }
 
-  // // Interpolate between the chosen states
-  // clientState.interpolate(pastState, futureState, t);
+  // Find the two states that straddle the current time
+  var futureState = null;
+  for (var n = 1; n < this.previousStates_.length; n++) {
+    futureState = this.previousStates_[n];
+    if (futureState.time >= time) {
+      break;
+    }
+  }
+  // No future state found - all states are in the past
+  if (n >= this.previousStates_.length) {
+    var lastState = this.previousStates_[this.previousStates_.length - 1];
+    // TODO(benvanik): fast copy
+    clientState.interpolate(lastState, lastState, 0);
+    for (var m = 0; m < this.previousStates_.length; m++) {
+      this.factory.releaseState(this.previousStates_[m]);
+    }
+    this.previousStates_.length = 0;
+    return;
+  }
+  var pastState = this.previousStates_[n - 1];
+  goog.asserts.assert(pastState != futureState);
+
+  // Find interpolation factor t
+  var duration = futureState.time - pastState.time;
+  var baseTime = time - pastState.time;
+  var t = baseTime / (futureState.time - pastState.time);
+  t = goog.math.clamp(t, 0, 1);
+
+  // Interpolate between the chosen states
+  clientState.interpolate(pastState, futureState, t);
+
+  // Remove old states - only remove the past state if we don't need it (t>=1)
+  var removeBefore = t >= 1 ? n : n - 1;
+  if (removeBefore > 0) {
+    for (var m = 0; m < removeBefore; m++) {
+      this.factory.releaseState(this.previousStates_[m]);
+    }
+    this.previousStates_.splice(0, removeBefore);
+  }
 } : goog.nullFunction;
 
 

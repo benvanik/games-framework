@@ -17,6 +17,7 @@
 goog.provide('gf.timing.Clock');
 
 goog.require('gf');
+goog.require('goog.asserts');
 
 
 

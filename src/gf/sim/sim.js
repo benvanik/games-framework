@@ -74,3 +74,14 @@ gf.sim.createTypeId = function(module, type) {
   // If assume at most 4 modules (2 bits), has a constant cost and does not
   // restrict type count - but means only 32 ids get in a 1 byte varint
 };
+
+
+// TODO(benvanik): make a cvar
+/**
+ * Delay, in seconds, the client game is interpolated at.
+ * The higher the delay the more tolerant the game is to network lag, but the
+ * more time shifting that occurs.
+ * @const
+ * @type {number}
+ */
+gf.sim.INTERPOLATION_DELAY = 0.200;

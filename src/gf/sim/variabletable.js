@@ -76,7 +76,7 @@ gf.sim.VariableTable = function(variableList, obj) {
    */
   this.writeTable_ = new Array(variableList.length);
 
-  // Here lie black magic
+  // Here lies black magic
   // This code carefully constructs Functions while being mindful of the Closure
   // Compiler renaming rules - it does this through some clever hacks that will
   // likely break with ambiguation enabled - I hope that doesn't happen.
