@@ -384,7 +384,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
       parentingRequired.push([entity, entityParentId]);
     }
 
-    gf.log.write('<- create entity', entity.getTypeId(), entityId);
+    //gf.log.write('<- create entity', entity.getTypeId(), entityId);
   }
 
   // Update entities
@@ -409,7 +409,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     // Snapshot
     entity.snapshotState(time);
 
-    gf.log.write('<- update entity', entityId);
+    //gf.log.write('<- update entity', entityId);
   }
 
   // Delete entities
@@ -431,7 +431,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     // Remove from simulation
     this.removeEntity(entity, gf.sim.RemoveEntityMode.SHALLOW);
 
-    gf.log.write('<- delete entity', entityId);
+    //gf.log.write('<- delete entity', entityId);
   }
 
   // For each entity created we need to set parents

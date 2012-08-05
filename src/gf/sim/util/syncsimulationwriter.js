@@ -217,7 +217,7 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function(time) {
     this.statistics_.entityCreates++;
     this.statistics_.entityCreateSize += writer.offset - startOffset;
 
-    gf.log.write('-> create entity', entity.getTypeId(), entity.getId());
+    //gf.log.write('-> create entity', entity.getTypeId(), entity.getId());
   }
   this.createEntityCount_ = 0;
 
@@ -238,7 +238,7 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function(time) {
     this.statistics_.entityUpdates++;
     this.statistics_.entityUpdateSize += writer.offset - startOffset;
 
-    gf.log.write('-> update entity', entity.getId());
+    //gf.log.write('-> update entity', entity.getId());
   }
   this.updateEntityCount_ = 0;
 
@@ -256,7 +256,7 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function(time) {
     this.statistics_.entityDeletes++;
     this.statistics_.entityDeleteSize += writer.offset - startOffset;
 
-    gf.log.write('-> delete entity', entity.getId());
+    //gf.log.write('-> delete entity', entity.getId());
   }
   this.deleteEntityCount_ = 0;
 
@@ -274,7 +274,7 @@ gf.sim.util.SyncSimulationWriter.prototype.finish = function(time) {
     this.statistics_.outgoingCommands++;
     this.statistics_.outgoingCommandSize += writer.offset - startOffset;
 
-    gf.log.write('-> command', command.factory.typeId);
+    //gf.log.write('-> command', command.factory.typeId);
   }
   this.commandCount_ = 0;
 
