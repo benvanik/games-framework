@@ -20,7 +20,6 @@
 
 goog.provide('gf.sim.util.SyncSimulationWriter');
 
-goog.require('gf.log');
 goog.require('gf.net.PacketWriter');
 goog.require('gf.net.User');
 goog.require('gf.sim');

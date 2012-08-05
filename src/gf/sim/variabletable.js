@@ -86,6 +86,7 @@ gf.sim.VariableTable = function(variableList, obj) {
   var writeAllVariablesFn = '';
   var copyVariablesFn = '';
   var copyImmediateVariablesFn = '';
+  var copyInterpolatedVariablesFn = '';
   var copyPredictedVariablesFn = '';
   var interpolateVariablesFn = '';
   var interpolateUnpredictedVariablesFn = '';
@@ -126,6 +127,7 @@ gf.sim.VariableTable = function(variableList, obj) {
     if (v.flags & gf.sim.VariableFlag.INTERPOLATED) {
       var interpolateSource = v.getInterpolateSource(obj);
       interpolateVariablesFn += interpolateSource;
+      copyInterpolatedVariablesFn += copySource;
       if (!(v.flags & gf.sim.VariableFlag.PREDICTED)) {
         interpolateUnpredictedVariablesFn += interpolateSource;
       }
@@ -164,6 +166,16 @@ gf.sim.VariableTable = function(variableList, obj) {
    */
   this.copyImmediateVariables = new Function(
       'source', 'target', copyImmediateVariablesFn);
+
+  /**
+   * Copies values of all interpolated variables from one object to another.
+   * All values in the target with {@see gf.sim.VariableFlag#INTERPOLATED} set
+   * will get overwritten with the source values.
+   * @param {!Object} source Source object.
+   * @param {!Object} target Target object.
+   */
+  this.copyInterpolatedVariables = new Function(
+      'source', 'target', copyInterpolatedVariablesFn);
 
   /**
    * Copies values of all predicted variables from one object to another.

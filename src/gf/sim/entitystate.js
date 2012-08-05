@@ -88,6 +88,19 @@ gf.sim.EntityState = function(entity, variableTable) {
 
 
 /**
+ * Resets the entity state.
+ * Used when pooling states.
+ * @param {!gf.sim.Entity} entity Target entity.
+ */
+gf.sim.EntityState.prototype.reset = function(entity) {
+  this.entity = entity;
+  this.time = 0;
+  this.dirtyBits00_31_ = 0;
+  this.dirtyBits32_63_ = 0;
+};
+
+
+/**
  * Gets the shared variable table for {@see gf.sim.EntityState} types.
  * @param {!function(!Array.<!gf.sim.Variable>)} declarationFunction
  *     Entity state variable declaration function.
@@ -236,6 +249,18 @@ gf.sim.EntityState.prototype.copyImmediateVariables = function(targetState) {
  */
 gf.sim.EntityState.prototype.copyPredictedVariables = function(targetState) {
   this.variableTable_.copyPredictedVariables(this, targetState);
+};
+
+
+/**
+ * Copies values of all interpolated variables to the target state.
+ * All values in the target state with their
+ * {@see gf.sim.VariableFlag#INTERPOLATED} bit set will get overwritten with
+ * this states values.
+ * @param {!gf.sim.EntityState} targetState Target state.
+ */
+gf.sim.EntityState.prototype.copyInterpolatedVariables = function(targetState) {
+  this.variableTable_.copyInterpolatedVariables(this, targetState);
 };
 
 

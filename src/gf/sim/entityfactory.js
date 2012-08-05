@@ -68,6 +68,13 @@ gf.sim.EntityFactory = function(typeId, entityCtor, stateCtor) {
    * @type {!gf.sim.EntityStateCtor}
    */
   this.stateCtor_ = stateCtor;
+
+  /**
+   * A pool of unused states.
+   * @private
+   * @type {!Array.<!gf.sim.EntityState>}
+   */
+  this.statePool_ = [];
 };
 
 
@@ -90,7 +97,11 @@ gf.sim.EntityFactory.prototype.createEntity = function(
  * @return {!gf.sim.EntityState} New or recycled entity state.
  */
 gf.sim.EntityFactory.prototype.allocateState = function(entity) {
-  // TODO(benvanik): pooling of entity state
+  if (this.statePool_.length) {
+    var entityState = this.statePool_.pop();
+    entityState.reset(entity);
+    return entityState;
+  }
   return new this.stateCtor_(entity);
 };
 
@@ -100,5 +111,6 @@ gf.sim.EntityFactory.prototype.allocateState = function(entity) {
  * @param {!gf.sim.EntityState} entityState Entity state that can be released.
  */
 gf.sim.EntityFactory.prototype.releaseState = function(entityState) {
-  // TODO(benvanik): pooling of entity state
+  // TODO(benvanik): prevent unlimited growth
+  this.statePool_.push(entityState);
 };

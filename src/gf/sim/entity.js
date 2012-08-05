@@ -29,6 +29,7 @@ goog.require('gf.sim.commands.ReparentCommand');
 goog.require('goog.Disposable');
 goog.require('goog.array');
 goog.require('goog.asserts');
+goog.require('goog.math');
 
 
 
@@ -511,13 +512,13 @@ gf.sim.Entity.prototype.snapshotState = function(time) {
     // This will enable a smooth lerp between the previous state and the one
     // that just arrived
     if (this.stateHistory_.length == 1) {
-      this.stateHistory_[0].time = time - gf.sim.INTERPOLATION_DELAY;
+      this.stateHistory_[0].time = time;
     }
 
     // Allocate a state, copy the current network state into it, and push
     var historyState = this.factory.allocateState(this);
     historyState.time = time;
-    this.state_.copy(historyState);
+    this.state_.copyInterpolatedVariables(historyState);
     this.stateHistory_.push(historyState);
   }
 };
