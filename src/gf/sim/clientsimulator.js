@@ -368,7 +368,8 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     entity.read(reader);
     this.statistics.entityCreateSize += reader.offset - startOffset;
 
-    // Snapshot
+    // Snapshot and place the state into the history
+    // Since this is creation this should end up as the base state
     entity.snapshotState(time);
 
     // Add to simulation
@@ -406,7 +407,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
     entity.readDelta(reader);
     this.statistics.entityUpdateSize += reader.offset - startOffset;
 
-    // Snapshot
+    // Snapshot and place the state into the history
     entity.snapshotState(time);
 
     //gf.log.write('<- update entity', entityId);

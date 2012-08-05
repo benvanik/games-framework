@@ -84,4 +84,4 @@ gf.sim.createTypeId = function(module, type) {
  * @const
  * @type {number}
  */
-gf.sim.INTERPOLATION_DELAY = 0.200;
+gf.sim.INTERPOLATION_DELAY = 500 / 1000;

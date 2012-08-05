@@ -172,10 +172,17 @@ gf.sim.Entity = function(simulator, entityFactory, entityId, entityFlags) {
    * snapshot. It is used to update the state with the values as interpolated
    * on the server. Only valid if the entity has
    * {@see gf.sim.EntityFlag#INTERPOLATED} set.
+   *
+   * On the client, this always has at least one state in it representing the
+   * last posted network state. This enables new states coming in off the
+   * network to be smoothly interpolated with that state as a base.
+   * The states all have their time set to the server time at which they were
+   * received. Interpolation occurs in order and through time.
+   *
    * @private
    * @type {!Array.<!gf.sim.EntityState>}
    */
-  this.previousStates_ = [];
+  this.stateHistory_ = [];
 };
 goog.inherits(gf.sim.Entity, goog.Disposable);
 
@@ -195,8 +202,8 @@ gf.sim.Entity.prototype.disposeInternal = function() {
   if (gf.CLIENT && this.clientState_) {
     this.factory.releaseState(this.clientState_);
   }
-  for (var n = 0; n < this.previousStates_.length; n++) {
-    this.factory.releaseState(this.previousStates_[n]);
+  for (var n = 0; n < this.stateHistory_.length; n++) {
+    this.factory.releaseState(this.stateHistory_[n]);
   }
 
   goog.base(this, 'disposeInternal');
@@ -499,10 +506,19 @@ gf.sim.Entity.prototype.writeDelta = function(writer) {
  */
 gf.sim.Entity.prototype.snapshotState = function(time) {
   if (this.getFlags() & gf.sim.EntityFlag.INTERPOLATED) {
+    // If we only have one other state, reset the current time to prepare for
+    // interpolation
+    // This will enable a smooth lerp between the previous state and the one
+    // that just arrived
+    if (this.stateHistory_.length == 1) {
+      this.stateHistory_[0].time = time - gf.sim.INTERPOLATION_DELAY;
+    }
+
+    // Allocate a state, copy the current network state into it, and push
     var historyState = this.factory.allocateState(this);
     historyState.time = time;
     this.state_.copy(historyState);
-    this.previousStates_.push(historyState);
+    this.stateHistory_.push(historyState);
   }
 };
 
@@ -556,11 +572,6 @@ gf.sim.Entity.prototype.interpolate_ = gf.CLIENT ? function(time) {
   var clientState = this.clientState_;
   goog.asserts.assert(clientState);
 
-  // if (this.getOwner() == blk.sim.getLocalPlayer(this).getOwner()) {
-  //   clientState.interpolate(this.state_, this.state_, 0);
-  //   return;
-  // }
-
   // The logic here is a bit hairy, but the idea is:
   // (time = current time, states[N] = some state in history)
   // - if time < states[0].time:
@@ -578,30 +589,33 @@ gf.sim.Entity.prototype.interpolate_ = gf.CLIENT ? function(time) {
   // Need at least two states to interpolate, and states must be in the
   // current time range
   // In the steady state (no changes) this is the most common case
-  if (!this.previousStates_.length || this.previousStates_[0].time > time) {
+  if (!this.stateHistory_.length || this.stateHistory_[0].time > time) {
     return;
   }
 
   // Find the two states that straddle the current time
   var futureState = null;
-  for (var n = 1; n < this.previousStates_.length; n++) {
-    futureState = this.previousStates_[n];
+  for (var n = 1; n < this.stateHistory_.length; n++) {
+    futureState = this.stateHistory_[n];
     if (futureState.time >= time) {
       break;
     }
   }
   // No future state found - all states are in the past
-  if (n >= this.previousStates_.length) {
-    var lastState = this.previousStates_[this.previousStates_.length - 1];
+  // This is unlikely, unless the client is *way* behind the server
+  // (RTT >> interp interval)
+  if (n >= this.stateHistory_.length) {
+    // Remove all but the last state
+    var lastState = this.stateHistory_[this.stateHistory_.length - 1];
     // TODO(benvanik): fast copy
     clientState.interpolate(lastState, lastState, 0);
-    for (var m = 0; m < this.previousStates_.length; m++) {
-      this.factory.releaseState(this.previousStates_[m]);
+    for (var m = 0; m < this.stateHistory_.length - 1; m++) {
+      this.factory.releaseState(this.stateHistory_[m]);
     }
-    this.previousStates_.length = 0;
+    this.stateHistory_.splice(0, this.stateHistory_.length - 1);
     return;
   }
-  var pastState = this.previousStates_[n - 1];
+  var pastState = this.stateHistory_[n - 1];
   goog.asserts.assert(pastState != futureState);
 
   // Find interpolation factor t
@@ -617,10 +631,11 @@ gf.sim.Entity.prototype.interpolate_ = gf.CLIENT ? function(time) {
   var removeBefore = t >= 1 ? n : n - 1;
   if (removeBefore > 0) {
     for (var m = 0; m < removeBefore; m++) {
-      this.factory.releaseState(this.previousStates_[m]);
+      this.factory.releaseState(this.stateHistory_[m]);
     }
-    this.previousStates_.splice(0, removeBefore);
+    this.stateHistory_.splice(0, removeBefore);
   }
+  goog.asserts.assert(this.stateHistory_.length);
 } : goog.nullFunction;
 
 
