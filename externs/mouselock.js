@@ -20,30 +20,19 @@
  * @externs
  */
 
-// TODO(benvanik): swap for the new API when Chrome gets it
-// /** @return {Element} */
-// Document.prototype.pointerLockElement = function() {};
-// /** @return {Element} */
-// Document.prototype.mozPointerLockElement = function() {};
-// /** @return {Element} */
-// Document.prototype.webkitPointerLockElement = function() {};
-// Document.prototype.exitPointerLock = function() {};
-// Element.prototype.requestPointerLock = function() {};
-// Element.prototype.mozRequestPointerLock = function() {};
-// Element.prototype.webkitRequestPointerLock = function() {};
+/** @return {Element} */
+Document.prototype.pointerLockElement = function() {};
+/** @return {Element} */
+Document.prototype.mozPointerLockElement = function() {};
+/** @return {Element} */
+Document.prototype.webkitPointerLockElement = function() {};
+Document.prototype.exitPointerLock = function() {};
+Document.prototype.mozExitPointerLock = function() {};
+Document.prototype.webkitExitPointerLock = function() {};
 
-/** @constructor */
-function PointerLock() {}
-/** @type {boolean} */
-PointerLock.prototype.isLocked;
-/**
- * @param {!Element} target
- * @param {(function(): void)=} opt_successCallback
- * @param {(function(): void)=} opt_failureCallback
- */
-PointerLock.prototype.lock =
-    function(target, opt_successCallback, opt_failureCallback) {};
-PointerLock.prototype.unlock = function() {};
+Element.prototype.requestPointerLock = function() {};
+Element.prototype.mozRequestPointerLock = function() {};
+Element.prototype.webkitRequestPointerLock = function() {};
 
 /** @type {number} */
 Event.prototype.movementX;
@@ -57,10 +46,3 @@ Event.prototype.mozMovementY;
 Event.prototype.webkitMovementX;
 /** @type {number} */
 Event.prototype.webkitMovementY;
-
-/** @type {PointerLock|undefined} */
-Navigator.prototype.pointer;
-/** @type {PointerLock|undefined} */
-Navigator.prototype.mozPointer;
-/** @type {PointerLock|undefined} */
-Navigator.prototype.webkitPointer;

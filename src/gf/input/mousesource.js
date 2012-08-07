@@ -57,9 +57,9 @@ gf.input.MouseSource = function(inputElement) {
    * @type {boolean}
    */
   this.supportsLocking = !!(
-      window.navigator.pointer ||
-      window.navigator.mozPointer ||
-      window.navigator.webkitPointer);
+      inputElement.requestPointerLock ||
+      inputElement.mozRequestPointerLock ||
+      inputElement.webkitRequestPointerLock);
 
   /**
    * Mouse sensitivity scalar.
@@ -124,10 +124,20 @@ gf.input.MouseSource = function(inputElement) {
 
   // Watch for pointer lock lost events
   if (this.supportsLocking) {
-    this.listen(inputElement, [
-      'pointerlocklost',
-      'mozpointerlocklost',
-      'webkitpointerlocklost'
+    this.listen(document, [
+      'pointerlockchange',
+      'mozpointerlockchange',
+      'webkitpointerlockchange'
+    ], function() {
+      this.isLocked = (
+          document.pointerLockElement ||
+          document.mozPointerLockElement ||
+          document.webkitPointerLockElement) === inputElement;
+    });
+    this.listen(document, [
+      'pointerlockerror',
+      'mozpointerlockerror',
+      'webkitpointerlockerror'
     ], function() {
       this.isLocked = false;
     });
@@ -156,24 +166,11 @@ gf.input.MouseSource.prototype.lock = function() {
     return;
   }
 
-  var pointer =
-      window.navigator.pointer ||
-      window.navigator.mozPointer ||
-      window.navigator.webkitPointer;
-  pointer.lock(this.inputElement,
-      /**
-       * Lock succeeded.
-       */
-      goog.bind(function() {
-        // TODO(benvanik): fire event?
-        this.isLocked = true;
-      }, this),
-      /**
-       * Lock failed.
-       */
-      goog.bind(function() {
-        // TODO(benvanik): fire event?
-      }, this));
+  var lockFn =
+      this.inputElement.requestPointerLock ||
+      this.inputElement.mozRequestPointerLock ||
+      this.inputElement.webkitRequestPointerLock;
+  lockFn.call(this.inputElement);
 };
 
 
@@ -186,11 +183,11 @@ gf.input.MouseSource.prototype.unlock = function() {
     return;
   }
 
-  var pointer =
-      window.navigator.pointer ||
-      window.navigator.mozPointer ||
-      window.navigator.webkitPointer;
-  pointer.unlock();
+  var unlockFn =
+      document.exitPointerLock ||
+      document.mozExitPointerLock ||
+      document.webkitExitPointerLock;
+  unlockFn.call(document);
 };
 
 
