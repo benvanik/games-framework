@@ -260,7 +260,9 @@ gf.dom.Display.prototype.getVisibleElement = function() {
  * @return {!Element} An element that can be used for input events.
  */
 gf.dom.Display.prototype.getInputElement = function() {
-  return this.canvas.el;
+  // This should really be this.canvas.el, but Firefox does not support the
+  // pointer lock API on any element but the one used for the fullscreen enable.
+  return this.mainFrame_;
 };
 
 

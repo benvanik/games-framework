@@ -161,8 +161,13 @@ gf.input.MouseData.prototype.update = function(e, sensitivity) {
     dx = browserEvent.webkitMovementX;
     dy = browserEvent.webkitMovementY;
   } else if (browserEvent.mozMovementX !== undefined) {
-    dx = browserEvent.mozMovementX;
-    dy = browserEvent.mozMovementY;
+    // mozMovementX/Y are bugged in click events. Sigh.
+    if (e.type == goog.events.EventType.MOUSEMOVE) {
+      dx = browserEvent.mozMovementX;
+      dy = browserEvent.mozMovementY;
+    } else {
+      dx = dy = 0;
+    }
   } else if (browserEvent.movementX !== undefined) {
     dx = browserEvent.movementX;
     dy = browserEvent.movementY;

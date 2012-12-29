@@ -130,9 +130,9 @@ gf.input.MouseSource = function(inputElement) {
       'webkitpointerlockchange'
     ], function() {
       this.isLocked = (
-          document.pointerLockElement ||
-          document.mozPointerLockElement ||
-          document.webkitPointerLockElement) === inputElement;
+          document.pointerLockElement === inputElement ||
+          document.mozPointerLockElement === inputElement ||
+          document.webkitPointerLockElement === inputElement);
     });
     this.listen(document, [
       'pointerlockerror',
@@ -159,11 +159,21 @@ gf.input.MouseSource.prototype.setLockOnFocus = function(value) {
  * Locks the mouse to the input element.
  * Only call this method if {@see gf.input.MouseSource#supportsLocking}
  * indicates that mouse locking is available.
+ * If a call to this returns true the mouse is going to be locked and the click
+ * that initiated it should be ignored.
+ * @return {boolean} True if the mouse will be locked.
  */
 gf.input.MouseSource.prototype.lock = function() {
   goog.asserts.assert(this.supportsLocking);
   if (!this.supportsLocking || this.isLocked) {
-    return;
+    return false;
+  }
+
+  // Firefox doesn't support locking unless in fullscreen mode.
+  if (goog.userAgent.GECKO) {
+    if (!(document.mozFullscreenElement || document.mozFullScreenElement)) {
+      return false;
+    }
   }
 
   var lockFn =
@@ -171,6 +181,8 @@ gf.input.MouseSource.prototype.lock = function() {
       this.inputElement.mozRequestPointerLock ||
       this.inputElement.webkitRequestPointerLock;
   lockFn.call(this.inputElement);
+
+  return true;
 };
 
 
@@ -197,12 +209,17 @@ gf.input.MouseSource.prototype.unlock = function() {
  * @param {!goog.events.BrowserEvent} e Event.
  */
 gf.input.MouseSource.prototype.handleMouseDown_ = function(e) {
+  if (!this.enabled) {
+    return;
+  }
+
   e.preventDefault();
 
   // Lock if just focusing - eat the event, too
   if (this.lockOnFocus_ && this.supportsLocking && !this.isLocked) {
-    this.lock();
-    return;
+    if (this.lock()) {
+      return;
+    }
   }
 
   this.data_.update(e, this.sensitivity_);
@@ -226,7 +243,7 @@ gf.input.MouseSource.prototype.handleMouseDown_ = function(e) {
   // Watch for document mouse move/up and treat it as a local event, then we get
   // proper drag behavior when the mouse leaves the window
   // We only do this if we are 'dragging'
-  if (this.data_.buttons && !this.dragging_) {
+  if (!this.isLocked && this.data_.buttons && !this.dragging_) {
     this.dragging_ = true;
     this.listen(goog.dom.getOwnerDocument(this.inputElement),
         goog.events.EventType.MOUSEMOVE, this.handleMouseMove_);
@@ -244,6 +261,10 @@ gf.input.MouseSource.prototype.handleMouseDown_ = function(e) {
  * @param {!goog.events.BrowserEvent} e Event.
  */
 gf.input.MouseSource.prototype.handleMouseUp_ = function(e) {
+  if (!this.enabled) {
+    return;
+  }
+
   e.preventDefault();
 
   this.data_.update(e, this.sensitivity_);
@@ -265,7 +286,7 @@ gf.input.MouseSource.prototype.handleMouseUp_ = function(e) {
   }
 
   // If this was the last mouse button, stop the 'drag'
-  if (!this.data_.buttons && this.dragging_) {
+  if (!this.isLocked && !this.data_.buttons && this.dragging_) {
     this.dragging_ = false;
     this.unlisten(goog.dom.getOwnerDocument(this.inputElement),
         goog.events.EventType.MOUSEMOVE, this.handleMouseMove_);
@@ -283,6 +304,10 @@ gf.input.MouseSource.prototype.handleMouseUp_ = function(e) {
  * @param {!goog.events.BrowserEvent} e Event.
  */
 gf.input.MouseSource.prototype.handleMouseMove_ = function(e) {
+  if (!this.enabled) {
+    return;
+  }
+
   e.preventDefault();
 
   this.data_.update(e, this.sensitivity_);
@@ -295,6 +320,10 @@ gf.input.MouseSource.prototype.handleMouseMove_ = function(e) {
  * @param {!goog.events.BrowserEvent} e Event.
  */
 gf.input.MouseSource.prototype.handleMouseOver_ = function(e) {
+  if (!this.enabled) {
+    return;
+  }
+
   e.preventDefault();
 };
 
@@ -305,6 +334,10 @@ gf.input.MouseSource.prototype.handleMouseOver_ = function(e) {
  * @param {!goog.events.BrowserEvent} e Event.
  */
 gf.input.MouseSource.prototype.handleMouseOut_ = function(e) {
+  if (!this.enabled) {
+    return;
+  }
+
   e.preventDefault();
 };
 
@@ -315,6 +348,10 @@ gf.input.MouseSource.prototype.handleMouseOut_ = function(e) {
  * @param {!goog.events.BrowserEvent} e Event.
  */
 gf.input.MouseSource.prototype.handleMouseWheel_ = function(e) {
+  if (!this.enabled) {
+    return;
+  }
+
   e.preventDefault();
 
   var z = 0;
