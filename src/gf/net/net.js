@@ -50,18 +50,11 @@ gf.net.Endpoint;
 gf.net.listen = function(endpoint, protocolVersion, authToken, serverInfo) {
   // Create the underlying listen socket based on endpoint type
   var socket = null;
-  if (gf.util.isAnyType(endpoint, [
-    'DedicatedWorkerContext',
-    'SharedWorkerContext'
-  ])) {
+  if (goog.isString(endpoint)) {
+    socket = new gf.net.sockets.WsListenSocket(endpoint);
+  } else if (goog.isObject(endpoint)) {
     socket = new gf.net.sockets.WorkerListenSocket(endpoint,
         /** @type {!Object} */ (endpoint));
-  } else if (goog.isString(endpoint)) {
-    socket = new gf.net.sockets.WsListenSocket(endpoint);
-    //socket = new gf.net.sockets.WsListenSocket(endpoint);
-  } else {
-    // Unsupported endpoint
-    return goog.async.Deferred.fail(null);
   }
   goog.asserts.assert(socket);
 
