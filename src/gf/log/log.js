@@ -22,6 +22,8 @@
 
 goog.provide('gf.log');
 
+goog.require('goog.array');
+
 
 /**
  * Installs a log message listener on a port.
@@ -55,7 +57,9 @@ gf.log.activePorts_ = goog.global.postMessage ? [goog.global] : [];
  * @param {!MessagePort} port Port to receive messages.
  */
 gf.log.attachPort = function(port) {
-  gf.log.activePorts_.push(port);
+  if (!goog.array.contains(gf.log.activePorts_, port)) {
+    gf.log.activePorts_.push(port);
+  }
 };
 
 

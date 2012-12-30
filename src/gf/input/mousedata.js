@@ -20,6 +20,8 @@
 
 goog.provide('gf.input.MouseData');
 
+goog.require('goog.events.EventType');
+
 
 
 /**
