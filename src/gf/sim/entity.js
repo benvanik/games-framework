@@ -700,6 +700,9 @@ gf.sim.Entity.prototype.update = goog.abstractMethod;
  *     then the update will be processed on the next tick.
  */
 gf.sim.Entity.prototype.scheduleUpdate = function(priority, opt_targetTime) {
+  if (this.isDisposed()) {
+    return;
+  }
   this.simulator.getScheduler().scheduleEvent(
       priority,
       opt_targetTime === undefined ? gf.sim.NEXT_TICK : opt_targetTime,

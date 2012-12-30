@@ -132,7 +132,7 @@ gf.sim.Scheduler.prototype.insertEvent_ = function(list, e) {
   var found;
   while (left < right) {
     var middle = (left + right) >> 1;
-    var compareResult = list[middle].targetTime - e.targetTime;
+    var compareResult = e.targetTime - list[middle].targetTime;
     if (compareResult > 0) {
       left = middle + 1;
     } else {
