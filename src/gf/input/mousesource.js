@@ -168,12 +168,8 @@ gf.input.MouseSource.prototype.lock = function() {
   if (!this.supportsLocking || this.isLocked) {
     return false;
   }
-
-  // Firefox doesn't support locking unless in fullscreen mode.
-  if (goog.userAgent.GECKO) {
-    if (!(document.mozFullscreenElement || document.mozFullScreenElement)) {
-      return false;
-    }
+  if (!this.canLock_()) {
+    return false;
   }
 
   var lockFn =
@@ -182,7 +178,32 @@ gf.input.MouseSource.prototype.lock = function() {
       this.inputElement.webkitRequestPointerLock;
   lockFn.call(this.inputElement);
 
+  this.data_.reset();
+
   return true;
+};
+
+
+/**
+ * Whether the mouse can be locked.
+ * @return {boolean} True if the mouse can be locked.
+ */
+gf.input.MouseSource.prototype.canLock_ = function() {
+  if (!this.enabled) {
+    return false;
+  }
+
+  if (this.lockOnFocus_ && this.supportsLocking) {
+    // Firefox doesn't support locking unless in fullscreen mode.
+    if (goog.userAgent.GECKO) {
+      if (!(document.mozFullscreenElement || document.mozFullScreenElement)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  return false;
 };
 
 
@@ -200,6 +221,8 @@ gf.input.MouseSource.prototype.unlock = function() {
       document.mozExitPointerLock ||
       document.webkitExitPointerLock;
   unlockFn.call(document);
+
+  this.data_.reset();
 };
 
 
@@ -216,7 +239,7 @@ gf.input.MouseSource.prototype.handleMouseDown_ = function(e) {
   e.preventDefault();
 
   // Lock if just focusing - eat the event, too
-  if (this.lockOnFocus_ && this.supportsLocking && !this.isLocked) {
+  if (this.canLock_()) {
     if (this.lock()) {
       return;
     }
@@ -265,6 +288,10 @@ gf.input.MouseSource.prototype.handleMouseUp_ = function(e) {
     return;
   }
 
+  if (this.canLock_() && !this.isLocked) {
+    return;
+  }
+
   e.preventDefault();
 
   this.data_.update(e, this.sensitivity_);
@@ -305,6 +332,10 @@ gf.input.MouseSource.prototype.handleMouseUp_ = function(e) {
  */
 gf.input.MouseSource.prototype.handleMouseMove_ = function(e) {
   if (!this.enabled) {
+    return;
+  }
+
+  if (this.canLock_() && !this.isLocked) {
     return;
   }
 
