@@ -21,6 +21,7 @@
 goog.provide('gf.dom.Display');
 
 goog.require('gf.dom.EventType');
+goog.require('gf.graphics');
 goog.require('goog.Disposable');
 goog.require('goog.asserts');
 goog.require('goog.dom.TagName');
@@ -409,8 +410,13 @@ goog.inherits(gf.dom.Display.Canvas, goog.Disposable);
  */
 gf.dom.Display.Canvas.prototype.layout = function() {
   var size = goog.style.getSize(this.parentElement);
-  this.el.width = size.width;
-  this.el.height = size.height;
+  var pixelRatio = gf.graphics.getDevicePixelRatio();
+  this.el.width = size.width * pixelRatio;
+  this.el.height = size.height * pixelRatio;
+  goog.style.setStyle(this.el, {
+    'width': size.width + 'px',
+    'height': size.height + 'px'
+  });
   this.size.width = size.width;
   this.size.height = size.height;
 };

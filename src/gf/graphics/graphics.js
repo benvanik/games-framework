@@ -29,3 +29,24 @@ goog.provide('gf.graphics');
  * only enable in release builds.
  */
 gf.graphics.COMPILED_SHADERS = true;
+
+
+/**
+ * Whether to support high-DPI displays.
+ * @const
+ * @type {boolean}
+ */
+gf.graphics.ENABLE_HIGH_DPI = true;
+
+
+/**
+ * Gets the window device pixel ratio.
+ * @return {number} The current windows device pixel ratio.
+ */
+gf.graphics.getDevicePixelRatio = function() {
+  if (gf.graphics.ENABLE_HIGH_DPI) {
+    return window['devicePixelRatio'] || 1;
+  } else {
+    return 1;
+  }
+};
