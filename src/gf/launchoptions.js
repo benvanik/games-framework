@@ -126,9 +126,9 @@ gf.LaunchOptions.prototype.getDefaultValue = function(name) {
  * @return {number?} Number value.
  */
 gf.LaunchOptions.prototype.getNumber = function(name) {
-  var defaultValue = /** @type {number} */ (this.getDefaultValue(name));
+  var defaultValue = parseFloat(this.getDefaultValue(name));
   var value = this.queryData.get(name, defaultValue);
-  if (!goog.isDef(value) || !value || !value.length) {
+  if (!goog.isDef(value)) {
     return defaultValue;
   }
   return Number(value);
