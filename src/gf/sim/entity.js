@@ -373,6 +373,51 @@ gf.sim.Entity.prototype.forEachChild = function(callback, opt_scope) {
 
 
 /**
+ * Gets the number of child entities.
+ * @return {number} Child entity count.
+ */
+gf.sim.Entity.prototype.getChildCount = function() {
+  return this.children_.length;
+};
+
+
+/**
+ * Gets the index of the given child.
+ * @param {!gf.sim.Entity} value Child to look up.
+ * @return {number} Child index or -1 if not found.
+ */
+gf.sim.Entity.prototype.getIndexOfChild = function(value) {
+  return goog.array.indexOf(this.children_, value);
+};
+
+
+/**
+ * Gets the child at the given index.
+ * @param {number} index Child index.
+ * @return {gf.sim.Entity} Child entity, if found.
+ */
+gf.sim.Entity.prototype.getChildAtIndex = function(index) {
+  return this.children_[index] || null;
+};
+
+
+/**
+ * Gets the child with the given entity ID.
+ * @param {number} entityId Entity ID.
+ * @return {gf.sim.Entity} Child entity, if found.
+ */
+gf.sim.Entity.prototype.getChild = function(entityId) {
+  // This could be sped up if entity trees end up getting flatter.
+  for (var n = 0; n < this.children_.length; n++) {
+    if (this.children_[n].getId() == entityId) {
+      return this.children_[n];
+    }
+  }
+  return null;
+};
+
+
+/**
  * Handles parent entity changes.
  * @protected
  * @param {gf.sim.Entity} oldParent Old parent entity, if any.
