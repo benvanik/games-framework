@@ -100,9 +100,9 @@ gf.LaunchOptions.ArgumentInfo;
 gf.LaunchOptions.getArgumentInfo = function() {
   return {
     'buildServer': {
-      help: 'Build server daemon address.',
-      type: String,
-      defaultValue: null
+      'help': 'Build server daemon address.',
+      'type': String,
+      'defaultValue': null
     }
   };
 };
@@ -116,7 +116,7 @@ gf.LaunchOptions.getArgumentInfo = function() {
 gf.LaunchOptions.prototype.getDefaultValue = function(name) {
   var value = this.argumentInfo[name];
   goog.asserts.assert(goog.isDef(value));
-  return value.defaultValue;
+  return value['defaultValue'];
 };
 
 

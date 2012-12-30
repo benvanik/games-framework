@@ -231,6 +231,11 @@ FsModule.prototype.lstatSync = function(path) {};
 FsModule.prototype.fstatSync = function(fd) {};
 /**
  * @param {string} path
+ * @return {boolean}
+ */
+FsModule.prototype.existsSync = function(path) {};
+/**
+ * @param {string} path
  * @param {(function(Object):void)=} opt_callback
  */
 FsModule.prototype.unlink = function(path, opt_callback) {};
@@ -327,11 +332,6 @@ PathModule.prototype.dirname = function(path) {};
  * @return {string}
  */
 PathModule.prototype.basename = function(path, opt_ext) {};
-/**
- * @param {string} path
- * @return {boolean}
- */
-PathModule.prototype.existsSync = function(path) {};
 
 
 /** @constructor */

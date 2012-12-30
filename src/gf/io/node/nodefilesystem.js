@@ -109,7 +109,7 @@ gf.io.node.NodeFileSystem.prototype.mkdirSync = function(targetPath) {
   var cwd = parts.shift(); // remove /
   for (var n = 0; n < parts.length; n++) {
     cwd = cwd + '/' + parts[n];
-    if (!path.existsSync(cwd)) {
+    if (!fs.existsSync(cwd)) {
       fs.mkdirSync(cwd);
     }
   }
@@ -148,7 +148,7 @@ gf.io.node.NodeFileSystem.prototype.prepare = function(deferred) {
       while (true) {
         var rand = goog.string.getRandomString();
         var randRoot = this.rootPath + rand + '/';
-        if (this.pathModule.existsSync(randRoot)) {
+        if (this.fsModule.existsSync(randRoot)) {
           continue;
         } else {
           this.rootPath = randRoot;
@@ -158,7 +158,7 @@ gf.io.node.NodeFileSystem.prototype.prepare = function(deferred) {
     }
 
     // Ensure the root path exists
-    if (!this.pathModule.existsSync(this.rootPath)) {
+    if (!this.fsModule.existsSync(this.rootPath)) {
       this.mkdirSync(this.rootPath);
     }
 
