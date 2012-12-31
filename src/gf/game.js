@@ -66,7 +66,7 @@ gf.Game = function(launchOptions, opt_clock) {
    * frames will have some timeAlpha value <= 1.
    * @type {boolean}
    */
-  this.fixedTimestep = false;
+  this.fixedTimestep = true;
 
   /**
    * The duration of each fixed update timestep, in seconds.
