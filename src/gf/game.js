@@ -66,7 +66,7 @@ gf.Game = function(launchOptions, opt_clock) {
    * frames will have some timeAlpha value <= 1.
    * @type {boolean}
    */
-  this.fixedTimestep = true;
+  this.fixedTimestep = false;
 
   /**
    * The duration of each fixed update timestep, in seconds.
@@ -139,7 +139,7 @@ goog.inherits(gf.Game, gf.Runtime);
  * @const
  * @type {number}
  */
-gf.Game.DEFAULT_FRAME_TIMESTEP_ = 10 / 1000;
+gf.Game.DEFAULT_FRAME_TIMESTEP_ = 16.777 / 1000;
 
 
 /**
