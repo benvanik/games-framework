@@ -122,7 +122,7 @@ gf.now = (function() {
     try {
       var microtime = require('microtime');
       return function gfNowMicrotime() {
-        return microtime['nowDouble']();
+        return microtime['nowDouble']() * 1000;
       };
     } catch (e) {
       var hrtime = goog.global['process']['hrtime'];
