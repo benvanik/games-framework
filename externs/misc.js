@@ -18,3 +18,15 @@
  * @fileoverview Misc externs.
  * @externs
  */
+
+
+/**
+ * @type {!Object}
+ */
+var _gaq;
+
+
+/**
+ * @param {!Array.<string|number|null>} args
+ */
+_gaq.push = function(args) {};
