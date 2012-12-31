@@ -127,7 +127,13 @@ gf.net.sockets.WsSocket.prototype.handleMessage_ = function(data) {
  * @override
  */
 gf.net.sockets.WsSocket.prototype.writeInternal = function(data) {
-  this.handle_.send(gf.util.node.arrayBufferToBuffer(data), this.writeOptions_);
+  var nodeData = gf.util.node.arrayBufferToBuffer(data);
+  try {
+    this.handle_.send(nodeData, this.writeOptions_);
+  } catch (e) {
+    gf.log.write('socket error: ' + e);
+    this.close();
+  }
 };
 
 
@@ -138,7 +144,10 @@ gf.net.sockets.WsSocket.prototype.close = function() {
   this.handle_.removeListener('error', this.boundHandleError_);
   this.handle_.removeListener('close', this.boundHandleClose_);
   this.handle_.removeListener('message', this.boundHandleMessage_);
-  this.handle_.close(1000, '');
+  try {
+    this.handle_.close(1000, '');
+  } catch (e) {
+  }
 
   goog.base(this, 'close');
 };
