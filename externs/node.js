@@ -345,6 +345,10 @@ ProcessModule.prototype.exit = function(opt_code) {};
  * @param {Function} callback
  */
 ProcessModule.prototype.on = function(name, callback) {};
+/**
+ * @param {Function} callback
+ */
+ProcessModule.prototype.nextTick = function(callback) {};
 /** @type {!ProcessModule} */
 var process;
 

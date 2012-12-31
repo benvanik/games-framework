@@ -24,17 +24,22 @@ goog.provide('gf.timing');
  * @return {number|null|undefined} An ID that can be used for cancellation.
  */
 gf.timing.setImmediate = function(fn, opt_scope) {
-  var callback = function() {
-    fn.call(opt_scope);
-  };
-
-  return goog.global.setTimeout(callback, 0);
+  if (gf.NODE) {
+    // TODO(benvanik): make cancellable
+    var callback = function() {
+      fn.call(opt_scope);
+    };
+    process.nextTick(callback);
+    return 0;
+  } else {
+    var callback = function() {
+      fn.call(opt_scope);
+    };
+    return goog.global.setTimeout(callback, 0);
+  }
 
   // TODO(benvanik): use setImmediate if detected
   //goog.global.setImmediate(callback);
-
-  // TODO(benvanik): if NODE, use process.nextTick
-  //process.nextTick(callback);
 };
 
 
