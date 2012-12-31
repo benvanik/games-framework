@@ -234,7 +234,9 @@ gf.Game.prototype.renderTick_ = function(timestamp) {
  * @param {number} timeDelta Time elapsed, in seconds.
  */
 gf.Game.prototype.update_ = function(time, timeDelta) {
-  goog.asserts.assert(timeDelta >= 0);
+  if (timeDelta <= 0) {
+    return;
+  }
   var frame = this.updateFrame_;
   frame.init(
       this.updateFrameNumber_++,
