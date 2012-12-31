@@ -359,6 +359,21 @@ gf.net.PacketWriter.prototype.endWriteUint8Array = function(finalLength) {
 
 
 /**
+ * Writes a raw byte array.
+ * @param {!ArrayBuffer|!Uint8Array} value Data.
+ */
+gf.net.PacketWriter.prototype.writeRawUint8Array = function(value) {
+  if (!(value instanceof Uint8Array)) {
+    value = new Uint8Array(value);
+  }
+  this.ensureCapacity(value.length);
+  for (var n = 0; n < value.length; n++) {
+    this.buffer[this.offset++] = value[n];
+  }
+};
+
+
+/**
  * Writes a value to the buffer.
  * @param {string} value Value to write.
  */
