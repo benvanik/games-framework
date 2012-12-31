@@ -88,5 +88,6 @@ file_set(
     name='all_gf_js',
     srcs=[
         ':all_closure_js',
+        'third_party/wtf-trace-shim.js',
         ':gf_js',
         ])
