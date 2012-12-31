@@ -87,17 +87,58 @@ if (!COMPILED && goog.global['gfdefines']) {
 
 
 /**
+ * Create a high performance time function from window.performance, if present.
+ * @return {number} A time, in ms.
+ * @private
+ */
+gf.performanceNow_ = (function() {
+  var performance = goog.global['performance'];
+  if (performance && performance['now']) {
+    return function() {
+      return performance['now']();
+    };
+  } else if (performance && performance['webkitNow']) {
+    return function() {
+      return performance['webkitNow']();
+    };
+  }
+  return undefined;
+})();
+
+
+/**
  * Returns a non-wall time timestamp in milliseconds.
- * If available this will use a high performance timer. Otherwise it will fall
+ * If available this will use a high precision timer. Otherwise it will fall
  * back to the default browser time.
  *
  * The time value is relative to page navigation, not wall time. Only use it for
  * relative measurements.
  *
- * @return {number} A monotonically increasing timer with millisecond
+ * @return {number} A monotonically increasing timer with sub-millisecond
  *      resolution (if supported).
  */
-gf.now = goog.global['performance'] && goog.global['performance']['webkitNow'] ?
-    (function() {
-      return goog.global['performance']['webkitNow']();
-    }) : goog.now;
+gf.now = (function() {
+  if (gf.NODE) {
+    try {
+      var microtime = require('microtime');
+      return function gfNowMicrotime() {
+        return microtime['nowDouble']();
+      };
+    } catch (e) {
+      var hrtime = goog.global['process']['hrtime'];
+      return function gfNowHrtime() {
+        var timeValue = hrtime();
+        return (timeValue[0] * 1000) + timeValue[1] / 1000000;
+      };
+    }
+  }
+
+  // This dance is a little silly, but calling off of the closure object is
+  // 2x+ faster than dereferencing the global and using a direct call instead of
+  // a .call() is 2x+ on top of that.
+  if (gf.performanceNow_) {
+    return gf.performanceNow_;
+  } else {
+    return Date.now;
+  }
+})();

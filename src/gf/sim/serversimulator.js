@@ -31,6 +31,8 @@ goog.require('gf.sim.packets.ExecCommands');
 goog.require('gf.sim.util.CommandList');
 goog.require('goog.array');
 goog.require('goog.asserts');
+goog.require('goog.reflect');
+goog.require('wtfapi.trace');
 
 
 
@@ -448,3 +450,13 @@ gf.sim.ServerSimulator.prototype.handleExecCommands_ =
 
   return true;
 };
+
+
+gf.sim.ServerSimulator = wtfapi.trace.instrumentType(
+    gf.sim.ServerSimulator, 'gf.sim.ServerSimulator',
+    goog.reflect.object(gf.sim.ServerSimulator, {
+      update: 'update',
+      postUpdate: 'postUpdate',
+      compact_: 'compact_',
+      handleExecCommands_: 'handleExecCommands_'
+    }));

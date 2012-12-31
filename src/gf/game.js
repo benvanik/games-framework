@@ -26,6 +26,8 @@ goog.require('gf.UpdateFrame');
 goog.require('gf.timing.RenderTimer');
 goog.require('goog.asserts');
 goog.require('goog.events.EventHandler');
+goog.require('goog.reflect');
+goog.require('wtfapi.trace');
 
 
 
@@ -274,3 +276,12 @@ gf.Game.prototype.update = goog.nullFunction;
  * @param {!gf.RenderFrame} frame Current render frame.
  */
 gf.Game.prototype.render = goog.nullFunction;
+
+
+gf.Game = wtfapi.trace.instrumentType(
+    gf.Game, 'gf.Game',
+    goog.reflect.object(gf.Game, {
+      renderTick_: 'renderTick_',
+      update_: 'update_',
+      render_: 'render_'
+    }));

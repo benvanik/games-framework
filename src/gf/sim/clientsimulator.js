@@ -31,6 +31,8 @@ goog.require('gf.sim.packets.SyncSimulation');
 goog.require('gf.sim.util.CommandList');
 goog.require('gf.sim.util.PredictedCommandList');
 goog.require('goog.array');
+goog.require('goog.reflect');
+goog.require('wtfapi.trace');
 
 
 
@@ -477,3 +479,14 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
 
   return true;
 };
+
+
+gf.sim.ClientSimulator = wtfapi.trace.instrumentType(
+    gf.sim.ClientSimulator, 'gf.sim.ClientSimulator',
+    goog.reflect.object(gf.sim.ClientSimulator, {
+      update: 'update',
+      interpolateEntities: 'interpolateEntities',
+      sendPendingCommands_: 'sendPendingCommands_',
+      compact_: 'compact_',
+      handleSyncSimulation_: 'handleSyncSimulation_'
+    }));

@@ -34,6 +34,8 @@ goog.require('gf.sim.Statistics');
 goog.require('gf.sim.commands');
 goog.require('goog.array');
 goog.require('goog.asserts');
+goog.require('goog.reflect');
+goog.require('wtfapi.trace');
 
 
 
@@ -581,3 +583,14 @@ gf.sim.RemoveEntityMode = {
    */
   SHALLOW: 2
 };
+
+
+gf.sim.Simulator = wtfapi.trace.instrumentType(
+    gf.sim.Simulator, 'gf.sim.Simulator',
+    goog.reflect.object(gf.sim.Simulator, {
+      forEachEntity: 'forEachEntity',
+      executeCommands: 'executeCommands',
+      postNetworkUpdateEntities: 'postNetworkUpdateEntities',
+      postTickUpdateEntities: 'postTickUpdateEntities',
+      postUpdate: 'postUpdate'
+    }));

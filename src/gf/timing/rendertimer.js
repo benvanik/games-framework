@@ -21,6 +21,7 @@ goog.require('goog.Disposable');
 goog.require('goog.asserts');
 goog.require('goog.events.EventHandler');
 goog.require('goog.events.EventType');
+goog.require('wtfapi.trace');
 
 
 
@@ -237,9 +238,9 @@ gf.timing.RenderTimer.prototype.start = function(opt_force) {
   if (this.forcedTickInterval_) {
     var self = this;
     this.simulatedIntervalId_ = goog.global.setInterval(
-        function() {
+        wtfapi.trace.instrument(function() {
           self.simulateTick();
-        }, this.forcedTickInterval_);
+        }, 'gf.timing.RenderTimer#simulateTick'), this.forcedTickInterval_);
   }
 };
 
