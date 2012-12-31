@@ -16,6 +16,8 @@
 
 goog.provide('gf.timing');
 
+goog.require('gf');
+
 
 /**
  * Queues a function to be called on the next tick.
