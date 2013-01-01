@@ -44,7 +44,7 @@ gf.sim.util.PredictedCommandList = function() {
   /**
    * Sent but unconfirmed command array.
    * @private
-   * @type {!Array.<gf.sim.PredictedCommand>}
+   * @type {!Array.<!gf.sim.PredictedCommand>}
    */
   this.unconfirmedPredictedArray_ = [];
 
@@ -74,7 +74,7 @@ gf.sim.util.PredictedCommandList = function() {
   /**
    * Unsent predicted command array.
    * @private
-   * @type {!Array.<gf.sim.PredictedCommand>}
+   * @type {!Array.<!gf.sim.PredictedCommand>}
    */
   this.outgoingPredictedArray_ = [];
 

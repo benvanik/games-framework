@@ -23,6 +23,8 @@ goog.provide('gf.assets.LoadPriority');
 
 goog.require('gf.Component');
 goog.require('goog.async.Deferred');
+/** @suppress {extraRequire} */
+goog.require('goog.dom.DomHelper');
 
 
 /**

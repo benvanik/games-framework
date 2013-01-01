@@ -195,7 +195,7 @@ ${writeType(name='value.' + member.name, type=member.type)}\
 % endfor
   return true;
 };
-
+% if not message.type_name:
 
 /**
  * Creates a new message data value.
@@ -227,4 +227,5 @@ ${member.name}\
   }
   return writer.finish();
 };
+% endif
 % endfor

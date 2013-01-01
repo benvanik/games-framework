@@ -22,7 +22,7 @@ goog.provide('gf.net.http.HttpResponse');
  * Generic HTTP response.
  * @constructor
  * @param {number} statusCode HTTP response status code.
- * @param {string=} opt_content HTTP response body.
+ * @param {?string=} opt_content HTTP response body.
  */
 gf.net.http.HttpResponse = function(statusCode, opt_content) {
   /**

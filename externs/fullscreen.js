@@ -20,9 +20,6 @@
  * @externs
  */
 
-/** @type {number} */
-Element.ALLOW_KEYBOARD_INPUT;
-
 /** @type {boolean} */
 Document.prototype.fullScreenEnabled;
 /** @type {boolean} */
@@ -30,6 +27,10 @@ Document.prototype.mozFullScreenEnabled;
 
 /** @type {Element} */
 Document.prototype.fullScreenElement;
+/** @type {Element} */
+Document.prototype.mozFullscreenElement;
+/** @type {Element} */
+Document.prototype.mozFullScreenElement;
 /** @type {boolean} */
 Document.prototype.mozFullScreen;
 /** @type {boolean} */
@@ -38,8 +39,6 @@ Document.prototype.webkitIsFullScreen;
 /** @param {number=} opt_flags */
 Element.prototype.requestFullScreen = function(opt_flags) {};
 Element.prototype.mozRequestFullScreen = function() {};
-/** @param {number} flags */
-Element.prototype.webkitRequestFullScreen = function(flags) {};
 
 Document.prototype.cancelFullScreen = function() {};
 Document.prototype.mozCancelFullScreen = function() {};

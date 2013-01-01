@@ -20,12 +20,12 @@
  * @externs
  */
 
-/** @return {Element} */
-Document.prototype.pointerLockElement = function() {};
-/** @return {Element} */
-Document.prototype.mozPointerLockElement = function() {};
-/** @return {Element} */
-Document.prototype.webkitPointerLockElement = function() {};
+/** @type {Element|undefined} */
+Document.prototype.pointerLockElement;
+/** @type {Element|undefined} */
+Document.prototype.mozPointerLockElement;
+/** @type {Element|undefined} */
+Document.prototype.webkitPointerLockElement;
 Document.prototype.exitPointerLock = function() {};
 Document.prototype.mozExitPointerLock = function() {};
 Document.prototype.webkitExitPointerLock = function() {};
