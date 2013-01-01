@@ -47,7 +47,7 @@ gf.net.sockets.WsListenSocket = function(endpoint) {
 
   /**
    * @private
-   * @type {function(!Object): void}
+   * @type {function(!WsWebSocket): void}
    */
   this.boundHandleConnection_ = goog.bind(this.handleConnection_, this);
 

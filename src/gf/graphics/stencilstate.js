@@ -59,7 +59,7 @@ gf.graphics.StencilState = function() {
    * Maps to gl.stencilFuncSeparate.
    * @type {number}
    */
-  this.stencilMaskFront = 0xFFFFFFFF;
+  this.stencilFuncMaskFront = 0xFFFFFFFF;
 
   /**
    * Back face stencil test function.
@@ -80,7 +80,7 @@ gf.graphics.StencilState = function() {
    * Maps to gl.stencilFuncSeparate.
    * @type {number}
    */
-  this.stencilMaskBack = 0xFFFFFFFF;
+  this.stencilFuncMaskBack = 0xFFFFFFFF;
 
   /**
    * Front face stencil test fail operation.
@@ -172,9 +172,9 @@ gf.graphics.StencilState.prototype.makeActiveFull_ = function(gl) {
     gl.disable(goog.webgl.STENCIL_TEST);
   }
   gl.stencilFuncSeparate(goog.webgl.FRONT,
-      this.stencilFuncFront, this.stencilRefFront, this.stencilMaskFront);
+      this.stencilFuncFront, this.stencilRefFront, this.stencilFuncMaskFront);
   gl.stencilFuncSeparate(goog.webgl.BACK,
-      this.stencilFuncBack, this.stencilRefBack, this.stencilMaskBack);
+      this.stencilFuncBack, this.stencilRefBack, this.stencilFuncMaskBack);
   gl.stencilOpSeparate(goog.webgl.FRONT,
       this.stencilOpSFailFront,
       this.stencilOpDPFailFront, this.stencilOpDPPassFront);
@@ -208,15 +208,15 @@ gf.graphics.StencilState.prototype.makeActiveDelta_ =
   }
   if (this.stencilFuncFront != previousState.stencilFuncFront ||
       this.stencilRefFront != previousState.stencilRefFront ||
-      this.stencilMaskFront != previousState.stencilMaskFront) {
+      this.stencilFuncMaskFront != previousState.stencilFuncMaskFront) {
     gl.stencilFuncSeparate(goog.webgl.FRONT,
-        this.stencilFuncFront, this.stencilRefFront, this.stencilMaskFront);
+        this.stencilFuncFront, this.stencilRefFront, this.stencilFuncMaskFront);
   }
   if (this.stencilFuncBack != previousState.stencilFuncBack ||
       this.stencilRefBack != previousState.stencilRefBack ||
-      this.stencilMaskBack != previousState.stencilMaskBack) {
+      this.stencilFuncMaskBack != previousState.stencilFuncMaskBack) {
     gl.stencilFuncSeparate(goog.webgl.BACK,
-        this.stencilFuncBack, this.stencilRefBack, this.stencilMaskBack);
+        this.stencilFuncBack, this.stencilRefBack, this.stencilFuncMaskBack);
   }
   if (this.stencilOpSFailFront != previousState.stencilOpSFailFront ||
       this.stencilOpDPFailFront != previousState.stencilOpDPFailFront ||

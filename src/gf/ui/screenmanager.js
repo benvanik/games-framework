@@ -133,8 +133,8 @@ gf.ui.ScreenManager.prototype.getTopScreen = function() {
 /**
  * Enumerates all screens in stack order from bottom to top.
  * Do not modify the screen manager while enumerating.
- * @param {!function(!gf.ui.Screen):boolean|undefined} callback Function called
- *     once for each screen.
+ * @param {!function(!gf.ui.Screen):(boolean|undefined)} callback Function
+ *     called once for each screen.
  * @param {Object=} opt_scope Scope to call the callback in.
  */
 gf.ui.ScreenManager.prototype.forEachScreen = function(callback, opt_scope) {

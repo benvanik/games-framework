@@ -77,7 +77,7 @@ goog.inherits(gf.net.sockets.HtmlWebSocket, gf.net.Socket);
 /**
  * Handles open notifications.
  * @private
- * @param {!Event} e Event.
+ * @param {Event} e Event.
  */
 gf.net.sockets.HtmlWebSocket.prototype.handleOpen_ = function(e) {
   // Drain waiting queue
@@ -89,7 +89,7 @@ gf.net.sockets.HtmlWebSocket.prototype.handleOpen_ = function(e) {
 /**
  * Handles error notifications.
  * @private
- * @param {!Event} e Event.
+ * @param {Event} e Event.
  */
 gf.net.sockets.HtmlWebSocket.prototype.handleError_ = function(e) {
   // TODO(benvanik): error
@@ -100,7 +100,7 @@ gf.net.sockets.HtmlWebSocket.prototype.handleError_ = function(e) {
 /**
  * Handles close notifications.
  * @private
- * @param {!Event} e Event.
+ * @param {Event} e Event.
  */
 gf.net.sockets.HtmlWebSocket.prototype.handleClose_ = function(e) {
   gf.log.write('close', e);
@@ -111,7 +111,7 @@ gf.net.sockets.HtmlWebSocket.prototype.handleClose_ = function(e) {
 /**
  * Handles messages from the web socket.
  * @private
- * @param {!Event} e Event.
+ * @param {Event} e Event.
  */
 gf.net.sockets.HtmlWebSocket.prototype.handleMessage_ = function(e) {
   var data = /** @type {Object} */ (e.data);

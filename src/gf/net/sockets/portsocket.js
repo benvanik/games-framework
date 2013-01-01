@@ -121,7 +121,7 @@ gf.net.sockets.PortSocket.prototype.handleMessage_ = function(e) {
 /**
  * Handles window unload events.
  * @private
- * @param {!Event} e Event.
+ * @param {Event} e Event.
  */
 gf.net.sockets.PortSocket.prototype.handleUnload_ = function(e) {
   this.close();

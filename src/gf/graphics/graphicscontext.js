@@ -26,6 +26,10 @@ goog.require('gf.graphics.ExtensionCache');
 goog.require('gf.graphics.ExtensionName');
 goog.require('gf.graphics.FeatureDetector');
 goog.require('gf.graphics.Program');
+/** @suppress {extraRequire} */
+goog.require('gf.graphics.RenderTexture');
+/** @suppress {extraRequire} */
+goog.require('gf.graphics.StencilState');
 goog.require('gf.log');
 goog.require('goog.asserts');
 goog.require('goog.async.Deferred');
@@ -667,50 +671,50 @@ gf.graphics.GraphicsContext.prototype.setTexture =
 };
 
 
-/**
- * Pushes a render target for render-to-texture operations.
- * @param {gf.graphics.RenderTexture} renderTexture Target texture.
- */
-gf.graphics.GraphicsContext.prototype.pushRenderTarget =
-    function(renderTexture) {
-  // Push to stack (regardless of whether set)
-  this.renderTargetStack_.push(renderTexture);
+// /**
+//  * Pushes a render target for render-to-texture operations.
+//  * @param {gf.graphics.RenderTexture} renderTexture Target texture.
+//  */
+// gf.graphics.GraphicsContext.prototype.pushRenderTarget =
+//     function(renderTexture) {
+//   // Push to stack (regardless of whether set)
+//   this.renderTargetStack_.push(renderTexture);
 
-  // Rebind framebuffer, if needed
-  if (this.renderTarget_ != renderTexture) {
-    // Reset all texture bindings that reference this texture
-    for (var n = 0; n < this.textureBindings_.length; n++) {
-      if (this.textureBindings_[n] == renderTexture) {
-        this.setTexture(n, null);
-      }
-    }
+//   // Rebind framebuffer, if needed
+//   if (this.renderTarget_ != renderTexture) {
+//     // Reset all texture bindings that reference this texture
+//     for (var n = 0; n < this.textureBindings_.length; n++) {
+//       if (this.textureBindings_[n] == renderTexture) {
+//         this.setTexture(n, null);
+//       }
+//     }
 
-    this.renderTarget_ = renderTexture;
-    renderTexture.bindRenderTarget();
-  }
-};
+//     this.renderTarget_ = renderTexture;
+//     renderTexture.bindRenderTarget();
+//   }
+// };
 
 
-/**
- * Pops an existing texture for render-to-texture operations.
- */
-gf.graphics.GraphicsContext.prototype.popRenderTarget = function() {
-  // Pop from stack
-  goog.asserts.assert(this.renderTargetStack_.length > 1);
-  this.renderTargetStack_.length--;
+// /**
+//  * Pops an existing texture for render-to-texture operations.
+//  */
+// gf.graphics.GraphicsContext.prototype.popRenderTarget = function() {
+//   // Pop from stack
+//   goog.asserts.assert(this.renderTargetStack_.length > 1);
+//   this.renderTargetStack_.length--;
 
-  // Rebind framebuffer, if needed
-  var renderTexture = this.renderTargetStack_[
-      this.renderTargetStack_.length - 1];
-  if (this.renderTarget_ != renderTexture) {
-    this.renderTarget_ = renderTexture;
-    if (renderTexture) {
-      renderTexture.bindRenderTarget();
-    } else {
-      this.gl.bindFramebuffer(goog.webgl.FRAMEBUFFER, null);
-    }
-  }
-};
+//   // Rebind framebuffer, if needed
+//   var renderTexture = this.renderTargetStack_[
+//       this.renderTargetStack_.length - 1];
+//   if (this.renderTarget_ != renderTexture) {
+//     this.renderTarget_ = renderTexture;
+//     if (renderTexture) {
+//       renderTexture.bindRenderTarget();
+//     } else {
+//       this.gl.bindFramebuffer(goog.webgl.FRAMEBUFFER, null);
+//     }
+//   }
+// };
 
 
 /**

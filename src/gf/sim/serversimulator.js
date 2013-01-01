@@ -405,7 +405,7 @@ gf.sim.ServerSimulator.prototype.handleExecCommands_ =
 
   // Update stats
   this.statistics.incomingCommands += commandCount;
-  this.statistics.incomingCommandSize += packet.data.length;
+  this.statistics.incomingCommandSize += packet.data.byteLength;
 
   // Commands
   for (var n = 0; n < commandCount; n++) {
