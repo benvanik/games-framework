@@ -81,11 +81,9 @@ gf.net.listen = function(endpoint, protocolVersion, authToken, serverInfo) {
 gf.net.connect = function(endpoint, protocolVersion, authToken, userInfo) {
   // Create the underlying socket based on endpoint type
   var socket = null;
-  if (gf.util.isAnyType(endpoint, [
-    'Worker',
-    'SharedWorker',
-    'MessagePort'
-  ])) {
+  if ((goog.global.Worker && endpoint instanceof Worker) ||
+      (goog.global.SharedWorker && endpoint instanceof SharedWorker) ||
+      (goog.global.MessagePort && endpoint instanceof MessagePort)) {
     socket = new gf.net.sockets.PortSocket(endpoint,
         /** @type {!Worker|!SharedWorker|!MessagePort} */ (endpoint));
   } else if (goog.isString(endpoint)) {

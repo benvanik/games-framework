@@ -59,7 +59,7 @@ gf.net.sockets.PortSocket = function(endpoint, handle) {
    */
   this.supportsTransferableArrays_ =
       !!handle['webkitPostMessage'] &&
-      !gf.util.isAnyType(handle, ['MessagePort']);
+      !(goog.global.MessagePort && handle instanceof MessagePort);
 
   /**
    * Whether the MessagePort will allow ArrayBuffers to be passed.
