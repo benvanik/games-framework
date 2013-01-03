@@ -161,10 +161,11 @@ echo "Installing Python packages..."
 # TODO(benvanik): not all of these are required, I'm sure
 PYTHON_PACKAGES=( glob2 mako pil watchdog Autobahn sphinx unittest2 networkx coverage argparse mutagen )
 
-source $DIR/third_party/anvil-build/local_virtualenv/bin/activate
+VIRTUAL_ENV_BIN=$DIR/third_party/anvil-build/local_virtualenv/bin
+source $VIRTUAL_ENV_BIN/activate
 for p in ${PYTHON_PACKAGES[@]}
 do
-  pip install $p
+  python $VIRTUAL_ENV_BIN/pip install $p
 done
 
 echo ""
@@ -179,20 +180,20 @@ if [ "$(which apt-get 2>/dev/null)" ]; then
   # Linux (Ubuntu)
   for p in ${SYSTEM_PACKAGES[@]}
   do
-    apt-get install $p
+    sudo apt-get install -y $p
   done
 elif [ "$(which brew 2>/dev/null)" ]; then
   # OS X (homebrew)
   for p in ${SYSTEM_PACKAGES[@]}
   do
-    brew install $p
+    sudo brew install $p
   done
 elif [ "$(which port 2>/dev/null)" ]; then
   # OS X (MacPorts)
-  port selfupdate
+  sudo port selfupdate
   for p in ${SYSTEM_PACKAGES[@]}
   do
-    port install $p
+    sudo port install $p
   done
 else
   echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
