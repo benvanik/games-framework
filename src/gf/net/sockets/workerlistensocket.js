@@ -51,7 +51,7 @@ gf.net.sockets.WorkerListenSocket = function(endpoint, handle) {
   this.handle_.addEventListener('connect', this.boundHandleConnect_, false);
 
   // If a dedicated worker, always fire a connect event
-  if (goog.global.WorkerLocation) {
+  if (goog.global['WorkerLocation']) {
     var socket = new gf.net.sockets.PortSocket(
         /** @type {gf.net.Endpoint} */ (handle),
         /** @type {!MessagePort|!Worker|!SharedWorker} */ (handle));
