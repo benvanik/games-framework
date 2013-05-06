@@ -36,7 +36,7 @@ goog.require('gf.net.packets.UserConnect');
 goog.require('gf.net.packets.UserDisconnect');
 goog.require('goog.asserts');
 goog.require('goog.async.Deferred');
-goog.require('wtfapi.trace');
+goog.require('WTF.trace');
 
 
 
@@ -166,7 +166,7 @@ gf.net.ClientSession.prototype.makeReady_ = function() {
   this.connectDeferred_.callback(this);
 
   // Setup a periodic ping to keep us alive and synchronize times
-  var sendPing = wtfapi.trace.instrument(goog.bind(function() {
+  var sendPing = WTF.trace.instrument(goog.bind(function() {
     if (this.state != gf.net.SessionState.DISCONNECTED) {
       var serverTime = this.clock.getServerTime() + this.clock.latency;
       var clientTime = this.clock.getClientTime();

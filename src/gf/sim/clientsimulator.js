@@ -32,7 +32,7 @@ goog.require('gf.sim.util.CommandList');
 goog.require('gf.sim.util.PredictedCommandList');
 goog.require('goog.array');
 goog.require('goog.reflect');
-goog.require('wtfapi.trace');
+goog.require('WTF.trace');
 
 
 
@@ -481,7 +481,7 @@ gf.sim.ClientSimulator.prototype.handleSyncSimulation_ =
 };
 
 
-gf.sim.ClientSimulator = wtfapi.trace.instrumentType(
+gf.sim.ClientSimulator = WTF.trace.instrumentType(
     gf.sim.ClientSimulator, 'gf.sim.ClientSimulator',
     goog.reflect.object(gf.sim.ClientSimulator, {
       update: 'update',

@@ -32,7 +32,7 @@ goog.require('gf.sim.util.CommandList');
 goog.require('goog.array');
 goog.require('goog.asserts');
 goog.require('goog.reflect');
-goog.require('wtfapi.trace');
+goog.require('WTF.trace');
 
 
 
@@ -452,7 +452,7 @@ gf.sim.ServerSimulator.prototype.handleExecCommands_ =
 };
 
 
-gf.sim.ServerSimulator = wtfapi.trace.instrumentType(
+gf.sim.ServerSimulator = WTF.trace.instrumentType(
     gf.sim.ServerSimulator, 'gf.sim.ServerSimulator',
     goog.reflect.object(gf.sim.ServerSimulator, {
       update: 'update',
